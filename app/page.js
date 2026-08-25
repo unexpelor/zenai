@@ -20,36 +20,56 @@ export default function Home() {
   // AI ROUTER
   // =========================
 
-  const askAI = async (payload) => {
-    const response = await fetch("/api/ai", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
+const askAI = async (payload) => {
+  const response = await fetch("/api/ai", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
 
-    const result = await response.json();
+  const result = await response.json();
 
-    if (!response.ok) {
-      console.error("AI Router Error:", result);
+  if (!response.ok) {
+    console.error("AI Router Error:", result);
 
-      const details = result.details
-        ? result.details.join("\n")
-        : "";
+    const details = Array.isArray(result.details)
+      ? result.details
+          .map((item) => {
+            if (typeof item === "string") {
+              return item;
+            }
 
-      throw new Error(
-  [
-    result.message || "Autopilot gagal dijalankan.",
-    ...(result.details || [])
-  ].join("\n")
-);
-    }
+            if (item && typeof item === "object") {
+              return Object.entries(item)
+                .map(([key, value]) => {
+                  const text =
+                    typeof value === "string"
+                      ? value
+                      : JSON.stringify(value);
 
-    setProvider(result.provider || "");
+                  return `${key}: ${text}`;
+                })
+                .join(" | ");
+            }
 
-    return result.text;
-  };
+            return String(item);
+          })
+          .join("\n")
+      : "";
+
+    throw new Error(
+      `${result.message || "AI Router gagal"}${
+        details ? "\n\n" + details : ""
+      }`
+    );
+  }
+
+  setProvider(result.provider || "");
+
+  return result.text;
+};
 
   // =========================
   // UPLOAD IMAGE
@@ -189,32 +209,90 @@ Balas hanya JSON valid.
   // =========================
 
   const runAutopilot = async () => {
-    if (!business) {
-      alert(
-        "Lakukan Product Story Capture terlebih dahulu."
-      );
+  if (!business) {
+    alert(
+      "Lakukan Product Story Capture terlebih dahulu."
+    );
 
-      setTab("capture");
+    setTab("capture");
+    return;
+  }
 
-      return;
+  setBusy(true);
+
+  try {
+    const response = await fetch(
+      "/api/autopilot",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          business,
+          duration: days,
+        }),
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      console.error("AUTOPILOT ERROR:", result);
+
+      const details = Array.isArray(result.details)
+        ? result.details
+            .map((item) => {
+              if (typeof item === "string") {
+                return item;
+              }
+
+              if (item && typeof item === "object") {
+                return Object.entries(item)
+                  .map(([key, value]) => {
+                    const text =
+                      typeof value === "string"
+                        ? value
+                        : JSON.stringify(value);
+
+                    return `${key}: ${text}`;
+                  })
+                  .join(" | ");
+              }
+
+              return String(item);
+            })
+            .join("\n")
+        : "";
+
+      const errorMessage = [
+        result.message || "Autopilot gagal dijalankan.",
+        details
+      ]
+        .filter(Boolean)
+        .join("\n\n");
+
+      throw new Error(errorMessage);
     }
 
-    setBusy(true);
+    setAutopilotData(result.result);
 
-    try {
-      const response = await fetch(
-        "/api/autopilot",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            business,
-            duration: days,
-          }),
-        }
-      );
+    setProvider(result.provider || "");
+
+    setTab("autopilot");
+
+  } catch (error) {
+    console.error("AUTOPILOT:", error);
+
+    alert(
+      error.message ||
+      "Autopilot gagal."
+    );
+
+  } finally {
+    setBusy(false);
+  }
+};
 
       const result = await response.json();
 
