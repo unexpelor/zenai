@@ -207,13 +207,9 @@ Balas hanya JSON valid.
   // =========================
   // AUTOPILOT
   // =========================
-
-  const runAutopilot = async () => {
+const runAutopilot = async () => {
   if (!business) {
-    alert(
-      "Lakukan Product Story Capture terlebih dahulu."
-    );
-
+    alert("Lakukan Product Story Capture terlebih dahulu.");
     setTab("capture");
     return;
   }
@@ -221,103 +217,53 @@ Balas hanya JSON valid.
   setBusy(true);
 
   try {
-    const response = await fetch(
-      "/api/autopilot",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          business,
-          duration: days,
-        }),
-      }
-    );
+    const response = await fetch("/api/autopilot", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        business,
+        duration: days,
+      }),
+    });
+
+    const result = await response.json();
 
     if (!response.ok) {
-      console.error("AUTOPILOT ERROR:", result);
-
       const details = Array.isArray(result.details)
         ? result.details
-            .map((item) => {
-              if (typeof item === "string") {
-                return item;
-              }
-
-              if (item && typeof item === "object") {
-                return Object.entries(item)
-                  .map(([key, value]) => {
-                    const text =
-                      typeof value === "string"
-                        ? value
-                        : JSON.stringify(value);
-
-                    return `${key}: ${text}`;
-                  })
-                  .join(" | ");
-              }
-
-              return String(item);
-            })
+            .map((item) =>
+              typeof item === "string"
+                ? item
+                : JSON.stringify(item, null, 2)
+            )
             .join("\n")
         : "";
 
-      const errorMessage = [
-        result.message || "Autopilot gagal dijalankan.",
-        details
-      ]
-        .filter(Boolean)
-        .join("\n\n");
-
-      throw new Error(errorMessage);
+      throw new Error(
+        [
+          result.message || "Autopilot gagal dijalankan.",
+          details,
+        ]
+          .filter(Boolean)
+          .join("\n\n")
+      );
     }
 
     setAutopilotData(result.result);
-
     setProvider(result.provider || "");
-
     setTab("autopilot");
 
   } catch (error) {
-    console.error("AUTOPILOT:", error);
+    console.error("AUTOPILOT ERROR:", error);
 
-    alert(
-      error.message ||
-      "Autopilot gagal."
-    );
+    alert(error.message || "Autopilot gagal.");
 
   } finally {
     setBusy(false);
   }
 };
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          result.message ||
-            "Autopilot gagal dijalankan."
-        );
-      }
-
-      setAutopilotData(result.result);
-
-      setProvider(result.provider || "");
-
-      setTab("autopilot");
-    } catch (error) {
-      console.error(error);
-
-      alert(
-        error.message ||
-          "Autopilot gagal."
-      );
-    } finally {
-      setBusy(false);
-    }
-  };
-
   // =========================
   // NAVIGATION
   // =========================
