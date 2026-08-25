@@ -4,8 +4,12 @@ export async function POST(req) {
 
     if (!body.business) {
       return Response.json(
-        { message: "Data bisnis tidak tersedia." },
-        { status: 400 }
+        {
+          message: "Data bisnis tidak tersedia."
+        },
+        {
+          status: 400
+        }
       );
     }
 
@@ -16,27 +20,26 @@ Buat strategi bisnis UMKM selama ${duration} hari berdasarkan data berikut:
 
 ${JSON.stringify(body.business)}
 
-WAJIB balas dengan SATU objek JSON valid.
-Tidak boleh markdown.
-Tidak boleh menggunakan \`\`\`.
-Tidak boleh ada teks sebelum atau sesudah JSON.
+Balas HANYA dengan satu objek JSON valid.
+Jangan gunakan markdown.
+Jangan gunakan teks sebelum atau sesudah JSON.
 
-Format wajib:
+Format:
 
 {
   "mission": {
-    "title": "judul strategi",
-    "target": "target utama",
+    "title": "Judul strategi",
+    "target": "Target utama",
     "duration": "${duration} hari",
     "priority": "HIGH"
   },
   "actions": [
     {
       "id": 1,
-      "title": "judul aksi",
+      "title": "Judul aksi",
       "type": "CONTENT",
-      "description": "penjelasan aksi",
-      "output": "hasil yang diharapkan"
+      "description": "Penjelasan aksi",
+      "output": "Hasil yang diharapkan"
     }
   ]
 }
@@ -52,7 +55,7 @@ Format wajib:
         body: JSON.stringify({
           prompt,
           system:
-            "Anda adalah AI Business Autopilot. Output harus berupa JSON valid saja."
+            "Anda adalah AI Business Autopilot untuk UMKM Indonesia. Balas hanya JSON valid tanpa markdown atau teks tambahan."
         })
       }
     );
@@ -63,32 +66,33 @@ Format wajib:
       return Response.json(
         {
           message: data.message || "AI Router gagal",
-          details: data.details
+          details: data.details || []
         },
-        { status: response.status }
+        {
+          status: response.status
+        }
+      );
+    }
+
+    if (!data.text || typeof data.text !== "string") {
+      return Response.json(
+        {
+          message: "AI tidak mengembalikan respons."
+        },
+        {
+          status: 500
+        }
       );
     }
 
     const raw = data.text;
 
-    if (!raw || typeof raw !== "string") {
-      return Response.json(
-        {
-          message: "AI tidak mengembalikan teks.",
-          raw
-        },
-        { status: 500 }
-      );
-    }
-
-    // Bersihkan markdown
-    let text = raw
+    let cleanJson = raw
       .replace(/```json/gi, "")
       .replace(/```/g, "")
       .trim();
 
-    // Ambil JSON pertama
-    const start = text.indexOf("{");
+    const start = cleanJson.indexOf("{");
 
     if (start === -1) {
       return Response.json(
@@ -96,13 +100,96 @@ Format wajib:
           message: "Output AI tidak mengandung JSON.",
           raw
         },
-        { status: 500 }
+        {
+          status: 500
+        }
       );
     }
 
-    // Cari penutup JSON yang benar dengan menghitung kurung
     let depth = 0;
     let end = -1;
+    let inString = false;
+    let escaped = false;
+
+    for (let i = start; i < cleanJson.length; i++) {
+      const char = cleanJson[i];
+
+      if (inString) {
+        if (escaped) {
+          escaped = false;
+        } else if (char === "\\") {
+          escaped = true;
+        } else if (char === '"') {
+          inString = false;
+        }
+
+        continue;
+      }
+
+      if (char === '"') {
+        inString = true;
+      } else if (char === "{") {
+        depth++;
+      } else if (char === "}") {
+        depth--;
+
+        if (depth === 0) {
+          end = i + 1;
+          break;
+        }
+      }
+    }
+
+    if (end === -1) {
+      return Response.json(
+        {
+          message: "JSON dari AI tidak lengkap.",
+          raw
+        },
+        {
+          status: 500
+        }
+      );
+    }
+
+    const jsonText = cleanJson.substring(start, end);
+
+    let result;
+
+    try {
+      result = JSON.parse(jsonText);
+    } catch (error) {
+      return Response.json(
+        {
+          message: "JSON AI tidak valid.",
+          error: error.message,
+          raw,
+          jsonText
+        },
+        {
+          status: 500
+        }
+      );
+    }
+
+    return Response.json({
+      result,
+      provider: data.provider
+    });
+
+  } catch (error) {
+    console.error("AUTOPILOT ERROR:", error);
+
+    return Response.json(
+      {
+        message: error.message || "Autopilot gagal dijalankan."
+      },
+      {
+        status: 500
+      }
+    );
+  }
+}    let end = -1;
     let inString = false;
     let escaped = false;
 
