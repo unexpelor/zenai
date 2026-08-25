@@ -1,0 +1,1 @@
+export async function POST(req){let b=await req.json();return Response.json({status:"connector-ready",channel:b.channel,listing:b.listing,nextStep:"Hubungkan OAuth/API resmi marketplace untuk direct sync."})}
