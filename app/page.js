@@ -235,8 +235,6 @@ Balas hanya JSON valid.
       }
     );
 
-    const result = await response.json();
-
     if (!response.ok) {
       console.error("AUTOPILOT ERROR:", result);
 
