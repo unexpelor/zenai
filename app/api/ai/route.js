@@ -14,7 +14,7 @@ async function groq(prompt, system) {
         Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
       },
       body: JSON.stringify({
-        model: process.env.GROQ_MODEL || "llama-3.3-70b-versatile",
+        model: process.env.GROQ_MODEL || "qwen/qwen3.6-27b",
         messages: [
           {
             role: "system",
@@ -58,7 +58,7 @@ async function openrouter(prompt, system) {
       body: JSON.stringify({
         model:
           process.env.OPENROUTER_MODEL ||
-          "google/gemma-3-27b-it:free",
+          "google/gemma-4-26b-a4b-it:free",
         messages: [
           {
             role: "system",
@@ -99,7 +99,7 @@ async function gemini(prompt, image, imageMimeType, system) {
   );
 
   const model = genAI.getGenerativeModel({
-    model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
+    model: process.env.GEMINI_MODEL || "gemini-3.5-flash-lite",
   });
 
   const parts = [
