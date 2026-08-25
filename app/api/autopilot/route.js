@@ -46,17 +46,22 @@ Balas HANYA dalam format JSON valid:
     const data = await response.json();
 
     if (!response.ok) {
-      return Response.json(
-        {
-          message: data.message || "AI gagal",
-          details: data.details || []
-        },
-        {
-          status: response.status
-        }
-      );
-    }
+  console.error("AI ROUTER ERROR:", data);
 
+  return Response.json(
+    {
+      message:
+        data.message ||
+        data.error ||
+        "AI gagal",
+      details: data.details || [],
+      configured: data.configured || {}
+    },
+    {
+      status: response.status
+    }
+  );
+}
     const raw = String(data.text || "")
       .replace(/```json/gi, "")
       .replace(/```/g, "")
