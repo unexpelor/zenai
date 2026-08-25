@@ -39,8 +39,11 @@ export default function Home() {
         : "";
 
       throw new Error(
-        `${result.message || "AI Router gagal"}\n${details}`
-      );
+  [
+    result.message || "Autopilot gagal dijalankan.",
+    ...(result.details || [])
+  ].join("\n")
+);
     }
 
     setProvider(result.provider || "");
