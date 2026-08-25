@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -17,59 +18,75 @@ export default function Home() {
   const [days, setDays] = useState(7);
 
   // =========================
+  // ERROR FORMATTER
+  // =========================
+
+  const formatError = (value) => {
+    if (value === null || value === undefined) {
+      return "";
+    }
+
+    if (typeof value === "string") {
+      return value;
+    }
+
+    if (value instanceof Error) {
+      return value.message;
+    }
+
+    if (Array.isArray(value)) {
+      return value
+        .map((item) => formatError(item))
+        .filter(Boolean)
+        .join("\n");
+    }
+
+    if (typeof value === "object") {
+      try {
+        return JSON.stringify(value, null, 2);
+      } catch {
+        return String(value);
+      }
+    }
+
+    return String(value);
+  };
+
+  // =========================
   // AI ROUTER
   // =========================
 
-const askAI = async (payload) => {
-  const response = await fetch("/api/ai", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
+  const askAI = async (payload) => {
+    const response = await fetch("/api/ai", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
 
-  const result = await response.json();
+    const result = await response.json();
 
-  if (!response.ok) {
-    console.error("AI Router Error:", result);
+    if (!response.ok) {
+      console.error("AI ROUTER ERROR:", result);
 
-    const details = Array.isArray(result.details)
-      ? result.details
-          .map((item) => {
-            if (typeof item === "string") {
-              return item;
-            }
+      const errorMessage = [
+        formatError(result.message) || "AI Router gagal.",
+        formatError(result.details),
+        result.error
+          ? `Error: ${formatError(result.error)}`
+          : "",
+      ]
+        .filter(Boolean)
+        .join("\n\n");
 
-            if (item && typeof item === "object") {
-              return Object.entries(item)
-                .map(([key, value]) => {
-                  const text =
-                    typeof value === "string"
-                      ? value
-                      : JSON.stringify(value);
+      throw new Error(errorMessage);
+    }
 
-                  return `${key}: ${text}`;
-                })
-                .join(" | ");
-            }
+    setProvider(result.provider || "");
 
-            return String(item);
-          })
-          .join("\n")
-      : "";
-
-    throw new Error(
-      `${result.message || "AI Router gagal"}${
-        details ? "\n\n" + details : ""
-      }`
-    );
-  }
-
-  setProvider(result.provider || "");
-
-  return result.text;
-};
+    return result.text;
+  };
 
   // =========================
   // UPLOAD IMAGE
@@ -151,7 +168,9 @@ Jika tersedia gambar, analisis juga gambar tersebut.
 
 Jangan mengarang informasi yang tidak tersedia.
 
-Balas HANYA dengan JSON valid dengan format:
+Balas HANYA dengan JSON valid.
+
+Format:
 
 {
   "product": "",
@@ -179,26 +198,39 @@ Balas hanya JSON valid.
 `,
       });
 
-      const match = rawResult.match(/\{[\s\S]*\}/);
+      let cleanJson = String(rawResult || "")
+        .replace(/```json/gi, "")
+        .replace(/```/g, "")
+        .trim();
 
-      if (!match) {
+      const start = cleanJson.indexOf("{");
+      const end = cleanJson.lastIndexOf("}");
+
+      if (start === -1 || end === -1) {
         throw new Error(
-          "AI tidak mengembalikan format JSON yang valid."
+          `AI tidak mengembalikan JSON valid.\n\n${cleanJson}`
         );
       }
 
-      const parsed = JSON.parse(match[0]);
+      cleanJson = cleanJson.substring(
+        start,
+        end + 1
+      );
+
+      const parsed = JSON.parse(cleanJson);
 
       setBusiness(parsed);
-
+      setAutopilotData(null);
       setTab("pulse");
+
     } catch (error) {
-      console.error(error);
+      console.error("ANALYZE ERROR:", error);
 
       alert(
-        error.message ||
-          "Terjadi kesalahan saat menganalisis bisnis."
+        formatError(error) ||
+        "Terjadi kesalahan saat menganalisis bisnis."
       );
+
     } finally {
       setBusy(false);
     }
@@ -207,63 +239,92 @@ Balas hanya JSON valid.
   // =========================
   // AUTOPILOT
   // =========================
-const runAutopilot = async () => {
-  if (!business) {
-    alert("Lakukan Product Story Capture terlebih dahulu.");
-    setTab("capture");
-    return;
-  }
 
-  setBusy(true);
-
-  try {
-    const response = await fetch("/api/autopilot", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        business,
-        duration: days,
-      }),
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      const details = Array.isArray(result.details)
-        ? result.details
-            .map((item) =>
-              typeof item === "string"
-                ? item
-                : JSON.stringify(item, null, 2)
-            )
-            .join("\n")
-        : "";
-
-      throw new Error(
-        [
-          result.message || "Autopilot gagal dijalankan.",
-          details,
-        ]
-          .filter(Boolean)
-          .join("\n\n")
+  const runAutopilot = async () => {
+    if (!business) {
+      alert(
+        "Lakukan Product Story Capture terlebih dahulu."
       );
+
+      setTab("capture");
+      return;
     }
 
-    setAutopilotData(result.result);
-    setProvider(result.provider || "");
-    setTab("autopilot");
+    setBusy(true);
 
-  } catch (error) {
-    console.error("AUTOPILOT ERROR:", error);
+    try {
+      const response = await fetch(
+        "/api/autopilot",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            business,
+            duration: days,
+          }),
+        }
+      );
 
-    alert(error.message || "Autopilot gagal.");
+      const result = await response.json();
 
-  } finally {
-    setBusy(false);
-  }
-};
+      if (!response.ok) {
+        console.error(
+          "AUTOPILOT API ERROR:",
+          result
+        );
+
+        const errorMessage = [
+          formatError(result.message) ||
+            "Autopilot gagal dijalankan.",
+
+          formatError(result.details),
+
+          result.error
+            ? `Error: ${formatError(result.error)}`
+            : "",
+
+          result.raw
+            ? `Raw AI Response:\n${formatError(result.raw)}`
+            : "",
+
+          result.jsonText
+            ? `JSON Text:\n${formatError(result.jsonText)}`
+            : "",
+        ]
+          .filter(Boolean)
+          .join("\n\n");
+
+        throw new Error(errorMessage);
+      }
+
+      if (!result.result) {
+        throw new Error(
+          "Autopilot berhasil merespons, tetapi strategi tidak ditemukan."
+        );
+      }
+
+      setAutopilotData(result.result);
+      setProvider(result.provider || "");
+      setTab("autopilot");
+
+    } catch (error) {
+      console.error(
+        "AUTOPILOT ERROR:",
+        error
+      );
+
+      alert(
+        formatError(error) ||
+        "Autopilot gagal."
+      );
+
+    } finally {
+      setBusy(false);
+    }
+  };
+
   // =========================
   // NAVIGATION
   // =========================
@@ -294,8 +355,6 @@ const runAutopilot = async () => {
   return (
     <div className="app">
 
-      {/* SIDEBAR */}
-
       <aside>
 
         <h2>
@@ -314,9 +373,6 @@ const runAutopilot = async () => {
 
       </aside>
 
-
-      {/* MAIN */}
-
       <main>
 
         <header>
@@ -328,6 +384,7 @@ const runAutopilot = async () => {
             </small>
 
             <h1>
+
               {tab === "capture" &&
                 "Product Story Capture"}
 
@@ -339,20 +396,18 @@ const runAutopilot = async () => {
 
               {tab === "system" &&
                 "Multi-AI Router"}
+
             </h1>
 
           </div>
 
           <div>
-
             {provider
               ? `● ${provider} aktif`
               : "○ AI Router siap"}
-
           </div>
 
         </header>
-
 
         {/* PRODUCT STORY */}
 
@@ -369,32 +424,26 @@ const runAutopilot = async () => {
               atau jelaskan menggunakan suara.
             </p>
 
-
             <textarea
               value={text}
               onChange={(event) =>
                 setText(event.target.value)
               }
-              placeholder="
-Contoh:
+              placeholder={`Contoh:
 
 Saya menjual keripik pisang seharga Rp10.000.
 Target saya mahasiswa.
 Penjualan masih rendah karena saya bingung
-membuat konten dan memasarkan produk.
-"
+membuat konten dan memasarkan produk.`}
             />
 
-
             <br />
-
 
             <input
               type="file"
               accept="image/*"
               onChange={handleImage}
             />
-
 
             {image && (
 
@@ -415,16 +464,13 @@ membuat konten dan memasarkan produk.
 
             )}
 
-
             <br />
-
 
             <button
               onClick={startVoice}
             >
               🎙️ Bicara
             </button>
-
 
             {voice && (
 
@@ -442,7 +488,6 @@ membuat konten dan memasarkan produk.
 
             )}
 
-
             <button
               className="primary"
               disabled={busy}
@@ -458,7 +503,6 @@ membuat konten dan memasarkan produk.
           </section>
 
         )}
-
 
         {/* BUSINESS PULSE */}
 
@@ -491,7 +535,6 @@ membuat konten dan memasarkan produk.
 
             )}
 
-
             {business && (
 
               <>
@@ -503,7 +546,6 @@ membuat konten dan memasarkan produk.
                 <p>
                   {business.description}
                 </p>
-
 
                 <div className="cards">
 
@@ -519,7 +561,6 @@ membuat konten dan memasarkan produk.
 
                   </article>
 
-
                   <article>
 
                     <h3>
@@ -531,7 +572,6 @@ membuat konten dan memasarkan produk.
                     </p>
 
                   </article>
-
 
                   <article>
 
@@ -547,7 +587,6 @@ membuat konten dan memasarkan produk.
 
                 </div>
 
-
                 <h3>
                   Langkah Berikutnya
                 </h3>
@@ -556,11 +595,10 @@ membuat konten dan memasarkan produk.
                   {business.nextStep}
                 </p>
 
-
                 <button
                   className="primary"
                   disabled={busy}
-                  onClick={runAutopilot}
+                  onClick={() => setTab("autopilot")}
                 >
                   ⚡ Aktifkan Autopilot
                 </button>
@@ -573,14 +611,36 @@ membuat konten dan memasarkan produk.
 
         )}
 
-
         {/* AUTOPILOT */}
 
         {tab === "autopilot" && (
 
           <section>
 
-            {!autopilotData && (
+            {!business && (
+
+              <div>
+
+                <h2>
+                  Belum ada data bisnis
+                </h2>
+
+                <p>
+                  Lakukan Product Story Capture terlebih dahulu.
+                </p>
+
+                <button
+                  className="primary"
+                  onClick={() => setTab("capture")}
+                >
+                  Mulai Product Story
+                </button>
+
+              </div>
+
+            )}
+
+            {business && !autopilotData && (
 
               <>
 
@@ -591,7 +651,6 @@ membuat konten dan memasarkan produk.
                 <p>
                   Pilih durasi strategi.
                 </p>
-
 
                 <select
                   value={days}
@@ -616,21 +675,21 @@ membuat konten dan memasarkan produk.
 
                 </select>
 
-
                 <button
                   className="primary"
                   disabled={busy}
                   onClick={runAutopilot}
                 >
-                  Generate Strategy
+                  {busy
+                    ? "AI sedang membuat strategi..."
+                    : "Generate Strategy"}
                 </button>
 
               </>
 
             )}
 
-
-            {autopilotData && (
+            {business && autopilotData && (
 
               <>
 
@@ -638,26 +697,21 @@ membuat konten dan memasarkan produk.
                   {autopilotData.mission?.title}
                 </h2>
 
-
                 <p>
 
                   {autopilotData.mission?.target}
 
                   <br />
 
-                  Durasi:
-
-                  {" "}
+                  Durasi:{" "}
 
                   {autopilotData.mission?.duration}
 
                 </p>
 
-
                 <h2>
                   Action Plan
                 </h2>
-
 
                 {autopilotData.actions?.map(
                   (action, index) => (
@@ -676,16 +730,12 @@ membuat konten dan memasarkan produk.
                       </h3>
 
                       <p>
-
                         {action.description}
-
                       </p>
 
                       <small>
 
-                        Output:
-
-                        {" "}
+                        Output:{" "}
 
                         {action.output}
 
@@ -696,6 +746,16 @@ membuat konten dan memasarkan produk.
                   )
                 )}
 
+                <br />
+
+                <button
+                  onClick={() =>
+                    setAutopilotData(null)
+                  }
+                >
+                  Buat Strategi Baru
+                </button>
+
               </>
 
             )}
@@ -703,7 +763,6 @@ membuat konten dan memasarkan produk.
           </section>
 
         )}
-
 
         {/* AI ROUTER */}
 
@@ -720,7 +779,6 @@ membuat konten dan memasarkan produk.
               jenis input dan mencoba provider lain
               apabila provider utama gagal.
             </p>
-
 
             <div className="cards">
 
@@ -741,7 +799,6 @@ membuat konten dan memasarkan produk.
 
               </article>
 
-
               <article>
 
                 <h3>
@@ -757,7 +814,6 @@ membuat konten dan memasarkan produk.
                 </code>
 
               </article>
-
 
               <article>
 
@@ -777,7 +833,6 @@ membuat konten dan memasarkan produk.
 
             </div>
 
-
             <div
               style={{
                 marginTop: "30px",
@@ -796,11 +851,8 @@ membuat konten dan memasarkan produk.
 
               Groq → OpenRouter → Gemini
 
-
               <br />
-
               <br />
-
 
               <strong>
                 IMAGE
@@ -820,4 +872,4 @@ membuat konten dan memasarkan produk.
 
     </div>
   );
-}
+              }
