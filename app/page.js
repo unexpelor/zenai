@@ -2589,22 +2589,42 @@ Masalah saya adalah pemasaran.`}
         )}
 
 
-        {/* =========================
+                {/* =========================
             BUSINESS PULSE
         ========================= */}
 
         {tab === "pulse" && (
           <section>
-            <h2>
-              📡 Business Pulse
-            </h2>
 
-            <p>
-              Ringkasan sinyal bisnis berdasarkan informasi
-              dan hasil analisis yang tersedia.
-            </p>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                gap: "16px",
+                flexWrap: "wrap",
+                marginBottom: "24px",
+              }}
+            >
+
+              <div>
+
+                <h2>
+                  📡 Business Pulse
+                </h2>
+
+                <p>
+                  Pantau perubahan kondisi usaha dan dapatkan
+                  sinyal terbaru dari ZENAI.
+                </p>
+
+              </div>
+
+            </div>
+
 
             {!business && (
+
               <div
                 style={{
                   padding: "24px",
@@ -2612,12 +2632,14 @@ Masalah saya adalah pemasaran.`}
                   borderRadius: "16px",
                 }}
               >
+
                 <h3>
                   Belum ada data bisnis
                 </h3>
 
                 <p>
-                  Mulai dengan menceritakan usaha Anda.
+                  Ceritakan usaha Anda terlebih dahulu agar
+                  ZENAI dapat memahami kondisi awal bisnis.
                 </p>
 
                 <button
@@ -2628,103 +2650,471 @@ Masalah saya adalah pemasaran.`}
                 >
                   🎙 Ceritakan Usaha
                 </button>
-              </div>
-            )}
-
-            {business && (
-              <div className="cards">
-
-                <article>
-                  <h3>
-                    🏪 Kondisi Bisnis
-                  </h3>
-
-                  <p>
-                    {business.product ||
-                      "Produk atau layanan sudah teridentifikasi."}
-                  </p>
-                </article>
-
-
-                <article>
-                  <h3>
-                    🎯 Fokus Pasar
-                  </h3>
-
-                  <p>
-                    {business.target ||
-                      "Target pasar masih perlu diperdalam."}
-                  </p>
-                </article>
-
-
-                <article>
-                  <h3>
-                    ⚠️ Sinyal Utama
-                  </h3>
-
-                  <p>
-                    {diagnosis?.areaPriority?.title ||
-                      business.problem ||
-                      "Belum ada hambatan utama yang dapat diprioritaskan."}
-                  </p>
-                </article>
 
               </div>
+
             )}
 
+
             {business && (
-              <div
-                style={{
-                  marginTop: "24px",
-                  padding: "22px",
-                  background: "#f8fafc",
-                  borderRadius: "16px",
-                }}
-              >
-                <h3>
-                  📡 Observasi ZENAI
-                </h3>
 
-                <p>
-                  {diagnosis?.summary ||
-                    "Lakukan Business Diagnosis untuk mendapatkan observasi kondisi bisnis yang lebih mendalam."}
-                </p>
+              <>
 
-                {!diagnosis && (
-                  <button
-                    className="primary"
-                    onClick={runDiagnosis}
-                    disabled={busy}
+                {/* UPDATE KONDISI */}
+
+                <div
+                  style={{
+                    padding: "22px",
+                    background: "#f8fafc",
+                    borderRadius: "16px",
+                    border: "1px solid #e2e8f0",
+                    marginBottom: "24px",
+                  }}
+                >
+
+                  <h3>
+                    🎙 Update Kondisi Usaha
+                  </h3>
+
+                  <p>
+                    Ceritakan apa yang terjadi pada usaha Anda
+                    hari ini. Misalnya penjualan, pelanggan,
+                    stok, promosi, atau masalah terbaru.
+                  </p>
+
+
+                  <textarea
+                    value={updateText}
+                    onChange={(event) =>
+                      setUpdateText(
+                        event.target.value
+                      )
+                    }
+                    placeholder={`Contoh:
+
+Hari ini penjualan lebih sepi dari biasanya.
+Banyak pelanggan menanyakan produk melalui WhatsApp,
+tetapi belum banyak yang melakukan pembelian.
+
+Stok masih tersedia cukup banyak.`}
+                    style={{
+                      minHeight: "150px",
+                      marginTop: "10px",
+                    }}
+                  />
+
+
+                  <div
+                    style={{
+                      marginTop: "16px",
+                      display: "flex",
+                      justifyContent: "flex-end",
+                    }}
                   >
-                    🩺 Jalankan Diagnosis
-                  </button>
+
+                    <button
+                      className="primary"
+                      disabled={
+                        busy ||
+                        !updateText.trim()
+                      }
+                      onClick={generatePulse}
+                    >
+
+                      {busy
+                        ? "ZENAI membaca perubahan..."
+                        : "📡 Analisis Update"}
+
+                    </button>
+
+                  </div>
+
+                </div>
+
+
+
+                {/* HASIL PULSE */}
+
+                {!pulseData && (
+
+                  <div
+                    style={{
+                      padding: "24px",
+                      background: "#f8fafc",
+                      borderRadius: "16px",
+                      textAlign: "center",
+                    }}
+                  >
+
+                    <h3>
+                      Belum ada perubahan terbaru
+                    </h3>
+
+                    <p>
+                      Kirim update kondisi usaha untuk
+                      melihat Business Pulse pertama Anda.
+                    </p>
+
+                  </div>
+
                 )}
-              </div>
+
+
+
+                {pulseData && (
+
+                  <>
+
+                    {/* SINYAL UTAMA */}
+
+                    <div
+                      style={{
+                        padding: "24px",
+                        background: "#eff6ff",
+                        borderRadius: "18px",
+                        marginBottom: "20px",
+                      }}
+                    >
+
+                      <div
+                        style={{
+                          fontSize: "12px",
+                          fontWeight: "700",
+                          color: "#64748b",
+                          textTransform: "uppercase",
+                          marginBottom: "10px",
+                        }}
+                      >
+
+                        📡 SINYAL TERBARU
+
+                      </div>
+
+
+                      <h2
+                        style={{
+                          marginTop: 0,
+                        }}
+                      >
+
+                        {pulseData.signal?.title ||
+                          "Kondisi bisnis terbaru"}
+
+                      </h2>
+
+
+                      <p>
+
+                        {pulseData.signal?.description ||
+                          pulseData.summary}
+
+                      </p>
+
+
+                      {pulseData.signal?.status && (
+
+                        <div
+                          style={{
+                            marginTop: "14px",
+                            display: "inline-block",
+                            padding:
+                              "8px 14px",
+                            borderRadius:
+                              "999px",
+                            background:
+                              "#ffffff",
+                            fontSize:
+                              "13px",
+                            fontWeight:
+                              "700",
+                          }}
+                        >
+
+                          Status:{" "}
+
+                          {
+                            pulseData.signal.status
+                          }
+
+                        </div>
+
+                      )}
+
+                    </div>
+
+
+
+                    {/* RINGKASAN */}
+
+                    {pulseData.summary && (
+
+                      <div
+                        className="action"
+                        style={{
+                          padding: "20px",
+                          marginBottom: "20px",
+                        }}
+                      >
+
+                        <h3>
+                          Ringkasan Perubahan
+                        </h3>
+
+                        <p>
+                          {pulseData.summary}
+                        </p>
+
+                      </div>
+
+                    )}
+
+
+
+                    {/* PERUBAHAN */}
+
+                    {Array.isArray(
+                      pulseData.changes
+                    ) &&
+                      pulseData.changes.length > 0 && (
+
+                        <div
+                          style={{
+                            marginBottom:
+                              "20px",
+                          }}
+                        >
+
+                          <h3>
+                            Perubahan yang Terdeteksi
+                          </h3>
+
+
+                          <div
+                            className="diagnosis-grid"
+                          >
+
+                            {pulseData.changes.map(
+                              (
+                                item,
+                                index
+                              ) => (
+
+                                <div
+                                  key={index}
+                                  className="diagnosis-item"
+                                >
+
+                                  <h4>
+
+                                    {item.area ||
+                                      `Perubahan ${
+                                        index + 1
+                                      }`}
+
+                                  </h4>
+
+
+                                  <p>
+
+                                    {item.change}
+
+                                  </p>
+
+
+                                  {item.impact && (
+
+                                    <p>
+
+                                      <strong>
+                                        Dampak:
+                                      </strong>{" "}
+
+                                      {item.impact}
+
+                                    </p>
+
+                                  )}
+
+                                </div>
+
+                              )
+                            )}
+
+                          </div>
+
+                        </div>
+
+                      )}
+
+
+
+                    {/* PRIORITAS */}
+
+                    {pulseData.priority && (
+
+                      <div
+                        className="action"
+                        style={{
+                          padding: "20px",
+                          marginBottom: "20px",
+                        }}
+                      >
+
+                        <h3>
+                          🎯 Prioritas Saat Ini
+                        </h3>
+
+                        <p>
+
+                          {pulseData.priority}
+
+                        </p>
+
+                      </div>
+
+                    )}
+
+
+
+                    {/* OBSERVASI */}
+
+                    {pulseData.observation && (
+
+                      <div
+                        className="action"
+                        style={{
+                          padding: "20px",
+                          marginBottom: "20px",
+                        }}
+                      >
+
+                        <h3>
+                          🧠 Observasi ZENAI
+                        </h3>
+
+                        <p>
+
+                          {pulseData.observation}
+
+                        </p>
+
+                      </div>
+
+                    )}
+
+
+
+                    {/* NEXT ACTION */}
+
+                    {pulseData.nextAction && (
+
+                      <div
+                        style={{
+                          padding: "22px",
+                          borderRadius: "16px",
+                          background: "#fff7ed",
+                        }}
+                      >
+
+                        <h3>
+                          ⚡ Langkah Berikutnya
+                        </h3>
+
+                        <p>
+
+                          {pulseData.nextAction}
+
+                        </p>
+
+
+                        <button
+                          className="primary"
+                          onClick={() =>
+                            setTab("autopilot")
+                          }
+                        >
+
+                          ⚡ Buka Action Autopilot
+
+                        </button>
+
+                      </div>
+
+                    )}
+
+
+                  </>
+
+                )}
+
+
+
+                {/* RIWAYAT UPDATE */}
+
+                {businessUpdates.length > 0 && (
+
+                  <div
+                    style={{
+                      marginTop: "32px",
+                    }}
+                  >
+
+                    <h3>
+                      🕒 Riwayat Update
+                    </h3>
+
+
+                    {businessUpdates.map(
+                      (update) => (
+
+                        <div
+                          key={update.id}
+                          style={{
+                            padding: "16px",
+                            borderBottom:
+                              "1px solid #e2e8f0",
+                          }}
+                        >
+
+                          <small
+                            style={{
+                              color:
+                                "#64748b",
+                            }}
+                          >
+
+                            {update.createdAt}
+
+                          </small>
+
+
+                          <p
+                            style={{
+                              marginBottom: 0,
+                            }}
+                          >
+
+                            {update.text}
+
+                          </p>
+
+                        </div>
+
+                      )
+                    )}
+
+                  </div>
+
+                )}
+
+
+              </>
+
             )}
 
-            <div
-              style={{
-                marginTop: "24px",
-                padding: "18px",
-                borderRadius: "14px",
-                border: "1px solid #e2e8f0",
-              }}
-            >
-              <h3>
-                Tentang Business Pulse
-              </h3>
-
-              <p>
-                Business Pulse akan membaca perubahan kondisi
-                bisnis dari data dan pembaruan yang diberikan.
-                Semakin banyak informasi yang diperbarui,
-                semakin kuat kemampuan ZENAI dalam mendeteksi
-                perubahan dan prioritas bisnis.
-              </p>
-            </div>
           </section>
         )}
+
 
 
         {/* =========================
