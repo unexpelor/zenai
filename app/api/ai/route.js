@@ -1,5 +1,9 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
+// =========================
+// DETECT JSON MODE
+// =========================
+
 function wantsJson(system = "", prompt = "") {
   const text = `${system}\n${prompt}`.toLowerCase();
 
@@ -15,6 +19,7 @@ function wantsJson(system = "", prompt = "") {
 
 // =========================
 // GROQ
+// TEXT ONLY
 // =========================
 
 async function groq(prompt, system, jsonMode = false) {
@@ -94,6 +99,7 @@ async function groq(prompt, system, jsonMode = false) {
 
 // =========================
 // OPENROUTER
+// TEXT ONLY
 // =========================
 
 async function openrouter(
@@ -177,12 +183,15 @@ async function openrouter(
 
 // =========================
 // GEMINI
+// TEXT + IMAGE + AUDIO
 // =========================
 
 async function gemini(
   prompt,
   image,
   imageMimeType,
+  audio,
+  audioMimeType,
   system,
   jsonMode = false
 ) {
@@ -208,6 +217,10 @@ async function gemini(
     },
   ];
 
+  // =========================
+  // IMAGE
+  // =========================
+
   if (image) {
     parts.push({
       inlineData: {
@@ -218,6 +231,24 @@ async function gemini(
         mimeType:
           imageMimeType ||
           "image/jpeg",
+      },
+    });
+  }
+
+  // =========================
+  // AUDIO / VOICE NOTE
+  // =========================
+
+  if (audio) {
+    parts.push({
+      inlineData: {
+        data: audio.includes(",")
+          ? audio.split(",")[1]
+          : audio,
+
+        mimeType:
+          audioMimeType ||
+          "audio/webm",
       },
     });
   }
@@ -279,18 +310,53 @@ export async function POST(request) {
     const hasImage =
       Boolean(body.image);
 
+    const hasAudio =
+      Boolean(body.audio);
+
+    const hasMedia =
+      hasImage || hasAudio;
+
     const jsonMode =
+      body.jsonMode === true ||
       wantsJson(
         system,
         prompt
       );
 
+    // =========================
+    // VALIDASI INPUT
+    // =========================
+
+    if (
+      !prompt.trim() &&
+      !hasImage &&
+      !hasAudio
+    ) {
+      return Response.json(
+        {
+          message:
+            "Masukkan teks, gambar, atau voice note.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    // =========================
+    // PROVIDER PRIORITY
+    //
+    // TEXT:
+    // Groq → OpenRouter → Gemini
+    //
+    // IMAGE / AUDIO:
+    // Gemini
+    // =========================
+
     const providers =
-      hasImage
+      hasMedia
         ? [
             "gemini",
-            "groq",
-            "openrouter",
           ]
         : [
             "groq",
@@ -304,6 +370,11 @@ export async function POST(request) {
       const provider of providers
     ) {
       try {
+
+        // =====================
+        // GROQ
+        // =====================
+
         if (
           provider === "groq"
         ) {
@@ -318,6 +389,10 @@ export async function POST(request) {
             result
           );
         }
+
+        // =====================
+        // OPENROUTER
+        // =====================
 
         if (
           provider === "openrouter"
@@ -334,6 +409,10 @@ export async function POST(request) {
           );
         }
 
+        // =====================
+        // GEMINI
+        // =====================
+
         if (
           provider === "gemini"
         ) {
@@ -342,6 +421,8 @@ export async function POST(request) {
               prompt,
               body.image,
               body.imageMimeType,
+              body.audio,
+              body.audioMimeType,
               system,
               jsonMode
             );
@@ -365,6 +446,10 @@ export async function POST(request) {
         );
       }
     }
+
+    // =========================
+    // ALL PROVIDERS FAILED
+    // =========================
 
     return Response.json(
       {
@@ -413,4 +498,4 @@ export async function POST(request) {
       }
     );
   }
-}
+        }
