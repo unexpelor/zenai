@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 
 export default function Home() {
-  const [tab, setTab] = useState("capture");
+  const [tab, setTab] = useState("command");
 
   const [text, setText] = useState("");
   const [image, setImage] = useState("");
@@ -16,6 +16,7 @@ export default function Home() {
   const [recordingTime, setRecordingTime] = useState(0);
 
   const [business, setBusiness] = useState(null);
+  const [diagnosis, setDiagnosis] = useState(null);
   const [autopilotData, setAutopilotData] = useState(null);
 
   const [busy, setBusy] = useState(false);
@@ -30,25 +31,24 @@ export default function Home() {
 
   const formatError = (value) => {
     if (value === null || value === undefined) return "";
-    if (typeof value === "string") return value;
-    if (value instanceof Error) return value.message;
+
+    if (typeof value === "string") {
+      return value;
+    }
+
+    if (value instanceof Error) {
+      return value.message;
+    }
 
     if (Array.isArray(value)) {
-      return value
-        .map((item) => formatError(item))
-        .filter(Boolean)
-        .join("\n");
+      return value.map(formatError).filter(Boolean).join("\n");
     }
 
-    if (typeof value === "object") {
-      try {
-        return JSON.stringify(value, null, 2);
-      } catch {
-        return String(value);
-      }
+    try {
+      return JSON.stringify(value, null, 2);
+    } catch {
+      return String(value);
     }
-
-    return String(value);
   };
 
   const askAI = async (payload) => {
@@ -63,15 +63,18 @@ export default function Home() {
     const result = await response.json();
 
     if (!response.ok) {
-      const errorMessage = [
-        formatError(result.message) || "AI Router gagal.",
+      const message = [
+        formatError(result.message) ||
+          "AI gagal memproses permintaan.",
         formatError(result.details),
-        result.error ? `Error: ${formatError(result.error)}` : "",
+        result.error
+          ? `Error: ${formatError(result.error)}`
+          : "",
       ]
         .filter(Boolean)
         .join("\n\n");
 
-      throw new Error(errorMessage);
+      throw new Error(message);
     }
 
     setProvider(result.provider || "");
@@ -79,19 +82,42 @@ export default function Home() {
     return result.text;
   };
 
-  const fileToBase64 = (file) => {
-    return new Promise((resolve, reject) => {
+  const extractJson = (rawResult) => {
+    const clean = String(rawResult || "")
+      .replace(/```json/gi, "")
+      .replace(/```/g, "")
+      .trim();
+
+    const start = clean.indexOf("{");
+    const end = clean.lastIndexOf("}");
+
+    if (start === -1 || end === -1) {
+      throw new Error(
+        "AI tidak mengembalikan JSON valid."
+      );
+    }
+
+    return JSON.parse(
+      clean.substring(start, end + 1)
+    );
+  };
+
+  const fileToBase64 = (file) =>
+    new Promise((resolve, reject) => {
       const reader = new FileReader();
 
-      reader.onload = () => resolve(reader.result);
+      reader.onload = () => {
+        resolve(reader.result);
+      };
 
       reader.onerror = () => {
-        reject(new Error("Gagal membaca file."));
+        reject(
+          new Error("Gagal membaca file.")
+        );
       };
 
       reader.readAsDataURL(file);
     });
-  };
 
   const handleImage = async (event) => {
     const file = event.target.files?.[0];
@@ -105,10 +131,13 @@ export default function Home() {
 
     try {
       const base64 = await fileToBase64(file);
+
       setImage(base64);
     } catch (error) {
-      console.error("IMAGE ERROR:", error);
-      alert("Gagal membaca gambar.");
+      alert(
+        formatError(error) ||
+          "Gagal membaca gambar."
+      );
     }
   };
 
@@ -118,7 +147,10 @@ export default function Home() {
     if (!file) return;
 
     if (!file.type.startsWith("audio/")) {
-      alert("File yang dipilih bukan audio.");
+      alert(
+        "File yang dipilih bukan audio."
+      );
+
       return;
     }
 
@@ -126,11 +158,19 @@ export default function Home() {
       const base64 = await fileToBase64(file);
 
       setAudio(base64);
-      setAudioMimeType(file.type || "audio/webm");
-      setAudioName(file.name || "Voice Note");
+
+      setAudioMimeType(
+        file.type || "audio/webm"
+      );
+
+      setAudioName(
+        file.name || "Voice Note"
+      );
     } catch (error) {
-      console.error("AUDIO ERROR:", error);
-      alert("Gagal membaca file audio.");
+      alert(
+        formatError(error) ||
+          "Gagal membaca voice note."
+      );
     }
   };
 
@@ -145,20 +185,32 @@ export default function Home() {
     }
   };
 
-  const formatRecordingTime = (seconds) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
+  const formatRecordingTime = (
+    seconds
+  ) => {
+    const minutes = Math.floor(
+      seconds / 60
+    );
 
-    return `${String(minutes).padStart(2, "0")}:${String(
-      remainingSeconds
-    ).padStart(2, "0")}`;
+    const remaining =
+      seconds % 60;
+
+    return `${String(minutes).padStart(
+      2,
+      "0"
+    )}:${String(remaining).padStart(
+      2,
+      "0"
+    )}`;
   };
 
   const stopMicrophone = () => {
     if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach((track) => {
-        track.stop();
-      });
+      mediaStreamRef.current
+        .getTracks()
+        .forEach((track) => {
+          track.stop();
+        });
 
       mediaStreamRef.current = null;
     }
@@ -166,132 +218,185 @@ export default function Home() {
 
   const startRecording = async () => {
     if (
-      typeof navigator === "undefined" ||
       !navigator.mediaDevices ||
       !navigator.mediaDevices.getUserMedia
     ) {
-      alert("Browser ini tidak mendukung perekaman audio.");
+      alert(
+        "Browser ini tidak mendukung perekaman audio."
+      );
+
       return;
     }
 
     if (typeof MediaRecorder === "undefined") {
-      alert("MediaRecorder tidak didukung oleh browser ini.");
+      alert(
+        "MediaRecorder tidak didukung oleh browser ini."
+      );
+
       return;
     }
 
     try {
       clearAudio();
 
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-      });
+      const stream =
+        await navigator.mediaDevices.getUserMedia(
+          {
+            audio: true,
+          }
+        );
 
       mediaStreamRef.current = stream;
 
-      const supportedTypes = [
+      const types = [
         "audio/webm;codecs=opus",
         "audio/webm",
         "audio/ogg;codecs=opus",
       ];
 
-      const supportedType = supportedTypes.find((type) =>
-        MediaRecorder.isTypeSupported(type)
-      );
+      const supportedType =
+        types.find((type) =>
+          MediaRecorder.isTypeSupported(type)
+        );
 
-      const options = supportedType
-        ? { mimeType: supportedType }
-        : {};
+      const recorder =
+        new MediaRecorder(
+          stream,
+          supportedType
+            ? {
+                mimeType:
+                  supportedType,
+              }
+            : {}
+        );
 
-      const mediaRecorder = new MediaRecorder(stream, options);
+      mediaRecorderRef.current =
+        recorder;
 
-      mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
 
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data && event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
+      recorder.ondataavailable =
+        (event) => {
+          if (
+            event.data &&
+            event.data.size > 0
+          ) {
+            audioChunksRef.current.push(
+              event.data
+            );
+          }
+        };
 
-      mediaRecorder.onerror = (event) => {
-        console.error("RECORDING ERROR:", event);
+      recorder.onerror = () => {
+        clearInterval(
+          recordingTimerRef.current
+        );
 
-        clearInterval(recordingTimerRef.current);
         setIsRecording(false);
+
         stopMicrophone();
 
-        alert("Terjadi kesalahan saat merekam audio.");
+        alert(
+          "Terjadi kesalahan saat merekam audio."
+        );
       };
 
-      mediaRecorder.onstop = async () => {
+      recorder.onstop = async () => {
         try {
-          clearInterval(recordingTimerRef.current);
+          clearInterval(
+            recordingTimerRef.current
+          );
 
           setIsRecording(false);
 
           const mimeType =
-            mediaRecorder.mimeType || "audio/webm";
+            recorder.mimeType ||
+            "audio/webm";
 
-          const audioBlob = new Blob(audioChunksRef.current, {
-            type: mimeType,
-          });
+          const blob = new Blob(
+            audioChunksRef.current,
+            {
+              type: mimeType,
+            }
+          );
 
-          if (!audioBlob.size) {
-            throw new Error("Rekaman audio kosong.");
+          if (!blob.size) {
+            throw new Error(
+              "Rekaman audio kosong."
+            );
           }
 
-          const extension = mimeType.includes("ogg")
-            ? "ogg"
-            : mimeType.includes("mp4")
-            ? "m4a"
-            : "webm";
+          const extension =
+            mimeType.includes("ogg")
+              ? "ogg"
+              : "webm";
 
-          const audioFile = new File(
-            [audioBlob],
+          const file = new File(
+            [blob],
             `zenai-vn-${Date.now()}.${extension}`,
             {
               type: mimeType,
             }
           );
 
-          const base64 = await fileToBase64(audioFile);
+          const base64 =
+            await fileToBase64(file);
 
           setAudio(base64);
-          setAudioMimeType(mimeType);
-          setAudioName("Voice Note ZENAI");
-        } catch (error) {
-          console.error("PROCESS RECORDING ERROR:", error);
 
+          setAudioMimeType(
+            mimeType
+          );
+
+          setAudioName(
+            "Voice Note ZENAI"
+          );
+        } catch (error) {
           alert(
-            "Rekaman berhasil dibuat tetapi gagal diproses."
+            formatError(error) ||
+              "Rekaman berhasil dibuat tetapi gagal diproses."
           );
         } finally {
           stopMicrophone();
         }
       };
 
-      mediaRecorder.start();
+      recorder.start();
 
       setRecordingTime(0);
+
       setIsRecording(true);
 
-      recordingTimerRef.current = setInterval(() => {
-        setRecordingTime((current) => current + 1);
-      }, 1000);
+      recordingTimerRef.current =
+        setInterval(() => {
+          setRecordingTime(
+            (current) =>
+              current + 1
+          );
+        }, 1000);
     } catch (error) {
-      console.error("MICROPHONE ERROR:", error);
-
-      if (error.name === "NotAllowedError") {
+      if (
+        error.name ===
+        "NotAllowedError"
+      ) {
         alert(
           "Izin mikrofon ditolak. Izinkan akses mikrofon terlebih dahulu."
         );
-      } else if (error.name === "NotFoundError") {
-        alert("Mikrofon tidak ditemukan.");
+      } else if (
+        error.name ===
+        "NotFoundError"
+      ) {
+        alert(
+          "Mikrofon tidak ditemukan."
+        );
       } else {
-        alert("Gagal mengakses mikrofon.");
+        alert(
+          "Gagal mengakses mikrofon."
+        );
       }
 
       setIsRecording(false);
+
       stopMicrophone();
     }
   };
@@ -299,27 +404,27 @@ export default function Home() {
   const stopRecording = () => {
     if (
       mediaRecorderRef.current &&
-      mediaRecorderRef.current.state !== "inactive"
+      mediaRecorderRef.current.state !==
+        "inactive"
     ) {
       mediaRecorderRef.current.stop();
     }
 
-    clearInterval(recordingTimerRef.current);
-  };
-
-  const toggleRecording = () => {
-    if (isRecording) {
-      stopRecording();
-    } else {
-      startRecording();
-    }
+    clearInterval(
+      recordingTimerRef.current
+    );
   };
 
   const analyzeBusiness = async () => {
-    if (!text.trim() && !image && !audio) {
+    if (
+      !text.trim() &&
+      !image &&
+      !audio
+    ) {
       alert(
         "Masukkan minimal teks, gambar, atau voice note."
       );
+
       return;
     }
 
@@ -337,7 +442,7 @@ ${
     ? `
 VOICE NOTE:
 Terdapat rekaman audio yang harus Anda dengarkan dan pahami.
-Gunakan isi rekaman sebagai informasi utama atau tambahan mengenai produk dan usaha.
+Gunakan isi rekaman sebagai informasi utama atau tambahan mengenai usaha.
 `
     : ""
 }
@@ -351,19 +456,13 @@ Terdapat gambar produk yang harus dianalisis.
     : ""
 }
 
-Gabungkan semua informasi yang tersedia:
-- teks
-- isi voice note
-- gambar
+Gabungkan semua informasi yang tersedia.
 
 Jangan mengarang informasi yang tidak tersedia.
 
-Jika informasi tertentu tidak tersedia,
-isi dengan penjelasan yang jujur dan relevan.
+Jika informasi tertentu belum tersedia, jelaskan secara jujur dan relevan.
 
-Balas HANYA dengan JSON valid.
-
-Format:
+Balas HANYA dengan JSON valid:
 
 {
   "product": "",
@@ -378,60 +477,45 @@ Format:
 }
 `;
 
-      const rawResult = await askAI({
-        prompt,
-        image,
-        imageMimeType: "image/jpeg",
-        audio,
-        audioMimeType,
+      const raw =
+        await askAI({
+          prompt,
+          image,
+          audio,
+          audioMimeType,
 
-        system: `
+          system: `
 Anda adalah AI Business Analyst untuk UMKM Indonesia.
 
 Anda mampu memahami:
 - teks
 - gambar produk
-- rekaman audio atau voice note
+- voice note
 
-Tugas Anda adalah memahami produk,
-target pasar, masalah bisnis,
-peluang, dan langkah berikutnya.
+Tugas Anda adalah memahami kondisi usaha berdasarkan informasi yang benar-benar tersedia.
 
-Jika terdapat voice note,
-dengarkan dan pahami seluruh informasi
-yang disampaikan pengguna.
-
-Jangan mengarang informasi
-yang tidak tersedia.
+Jangan mengarang:
+- fakta
+- angka
+- persentase
+- tren
+- data yang tidak diberikan pengguna
 
 Balas hanya JSON valid.
 `,
-      });
+        });
 
-      let cleanJson = String(rawResult || "")
-        .replace(/```json/gi, "")
-        .replace(/```/g, "")
-        .trim();
-
-      const start = cleanJson.indexOf("{");
-      const end = cleanJson.lastIndexOf("}");
-
-      if (start === -1 || end === -1) {
-        throw new Error(
-          `AI tidak mengembalikan JSON valid.\n\n${cleanJson}`
-        );
-      }
-
-      cleanJson = cleanJson.substring(start, end + 1);
-
-      const parsed = JSON.parse(cleanJson);
+      const parsed =
+        extractJson(raw);
 
       setBusiness(parsed);
-      setAutopilotData(null);
-      setTab("pulse");
-    } catch (error) {
-      console.error("ANALYZE ERROR:", error);
 
+      setDiagnosis(null);
+
+      setAutopilotData(null);
+
+      setTab("command");
+    } catch (error) {
       alert(
         formatError(error) ||
           "Terjadi kesalahan saat menganalisis bisnis."
@@ -441,57 +525,203 @@ Balas hanya JSON valid.
     }
   };
 
-  const runAutopilot = async () => {
+  const runDiagnosis = async () => {
     if (!business) {
       alert(
-        "Lakukan Product Story Capture terlebih dahulu."
+        "Ceritakan usaha terlebih dahulu."
       );
 
       setTab("capture");
+
       return;
     }
 
     setBusy(true);
 
     try {
-      const response = await fetch("/api/autopilot", {
-        method: "POST",
+      const prompt = `
+Buat Business Diagnosis berdasarkan data bisnis berikut:
 
-        headers: {
-          "Content-Type": "application/json",
-        },
+${JSON.stringify(
+  business,
+  null,
+  2
+)}
 
-        body: JSON.stringify({
-          business,
-          duration: days,
-        }),
-      });
+Klasifikasikan temuan secara seimbang ke dalam:
 
-      const result = await response.json();
+1. areaPriority
+Hal yang paling perlu diprioritaskan.
+
+2. attention
+Kondisi yang perlu diperhatikan.
+
+3. opportunity
+Peluang perbaikan yang realistis.
+
+4. strength
+Kekuatan bisnis yang sudah terlihat.
+
+PENTING:
+
+- Jangan menciptakan angka.
+- Jangan membuat persentase.
+- Jangan membuat skor.
+- Jangan membuat omzet.
+- Jangan membuat tren tanpa data.
+- Jangan menciptakan fakta baru.
+- Gunakan hanya informasi yang tersedia.
+- Jika data tidak cukup, nyatakan secara jujur.
+- Jangan membuat semua kategori negatif.
+- Buat rekomendasi praktis dan spesifik untuk UMKM.
+- Evidence harus menjelaskan dasar analisis secara ringkas.
+
+Balas HANYA dengan JSON valid:
+
+{
+  "summary": "",
+
+  "areaPriority": {
+    "title": "",
+    "summary": "",
+    "evidence": [],
+    "impact": "",
+    "recommendations": []
+  },
+
+  "attention": {
+    "title": "",
+    "summary": "",
+    "evidence": [],
+    "impact": "",
+    "recommendations": []
+  },
+
+  "opportunity": {
+    "title": "",
+    "summary": "",
+    "evidence": [],
+    "impact": "",
+    "recommendations": []
+  },
+
+  "strength": {
+    "title": "",
+    "summary": "",
+    "evidence": [],
+    "impact": "",
+    "recommendations": []
+  },
+
+  "dataUsed": []
+}
+`;
+
+      const raw =
+        await askAI({
+          prompt,
+
+          system: `
+Anda adalah Business Diagnosis Engine untuk UMKM Indonesia.
+
+Diagnosis harus:
+
+- transparan
+- formal
+- mudah dipahami
+- berbasis bukti
+
+Jangan mengarang data.
+
+Jangan menggunakan angka tanpa dasar.
+
+Balas hanya JSON valid.
+`,
+        });
+
+      const parsed =
+        extractJson(raw);
+
+      setDiagnosis(parsed);
+
+      setTab("diagnosis");
+    } catch (error) {
+      alert(
+        formatError(error) ||
+          "Business Diagnosis gagal dibuat."
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const runAutopilot = async () => {
+    if (!business) {
+      alert(
+        "Ceritakan usaha terlebih dahulu."
+      );
+
+      setTab("capture");
+
+      return;
+    }
+
+    setBusy(true);
+
+    try {
+      const response =
+        await fetch(
+          "/api/autopilot",
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body: JSON.stringify({
+              business: {
+                ...business,
+                diagnosis:
+                  diagnosis || null,
+              },
+
+              duration: days,
+            }),
+          }
+        );
+
+      const result =
+        await response.json();
 
       if (!response.ok) {
-        const errorMessage = [
-          formatError(result.message) ||
+        const message = [
+          formatError(
+            result.message
+          ) ||
             "Autopilot gagal dijalankan.",
 
-          formatError(result.details),
+          formatError(
+            result.details
+          ),
 
           result.error
-            ? `Error: ${formatError(result.error)}`
+            ? `Error: ${formatError(
+                result.error
+              )}`
             : "",
 
           result.raw
-            ? `Raw AI Response:\n${formatError(result.raw)}`
-            : "",
-
-          result.jsonText
-            ? `JSON Text:\n${formatError(result.jsonText)}`
+            ? `Raw AI Response:\n${formatError(
+                result.raw
+              )}`
             : "",
         ]
           .filter(Boolean)
           .join("\n\n");
 
-        throw new Error(errorMessage);
+        throw new Error(message);
       }
 
       if (!result.result) {
@@ -500,12 +730,16 @@ Balas hanya JSON valid.
         );
       }
 
-      setAutopilotData(result.result);
-      setProvider(result.provider || "");
+      setAutopilotData(
+        result.result
+      );
+
+      setProvider(
+        result.provider || ""
+      );
+
       setTab("autopilot");
     } catch (error) {
-      console.error("AUTOPILOT ERROR:", error);
-
       alert(
         formatError(error) ||
           "Autopilot gagal."
@@ -515,92 +749,443 @@ Balas hanya JSON valid.
     }
   };
 
+  const getPriority = () => {
+    if (
+      diagnosis?.areaPriority?.title
+    ) {
+      return {
+        title:
+          diagnosis.areaPriority.title,
+
+        text:
+          diagnosis.areaPriority
+            .summary ||
+          "Lihat Business Diagnosis untuk penjelasan lengkap.",
+      };
+    }
+
+    if (business?.problem) {
+      return {
+        title:
+          "Memahami masalah utama",
+
+        text:
+          business.problem,
+      };
+    }
+
+    return {
+      title:
+        "Bangun profil bisnis",
+
+      text:
+        "Ceritakan usaha Anda agar ZENAI dapat memahami kondisi bisnis dan menentukan langkah berikutnya.",
+    };
+  };
+
+  const priority =
+    getPriority();
+
   const navItems = [
     {
-      id: "capture",
-      icon: "◎",
-      label: "Product Story",
+      id: "command",
+      icon: "🏆",
+      label: "Business Command",
     },
+
+    {
+      id: "capture",
+      icon: "🎙",
+      label: "Ceritakan Usaha",
+    },
+
+    {
+      id: "diagnosis",
+      icon: "🩺",
+      label: "Business Diagnosis",
+    },
+
     {
       id: "pulse",
-      icon: "◉",
+      icon: "📡",
       label: "Business Pulse",
     },
+
     {
       id: "autopilot",
       icon: "⚡",
-      label: "Autopilot",
-    },
-    {
-      id: "system",
-      icon: "⚙",
-      label: "AI Router",
+      label: "Action Autopilot",
     },
   ];
 
-  return (
-    <div className="app">
-      <aside>
-        <h2>
-          ◈ UMKM
-          <span>.AI</span>
+  const titles = {
+    command:
+      "Business Command",
+
+    capture:
+      "Ceritakan Usaha",
+
+    diagnosis:
+      "Business Diagnosis",
+
+    pulse:
+      "Business Pulse",
+
+    autopilot:
+      "Action Autopilot",
+  };
+
+  const DiagnosisCard = ({
+    icon,
+    label,
+    data,
+  }) => {
+    if (!data?.title) {
+      return null;
+    }
+
+    return (
+      <article
+        className="action"
+        style={{
+          marginBottom: "20px",
+        }}
+      >
+        <h3>
+          {icon} {label}
+        </h3>
+
+        <h2
+          style={{
+            marginTop: "10px",
+          }}
+        >
+          {data.title}
         </h2>
 
-        {navItems.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => setTab(item.id)}
-          >
-            {item.icon} {item.label}
-          </button>
-        ))}
+        {data.summary && (
+          <>
+            <h4>
+              Ringkasan Analisis
+            </h4>
+
+            <p>
+              {data.summary}
+            </p>
+          </>
+        )}
+
+        {Array.isArray(
+          data.evidence
+        ) &&
+          data.evidence.length >
+            0 && (
+            <>
+              <h4>
+                Dasar Analisis
+              </h4>
+
+              <ul>
+                {data.evidence.map(
+                  (
+                    item,
+                    index
+                  ) => (
+                    <li
+                      key={index}
+                    >
+                      {item}
+                    </li>
+                  )
+                )}
+              </ul>
+            </>
+          )}
+
+        {data.impact && (
+          <>
+            <h4>
+              Potensi Dampak
+            </h4>
+
+            <p>
+              {data.impact}
+            </p>
+          </>
+        )}
+
+        {Array.isArray(
+          data.recommendations
+        ) &&
+          data.recommendations
+            .length > 0 && (
+            <>
+              <h4>
+                Rekomendasi Prioritas
+              </h4>
+
+              <ol>
+                {data.recommendations.map(
+                  (
+                    item,
+                    index
+                  ) => (
+                    <li
+                      key={index}
+                    >
+                      {item}
+                    </li>
+                  )
+                )}
+              </ol>
+            </>
+          )}
+      </article>
+    );
+  };
+
+  return (
+    <div className="app">
+
+      <aside>
+        <h2>
+          ◈ ZEN
+          <span>AI</span>
+        </h2>
+
+        {navItems.map(
+          (item) => (
+            <button
+              key={item.id}
+              onClick={() =>
+                setTab(
+                  item.id
+                )
+              }
+              style={{
+                fontWeight:
+                  tab === item.id
+                    ? "700"
+                    : undefined,
+              }}
+            >
+              {item.icon}{" "}
+              {item.label}
+            </button>
+          )
+        )}
       </aside>
 
       <main>
+
         <header>
           <div>
             <small>
-              AI-POWERED BUSINESS COMMAND CENTER
+              AI-POWERED BUSINESS
+              COMMAND CENTER
             </small>
 
             <h1>
-              {tab === "capture" &&
-                "Product Story Capture"}
-
-              {tab === "pulse" &&
-                "Business Pulse"}
-
-              {tab === "autopilot" &&
-                "Business Autopilot"}
-
-              {tab === "system" &&
-                "Multi-AI Router"}
+              {titles[tab]}
             </h1>
           </div>
 
           <div>
             {provider
               ? `● ${provider} aktif`
-              : "○ AI Router siap"}
+              : "● ZENAI siap membantu"}
           </div>
         </header>
 
-        {tab === "capture" && (
+        {tab ===
+          "command" && (
           <section>
+
             <h2>
-              Ceritakan produk dan usaha Anda
+              Ringkasan Bisnis
+            </h2>
+
+            {!business ? (
+              <>
+                <p>
+                  Mulai dengan
+                  menceritakan usaha
+                  Anda. ZENAI akan
+                  membantu memahami
+                  kondisi bisnis,
+                  menemukan area yang
+                  perlu diperhatikan,
+                  dan menyiapkan
+                  langkah berikutnya.
+                </p>
+
+                <button
+                  className="primary"
+                  onClick={() =>
+                    setTab(
+                      "capture"
+                    )
+                  }
+                >
+                  🎙 Ceritakan Usaha
+                </button>
+              </>
+            ) : (
+              <>
+
+                <div className="cards">
+
+                  <article>
+                    <h3>
+                      🏪 Bisnis
+                    </h3>
+
+                    <p>
+                      {business.product ||
+                        "Belum teridentifikasi"}
+                    </p>
+                  </article>
+
+                                    <article>
+                    <h3>
+                      🎯 Target
+                    </h3>
+
+                    <p>
+                      {business.target ||
+                        "Belum cukup informasi"}
+                    </p>
+                  </article>
+
+                  <article>
+                    <h3>
+                      📊 Data Bisnis
+                    </h3>
+
+                    <p>
+                      ZENAI masih
+                      menggunakan
+                      informasi yang
+                      tersedia. Skor
+                      bisnis belum
+                      ditampilkan
+                      sebelum data
+                      aktual mencukupi.
+                    </p>
+                  </article>
+
+                </div>
+
+                <div
+                  style={{
+                    marginTop:
+                      "24px",
+
+                    padding:
+                      "20px",
+
+                    borderRadius:
+                      "14px",
+
+                    background:
+                      "#fff1e6",
+                  }}
+                >
+                  <h3>
+                    🎯 Prioritas Saat
+                    Ini
+                  </h3>
+
+                  <h2>
+                    {priority.title}
+                  </h2>
+
+                  <p>
+                    {priority.text}
+                  </p>
+
+                  <button
+                    className="primary"
+                    disabled={busy}
+                    onClick={() => {
+                      if (
+                        diagnosis
+                      ) {
+                        setTab(
+                          "diagnosis"
+                        );
+                      } else {
+                        runDiagnosis();
+                      }
+                    }}
+                  >
+                    {busy
+                      ? "ZENAI sedang menganalisis..."
+                      : diagnosis
+                      ? "🩺 Lihat Diagnosis"
+                      : "🩺 Buat Business Diagnosis"}
+                  </button>
+                </div>
+
+                <div
+                  style={{
+                    marginTop:
+                      "24px",
+                  }}
+                >
+                  <h3>
+                    ⚡ Status Action
+                    Autopilot
+                  </h3>
+
+                  <p>
+                    {autopilotData
+                      ? "Strategi sudah tersedia dan dapat ditinjau kembali."
+                      : "Belum ada action plan aktif."}
+                  </p>
+
+                  <button
+                    onClick={() =>
+                      setTab(
+                        "autopilot"
+                      )
+                    }
+                  >
+                    {autopilotData
+                      ? "Lihat Action Plan"
+                      : "Buka Action Autopilot"}
+                  </button>
+                </div>
+
+              </>
+            )}
+          </section>
+        )}
+
+        {tab ===
+          "capture" && (
+          <section>
+
+            <h2>
+              Ceritakan usaha Anda
             </h2>
 
             <p>
-              Masukkan teks, foto produk,
-              upload voice note, atau rekam
-              suara langsung.
+              Tidak perlu mengisi
+              formulir panjang.
+              Ceritakan produk,
+              usaha, target
+              pelanggan, atau
+              kendala yang sedang
+              Anda hadapi.
             </p>
 
             <textarea
               value={text}
               onChange={(event) =>
-                setText(event.target.value)
+                setText(
+                  event.target.value
+                )
               }
               placeholder={`Contoh:
 Saya menjual keripik pisang seharga Rp10.000.
@@ -614,19 +1199,25 @@ membuat konten dan memasarkan produk.`}
             <input
               type="file"
               accept="image/*"
-              onChange={handleImage}
+              onChange={
+                handleImage
+              }
             />
 
             {image && (
               <div>
+
                 <br />
 
                 <img
                   src={image}
                   alt="Produk"
                   style={{
-                    width: "200px",
-                    borderRadius: "10px",
+                    width:
+                      "200px",
+
+                    borderRadius:
+                      "10px",
                   }}
                 />
 
@@ -634,7 +1225,9 @@ membuat konten dan memasarkan produk.`}
                 <br />
 
                 <button
-                  onClick={() => setImage("")}
+                  onClick={() =>
+                    setImage("")
+                  }
                 >
                   Hapus Gambar
                 </button>
@@ -648,22 +1241,31 @@ membuat konten dan memasarkan produk.`}
               ref={audioInputRef}
               type="file"
               accept="audio/*"
-              onChange={handleAudio}
+              onChange={
+                handleAudio
+              }
             />
 
             <br />
             <br />
 
             <button
-              onClick={toggleRecording}
+              onClick={() =>
+                isRecording
+                  ? stopRecording()
+                  : startRecording()
+              }
               disabled={busy}
               style={{
-                background: isRecording
-                  ? "#dc2626"
-                  : "",
-                color: isRecording
-                  ? "#ffffff"
-                  : "",
+                background:
+                  isRecording
+                    ? "#dc2626"
+                    : "",
+
+                color:
+                  isRecording
+                    ? "#ffffff"
+                    : "",
               }}
             >
               {isRecording
@@ -676,21 +1278,32 @@ membuat konten dan memasarkan produk.`}
             {isRecording && (
               <p>
                 🔴 Sedang merekam...{" "}
-                {formatRecordingTime(recordingTime)}
+                {formatRecordingTime(
+                  recordingTime
+                )}
               </p>
             )}
 
             {audio && (
               <div
                 style={{
-                  marginTop: "20px",
-                  padding: "15px",
-                  borderRadius: "10px",
-                  background: "#f5f5f5",
+                  marginTop:
+                    "20px",
+
+                  padding:
+                    "15px",
+
+                  borderRadius:
+                    "10px",
+
+                  background:
+                    "#f5f5f5",
                 }}
               >
                 <strong>
-                  🎙️ {audioName || "Voice Note siap"}
+                  🎙️{" "}
+                  {audioName ||
+                    "Voice Note siap"}
                 </strong>
 
                 <br />
@@ -701,14 +1314,19 @@ membuat konten dan memasarkan produk.`}
                   src={audio}
                   style={{
                     width: "100%",
-                    maxWidth: "400px",
+                    maxWidth:
+                      "400px",
                   }}
                 />
 
                 <br />
                 <br />
 
-                <button onClick={clearAudio}>
+                <button
+                  onClick={
+                    clearAudio
+                  }
+                >
                   Hapus Voice Note
                 </button>
               </div>
@@ -718,295 +1336,516 @@ membuat konten dan memasarkan produk.`}
 
             <button
               className="primary"
-              disabled={busy || isRecording}
-              onClick={analyzeBusiness}
+              disabled={
+                busy ||
+                isRecording
+              }
+              onClick={
+                analyzeBusiness
+              }
             >
               {busy
-                ? "AI sedang menganalisis..."
-                : "◎ Analisis Produk"}
+                ? "ZENAI sedang memahami usaha..."
+                : "✨ Analisis Usaha"}
             </button>
+
           </section>
         )}
 
-        {tab === "pulse" && (
+        {tab ===
+          "diagnosis" && (
           <section>
+
             {!business && (
-              <div>
+              <>
                 <h2>
-                  Belum ada data bisnis
+                  Belum ada
+                  informasi bisnis
                 </h2>
 
                 <p>
-                  Mulai dengan Product Story Capture.
+                  Ceritakan usaha
+                  Anda terlebih dahulu
+                  agar ZENAI memiliki
+                  dasar untuk melakukan
+                  diagnosis.
                 </p>
 
                 <button
                   className="primary"
-                  onClick={() => setTab("capture")}
+                  onClick={() =>
+                    setTab(
+                      "capture"
+                    )
+                  }
+                >
+                  🎙 Ceritakan Usaha
+                </button>
+              </>
+            )}
+
+            {business &&
+              !diagnosis && (
+                <>
+                  <h2>
+                    Business Diagnosis
+                  </h2>
+
+                  <p>
+                    ZENAI akan
+                    menganalisis kondisi
+                    usaha berdasarkan
+                    informasi yang
+                    tersedia tanpa
+                    membuat angka atau
+                    klaim yang tidak
+                    memiliki dasar.
+                  </p>
+
+                  <button
+                    className="primary"
+                    disabled={busy}
+                    onClick={
+                      runDiagnosis
+                    }
+                  >
+                    {busy
+                      ? "ZENAI sedang membuat diagnosis..."
+                      : "🩺 Mulai Diagnosis"}
+                  </button>
+                </>
+              )}
+
+            {diagnosis && (
+              <>
+
+                <h2>
+                  Business Diagnosis
+                </h2>
+
+                {diagnosis.summary && (
+                  <p>
+                    {diagnosis.summary}
+                  </p>
+                )}
+
+                <DiagnosisCard
+                  icon="🔴"
+                  label="AREA PRIORITAS"
+                  data={
+                    diagnosis.areaPriority
+                  }
+                />
+
+                <DiagnosisCard
+                  icon="🟡"
+                  label="PERLU DIPERHATIKAN"
+                  data={
+                    diagnosis.attention
+                  }
+                />
+
+                <DiagnosisCard
+                  icon="🔵"
+                  label="PELUANG PERBAIKAN"
+                  data={
+                    diagnosis.opportunity
+                  }
+                />
+
+                <DiagnosisCard
+                  icon="🟢"
+                  label="KEKUATAN BISNIS"
+                  data={
+                    diagnosis.strength
+                  }
+                />
+
+                {Array.isArray(
+                  diagnosis.dataUsed
+                ) &&
+                  diagnosis.dataUsed
+                    .length > 0 && (
+                    <div
+                      style={{
+                        marginTop:
+                          "20px",
+
+                        padding:
+                          "16px",
+
+                        borderRadius:
+                          "12px",
+
+                        background:
+                          "#f5f5f5",
+                      }}
+                    >
+                      <h3>
+                        Informasi yang
+                        Digunakan
+                      </h3>
+
+                      <ul>
+                        {diagnosis.dataUsed.map(
+                          (
+                            item,
+                            index
+                          ) => (
+                            <li
+                              key={
+                                index
+                              }
+                            >
+                              {item}
+                            </li>
+                          )
+                        )}
+                      </ul>
+                    </div>
+                  )}
+
+                <br />
+
+                <button
+                  className="primary"
+                  disabled={busy}
+                  onClick={() =>
+                    setTab(
+                      "autopilot"
+                    )
+                  }
+                >
+                  ⚡ Lanjut ke Action
+                  Autopilot
+                </button>
+
+              </>
+            )}
+
+          </section>
+        )}
+
+        {tab ===
+          "pulse" && (
+          <section>
+
+            {!business && (
+              <>
+                <h2>
+                  Belum ada data
+                  bisnis
+                </h2>
+
+                <p>
+                  Business Pulse
+                  membutuhkan informasi
+                  bisnis sebagai titik
+                  awal.
+                </p>
+
+                <button
+                  className="primary"
+                  onClick={() =>
+                    setTab(
+                      "capture"
+                    )
+                  }
                 >
                   Mulai
                 </button>
-              </div>
+              </>
             )}
 
             {business && (
               <>
+
                 <h2>
-                  {business.product}
+                  Business Pulse
                 </h2>
 
-                <p>
-                  {business.description}
-                </p>
+                <div
+                  style={{
+                    padding:
+                      "20px",
 
-                <div className="cards">
-                  <article>
-                    <h3>🎯 Target</h3>
-                    <p>{business.target}</p>
-                  </article>
+                    borderRadius:
+                      "14px",
 
-                  <article>
-                    <h3>⚠ Masalah</h3>
-                    <p>{business.problem}</p>
-                  </article>
+                    background:
+                      "#f5f5f5",
 
-                  <article>
-                    <h3>💡 Peluang</h3>
-                    <p>{business.opportunity}</p>
-                  </article>
+                    marginBottom:
+                      "24px",
+                  }}
+                >
+                  <h3>
+                    ⏳ Membangun
+                    Baseline
+                  </h3>
+
+                  <p>
+                    ZENAI belum memiliki
+                    cukup data historis
+                    untuk menyatakan
+                    apakah penjualan,
+                    margin, atau
+                    pelanggan sedang
+                    naik atau turun.
+                  </p>
+
+                  <p>
+                    Pulse akan menjadi
+                    lebih informatif
+                    setelah tersedia
+                    data berkala untuk
+                    dibandingkan.
+                  </p>
                 </div>
 
-                <h3>
-                  Langkah Berikutnya
-                </h3>
+                <div className="cards">
 
-                <p>
-                  {business.nextStep}
-                </p>
+                  <article>
+                    <h3>
+                      🏪 Informasi
+                      Bisnis
+                    </h3>
 
-                <button
-                  className="primary"
-                  disabled={busy}
-                  onClick={() =>
-                    setTab("autopilot")
-                  }
+                    <p>
+                      {business.product ||
+                        "Tersedia"}
+                    </p>
+                  </article>
+
+                  <article>
+                    <h3>
+                      🎯 Target Pasar
+                    </h3>
+
+                    <p>
+                      {business.target ||
+                        "Belum cukup informasi"}
+                    </p>
+                  </article>
+
+                  <article>
+                    <h3>
+                      📈 Perubahan
+                      Bisnis
+                    </h3>
+
+                    <p>
+                      Belum dapat
+                      dihitung sampai
+                      tersedia minimal
+                      dua periode data
+                      yang dapat
+                      dibandingkan.
+                    </p>
+                  </article>
+
+                </div>
+
+                <div
+                  style={{
+                    marginTop:
+                      "24px",
+                  }}
                 >
-                  ⚡ Aktifkan Autopilot
-                </button>
+                  <h3>
+                    Apa yang akan
+                    dipantau?
+                  </h3>
+
+                  <p>
+                    Ketika data
+                    tersedia, Business
+                    Pulse dapat membaca
+                    perubahan penjualan,
+                    biaya, margin,
+                    pelanggan, dan
+                    aktivitas bisnis
+                    berdasarkan catatan
+                    aktual.
+                  </p>
+                </div>
+
               </>
             )}
+
           </section>
         )}
 
-        {tab === "autopilot" && (
+        {tab ===
+          "autopilot" && (
           <section>
+
             {!business && (
-              <div>
+              <>
                 <h2>
-                  Belum ada data bisnis
+                  Belum ada data
+                  bisnis
                 </h2>
 
                 <p>
-                  Lakukan Product Story Capture terlebih dahulu.
+                  Lakukan Ceritakan
+                  Usaha terlebih dahulu
+                  sebelum membuat
+                  action plan.
                 </p>
 
                 <button
                   className="primary"
-                  onClick={() => setTab("capture")}
-                >
-                  Mulai Product Story
-                </button>
-              </div>
-            )}
-
-            {business && !autopilotData && (
-              <>
-                <h2>
-                  Business Autopilot
-                </h2>
-
-                <p>
-                  Pilih durasi strategi.
-                </p>
-
-                <select
-                  value={days}
-                  onChange={(event) =>
-                    setDays(
-                      Number(event.target.value)
+                  onClick={() =>
+                    setTab(
+                      "capture"
                     )
                   }
                 >
-                  <option value="7">
-                    7 Hari
-                  </option>
-
-                  <option value="14">
-                    14 Hari
-                  </option>
-
-                  <option value="30">
-                    30 Hari
-                  </option>
-                </select>
-
-                <br />
-                <br />
-
-                <button
-                  className="primary"
-                  disabled={busy}
-                  onClick={runAutopilot}
-                >
-                  {busy
-                    ? "AI sedang membuat strategi..."
-                    : "Generate Strategy"}
+                  🎙 Ceritakan Usaha
                 </button>
               </>
             )}
 
-            {business && autopilotData && (
-              <>
-                <h2>
-                  {autopilotData.mission?.title}
-                </h2>
+            {business &&
+              !autopilotData && (
+                <>
+                  <h2>
+                    Action Autopilot
+                  </h2>
 
-                <p>
-                  {autopilotData.mission?.target}
+                  <p>
+                    ZENAI akan
+                    mengubah informasi
+                    bisnis dan hasil
+                    diagnosis menjadi
+                    rencana tindakan
+                    yang dapat
+                    dijalankan.
+                  </p>
+
+                  <select
+                    value={days}
+                    onChange={(event) =>
+                      setDays(
+                        Number(
+                          event.target.value
+                        )
+                      )
+                    }
+                  >
+                    <option value="7">
+                      7 Hari
+                    </option>
+
+                    <option value="14">
+                      14 Hari
+                    </option>
+
+                    <option value="30">
+                      30 Hari
+                    </option>
+                  </select>
 
                   <br />
-                  Durasi:{" "}
-                  {autopilotData.mission?.duration}
-                </p>
+                  <br />
 
-                <h2>
-                  Action Plan
-                </h2>
+                  <button
+                    className="primary"
+                    disabled={busy}
+                    onClick={
+                      runAutopilot
+                    }
+                  >
+                    {busy
+                      ? "ZENAI sedang menyiapkan action plan..."
+                      : "⚡ Buat Action Plan"}
+                  </button>
+                </>
+              )}
 
-                {autopilotData.actions?.map(
-                  (action, index) => (
-                    <article
-                      className="action"
-                      key={index}
-                    >
-                      <h3>
-                        {index + 1}. {action.title}
-                      </h3>
+            {business &&
+              autopilotData && (
+                <>
+                  <h2>
+                    {
+                      autopilotData
+                        .mission?.title
+                    }
+                  </h2>
 
-                      <p>
-                        {action.description}
-                      </p>
+                  <p>
+                    {
+                      autopilotData
+                        .mission?.target
+                    }
 
-                      <small>
-                        Output: {action.output}
-                      </small>
-                    </article>
-                  )
-                )}
+                    <br />
 
-                <br />
+                    Durasi:{" "}
+                    {
+                      autopilotData
+                        .mission?.duration
+                    }
+                  </p>
 
-                <button
-                  onClick={() =>
-                    setAutopilotData(null)
-                  }
-                >
-                  Buat Strategi Baru
-                </button>
-              </>
-            )}
+                  <h2>
+                    Action Plan
+                  </h2>
+
+                  {autopilotData.actions?.map(
+                    (
+                      action,
+                      index
+                    ) => (
+                      <article
+                        className="action"
+                        key={index}
+                        style={{
+                          marginBottom:
+                            "16px",
+                        }}
+                      >
+                        <h3>
+                          {index + 1}.{" "}
+                          {action.title}
+                        </h3>
+
+                        <p>
+                          {action.description}
+                        </p>
+
+                        <small>
+                          Output:{" "}
+                          {action.output}
+                        </small>
+                      </article>
+                    )
+                  )}
+
+                  <br />
+
+                  <button
+                    onClick={() => {
+                      setAutopilotData(
+                        null
+                      );
+
+                      setTab(
+                        "autopilot"
+                      );
+                    }}
+                  >
+                    Buat Action Plan
+                    Baru
+                  </button>
+                </>
+              )}
+
           </section>
         )}
 
-        {tab === "system" && (
-          <section>
-            <h2>
-              Multi-AI Router
-            </h2>
-
-            <p>
-              Sistem otomatis memilih AI berdasarkan
-              jenis input dan mencoba provider lain
-              apabila provider utama gagal.
-            </p>
-
-            <div className="cards">
-              <article>
-                <h3>⚡ Groq</h3>
-
-                <p>
-                  Primary AI untuk teks,
-                  strategi, dan analisis cepat.
-                </p>
-
-                <code>
-                  GROQ_API_KEY
-                </code>
-              </article>
-
-              <article>
-                <h3>◈ Gemini</h3>
-
-                <p>
-                  Analisis gambar,
-                  voice note, dan input multimodal.
-                </p>
-
-                <code>
-                  GEMINI_API_KEY
-                </code>
-              </article>
-
-              <article>
-                <h3>◌ OpenRouter</h3>
-
-                <p>
-                  Model pool dan fallback.
-                </p>
-
-                <code>
-                  OPENROUTER_API_KEY
-                </code>
-              </article>
-            </div>
-
-            <div
-              style={{
-                marginTop: "30px",
-                padding: "20px",
-                background: "#fff1e6",
-                borderRadius: "15px",
-                lineHeight: "2",
-              }}
-            >
-              <strong>TEXT</strong>
-
-              <br />
-
-              Groq → OpenRouter → Gemini
-
-              <br />
-              <br />
-
-              <strong>IMAGE</strong>
-
-              <br />
-
-              Gemini Multimodal
-
-              <br />
-              <br />
-
-              <strong>VOICE NOTE</strong>
-
-              <br />
-
-              Gemini Audio Understanding
-            </div>
-          </section>
-        )}
       </main>
     </div>
   );
-}
-          
+                }
