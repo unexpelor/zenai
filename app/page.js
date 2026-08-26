@@ -875,5 +875,138 @@ membuat konten dan memasarkan produk.`}
                   {autopilotData.mission?.target}
 
                   <br />
+                  Durasi:{" "}
+                  {autopilotData.mission?.duration}
+                </p>
 
+                <h2>
+                  Action Plan
+                </h2>
+
+                {autopilotData.actions?.map(
+                  (action, index) => (
+                    <article
+                      className="action"
+                      key={index}
+                    >
+                      <h3>
+                        {index + 1}. {action.title}
+                      </h3>
+
+                      <p>
+                        {action.description}
+                      </p>
+
+                      <small>
+                        Output: {action.output}
+                      </small>
+                    </article>
+                  )
+                )}
+
+                <br />
+
+                <button
+                  onClick={() =>
+                    setAutopilotData(null)
+                  }
+                >
+                  Buat Strategi Baru
+                </button>
+              </>
+            )}
+          </section>
+        )}
+
+        {tab === "system" && (
+          <section>
+            <h2>
+              Multi-AI Router
+            </h2>
+
+            <p>
+              Sistem otomatis memilih AI berdasarkan
+              jenis input dan mencoba provider lain
+              apabila provider utama gagal.
+            </p>
+
+            <div className="cards">
+              <article>
+                <h3>⚡ Groq</h3>
+
+                <p>
+                  Primary AI untuk teks,
+                  strategi, dan analisis cepat.
+                </p>
+
+                <code>
+                  GROQ_API_KEY
+                </code>
+              </article>
+
+              <article>
+                <h3>◈ Gemini</h3>
+
+                <p>
+                  Analisis gambar,
+                  voice note, dan input multimodal.
+                </p>
+
+                <code>
+                  GEMINI_API_KEY
+                </code>
+              </article>
+
+              <article>
+                <h3>◌ OpenRouter</h3>
+
+                <p>
+                  Model pool dan fallback.
+                </p>
+
+                <code>
+                  OPENROUTER_API_KEY
+                </code>
+              </article>
+            </div>
+
+            <div
+              style={{
+                marginTop: "30px",
+                padding: "20px",
+                background: "#fff1e6",
+                borderRadius: "15px",
+                lineHeight: "2",
+              }}
+            >
+              <strong>TEXT</strong>
+
+              <br />
+
+              Groq → OpenRouter → Gemini
+
+              <br />
+              <br />
+
+              <strong>IMAGE</strong>
+
+              <br />
+
+              Gemini Multimodal
+
+              <br />
+              <br />
+
+              <strong>VOICE NOTE</strong>
+
+              <br />
+
+              Gemini Audio Understanding
+            </div>
+          </section>
+        )}
+      </main>
+    </div>
+  );
+}
           
