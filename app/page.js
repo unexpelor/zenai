@@ -999,7 +999,194 @@ setBusy(false);
 
 
 
+  const generatePulse = async () => {
 
+    if (!business) {
+
+      alert(
+        "Ceritakan usaha terlebih dahulu."
+      );
+
+      setTab("capture");
+
+      return;
+
+    }
+
+
+    if (!updateText.trim()) {
+
+      alert(
+        "Ceritakan perubahan atau kondisi terbaru usaha Anda."
+      );
+
+      return;
+
+    }
+
+
+    setBusy(true);
+
+
+    try {
+
+      const prompt = `
+
+Analisis perubahan kondisi UMKM berdasarkan:
+
+DATA BISNIS AWAL:
+${JSON.stringify(
+  business,
+  null,
+  2
+)}
+
+HASIL DIAGNOSIS SEBELUMNYA:
+${diagnosis
+  ? JSON.stringify(
+      diagnosis,
+      null,
+      2
+    )
+  : "Belum tersedia"
+}
+
+UPDATE KONDISI TERBARU:
+${updateText}
+
+
+Tugas Anda:
+
+1. Identifikasi perubahan atau sinyal terbaru.
+2. Tentukan apakah kondisi tersebut:
+   - positif
+   - perlu perhatian
+   - menjadi hambatan
+   - membuka peluang
+3. Jelaskan perubahan berdasarkan informasi yang tersedia.
+4. Jangan membuat angka, omzet, persentase, atau fakta yang tidak diberikan.
+5. Berikan rekomendasi langkah berikutnya yang realistis.
+
+Balas hanya dalam JSON valid:
+
+{
+  "summary": "",
+
+  "signal": {
+    "status": "",
+    "title": "",
+    "description": ""
+  },
+
+  "changes": [
+    {
+      "area": "",
+      "change": "",
+      "impact": ""
+    }
+  ],
+
+  "priority": "",
+
+  "nextAction": "",
+
+  "observation": ""
+}
+
+`;
+
+
+      const raw =
+        await askAI({
+
+          prompt,
+
+          system: `
+
+Anda adalah AI Business Pulse Engine
+untuk UMKM Indonesia.
+
+Tugas Anda adalah membaca perubahan kondisi bisnis
+berdasarkan data awal dan update terbaru.
+
+Jangan mengarang angka,
+omzet,
+persentase,
+atau fakta.
+
+Gunakan bahasa profesional,
+ringkas,
+jelas,
+dan mudah dipahami pemilik UMKM.
+
+Balas JSON valid tanpa markdown.
+
+`
+
+        });
+
+
+      const parsed =
+        extractJson(raw);
+
+
+      const newUpdate = {
+
+        id: Date.now(),
+
+        text: updateText,
+
+        createdAt:
+          new Date().toLocaleString(
+            "id-ID"
+          ),
+
+        pulse: parsed
+
+      };
+
+
+      setPulseData(
+        parsed
+      );
+
+
+      setBusinessUpdates(
+        (current) => [
+
+          newUpdate,
+
+          ...current
+
+        ]
+      );
+
+
+      setUpdateText(
+        ""
+      );
+
+
+      setTab(
+        "pulse"
+      );
+
+
+    } catch (error) {
+
+      alert(
+        formatError(error) ||
+        "Business Pulse gagal diperbarui."
+      );
+
+
+    } finally {
+
+      setBusy(false);
+
+    }
+
+  };
 
 const runAutopilot =
 async()=>{
