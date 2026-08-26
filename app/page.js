@@ -2218,7 +2218,587 @@ Masalah saya adalah pemasaran.`}
           </section>
 
         )}
-      </main>
+              {/* =========================
+            BUSINESS DIAGNOSIS
+        ========================= */}
+
+        {tab === "diagnosis" && (
+          <section>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                gap: "16px",
+                flexWrap: "wrap",
+                marginBottom: "24px",
+              }}
+            >
+              <div>
+                <h2>
+                  🩺 Business Diagnosis
+                </h2>
+
+                <p>
+                  Analisis kondisi bisnis berdasarkan informasi
+                  yang telah Anda berikan.
+                </p>
+              </div>
+
+              <button
+                className="primary"
+                disabled={busy}
+                onClick={runDiagnosis}
+              >
+                {busy
+                  ? "Menganalisis..."
+                  : "✨ Jalankan Diagnosis"}
+              </button>
+            </div>
+
+            {!business && (
+              <div
+                style={{
+                  padding: "24px",
+                  background: "#f8fafc",
+                  borderRadius: "16px",
+                }}
+              >
+                <h3>
+                  Belum ada data bisnis
+                </h3>
+
+                <p>
+                  Ceritakan usaha Anda terlebih dahulu agar
+                  ZENAI dapat melakukan diagnosis.
+                </p>
+
+                <button
+                  className="primary"
+                  onClick={() =>
+                    setTab("capture")
+                  }
+                >
+                  🎙 Ceritakan Usaha
+                </button>
+              </div>
+            )}
+
+            {business && !diagnosis && !busy && (
+              <div
+                style={{
+                  padding: "24px",
+                  background: "#f8fafc",
+                  borderRadius: "16px",
+                }}
+              >
+                <h3>
+                  Siap melakukan diagnosis
+                </h3>
+
+                <p>
+                  ZENAI akan mengidentifikasi area prioritas,
+                  hal yang perlu diperhatikan, peluang, dan
+                  kekuatan bisnis berdasarkan informasi yang
+                  tersedia.
+                </p>
+
+                <button
+                  className="primary"
+                  onClick={runDiagnosis}
+                >
+                  🩺 Mulai Business Diagnosis
+                </button>
+              </div>
+            )}
+
+            {business && busy && (
+              <div
+                style={{
+                  padding: "30px",
+                  textAlign: "center",
+                }}
+              >
+                <h3>
+                  🧠 ZENAI sedang menganalisis bisnis...
+                </h3>
+
+                <p>
+                  Mengidentifikasi kondisi dan prioritas bisnis.
+                </p>
+              </div>
+            )}
+
+            {diagnosis && (
+              <>
+                {diagnosis.summary && (
+                  <div
+                    style={{
+                      padding: "20px",
+                      background: "#eff6ff",
+                      borderRadius: "16px",
+                      marginBottom: "20px",
+                    }}
+                  >
+                    <h3>
+                      Ringkasan Diagnosis
+                    </h3>
+
+                    <p>
+                      {diagnosis.summary}
+                    </p>
+                  </div>
+                )}
+
+                <DiagnosisCard
+                  icon="🔴"
+                  label="AREA PRIORITAS"
+                  data={diagnosis.areaPriority}
+                />
+
+                <DiagnosisCard
+                  icon="🟡"
+                  label="PERLU DIPERHATIKAN"
+                  data={diagnosis.attention}
+                />
+
+                <DiagnosisCard
+                  icon="🔵"
+                  label="PELUANG PERBAIKAN"
+                  data={diagnosis.opportunity}
+                />
+
+                <DiagnosisCard
+                  icon="🟢"
+                  label="KEKUATAN BISNIS"
+                  data={diagnosis.strength}
+                />
+
+                <div
+                  style={{
+                    marginTop: "24px",
+                  }}
+                >
+                  <button
+                    className="primary"
+                    onClick={() =>
+                      runAutopilot()
+                    }
+                  >
+                    ⚡ Buat Action Plan
+                  </button>
+                </div>
+              </>
+            )}
+          </section>
+        )}
+
+
+        {/* =========================
+            BUSINESS PULSE
+        ========================= */}
+
+        {tab === "pulse" && (
+          <section>
+            <h2>
+              📡 Business Pulse
+            </h2>
+
+            <p>
+              Ringkasan sinyal bisnis berdasarkan informasi
+              dan hasil analisis yang tersedia.
+            </p>
+
+            {!business && (
+              <div
+                style={{
+                  padding: "24px",
+                  background: "#f8fafc",
+                  borderRadius: "16px",
+                }}
+              >
+                <h3>
+                  Belum ada data bisnis
+                </h3>
+
+                <p>
+                  Mulai dengan menceritakan usaha Anda.
+                </p>
+
+                <button
+                  className="primary"
+                  onClick={() =>
+                    setTab("capture")
+                  }
+                >
+                  🎙 Ceritakan Usaha
+                </button>
+              </div>
+            )}
+
+            {business && (
+              <div className="cards">
+
+                <article>
+                  <h3>
+                    🏪 Kondisi Bisnis
+                  </h3>
+
+                  <p>
+                    {business.product ||
+                      "Produk atau layanan sudah teridentifikasi."}
+                  </p>
+                </article>
+
+
+                <article>
+                  <h3>
+                    🎯 Fokus Pasar
+                  </h3>
+
+                  <p>
+                    {business.target ||
+                      "Target pasar masih perlu diperdalam."}
+                  </p>
+                </article>
+
+
+                <article>
+                  <h3>
+                    ⚠️ Sinyal Utama
+                  </h3>
+
+                  <p>
+                    {diagnosis?.areaPriority?.title ||
+                      business.problem ||
+                      "Belum ada hambatan utama yang dapat diprioritaskan."}
+                  </p>
+                </article>
+
+              </div>
+            )}
+
+            {business && (
+              <div
+                style={{
+                  marginTop: "24px",
+                  padding: "22px",
+                  background: "#f8fafc",
+                  borderRadius: "16px",
+                }}
+              >
+                <h3>
+                  📡 Observasi ZENAI
+                </h3>
+
+                <p>
+                  {diagnosis?.summary ||
+                    "Lakukan Business Diagnosis untuk mendapatkan observasi kondisi bisnis yang lebih mendalam."}
+                </p>
+
+                {!diagnosis && (
+                  <button
+                    className="primary"
+                    onClick={runDiagnosis}
+                    disabled={busy}
+                  >
+                    🩺 Jalankan Diagnosis
+                  </button>
+                )}
+              </div>
+            )}
+
+            <div
+              style={{
+                marginTop: "24px",
+                padding: "18px",
+                borderRadius: "14px",
+                border: "1px solid #e2e8f0",
+              }}
+            >
+              <h3>
+                Tentang Business Pulse
+              </h3>
+
+              <p>
+                Business Pulse akan membaca perubahan kondisi
+                bisnis dari data dan pembaruan yang diberikan.
+                Semakin banyak informasi yang diperbarui,
+                semakin kuat kemampuan ZENAI dalam mendeteksi
+                perubahan dan prioritas bisnis.
+              </p>
+            </div>
+          </section>
+        )}
+
+
+        {/* =========================
+            ACTION AUTOPILOT
+        ========================= */}
+
+        {tab === "autopilot" && (
+          <section>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                gap: "16px",
+                flexWrap: "wrap",
+                marginBottom: "24px",
+              }}
+            >
+              <div>
+                <h2>
+                  ⚡ Action Autopilot
+                </h2>
+
+                <p>
+                  Ubah hasil analisis bisnis menjadi langkah
+                  yang dapat langsung dijalankan.
+                </p>
+              </div>
+            </div>
+
+
+            {!business && (
+              <div
+                style={{
+                  padding: "24px",
+                  background: "#f8fafc",
+                  borderRadius: "16px",
+                }}
+              >
+                <h3>
+                  Belum ada data bisnis
+                </h3>
+
+                <p>
+                  Ceritakan usaha terlebih dahulu sebelum
+                  membuat action plan.
+                </p>
+
+                <button
+                  className="primary"
+                  onClick={() =>
+                    setTab("capture")
+                  }
+                >
+                  🎙 Ceritakan Usaha
+                </button>
+              </div>
+            )}
+
+
+            {business && !autopilotData && (
+              <>
+                <div
+                  style={{
+                    padding: "24px",
+                    background: "#f8fafc",
+                    borderRadius: "16px",
+                  }}
+                >
+                  <h3>
+                    🎯 Target Action Plan
+                  </h3>
+
+                  <p>
+                    Pilih durasi untuk menyusun langkah aksi.
+                  </p>
+
+
+                  <select
+                    value={days}
+                    onChange={(event) =>
+                      setDays(
+                        Number(event.target.value)
+                      )
+                    }
+                    style={{
+                      padding: "12px",
+                      borderRadius: "10px",
+                      border:
+                        "1px solid #cbd5e1",
+                      marginBottom: "20px",
+                    }}
+                  >
+                    <option value={7}>
+                      7 Hari
+                    </option>
+
+                    <option value={14}>
+                      14 Hari
+                    </option>
+
+                    <option value={30}>
+                      30 Hari
+                    </option>
+                  </select>
+
+
+                  <br />
+
+
+                  <button
+                    className="primary"
+                    disabled={busy}
+                    onClick={runAutopilot}
+                  >
+                    {busy
+                      ? "ZENAI sedang menyusun strategi..."
+                      : "⚡ Buat Action Plan"}
+                  </button>
+                </div>
+              </>
+            )}
+
+
+            {business && busy && tab === "autopilot" && (
+              <div
+                style={{
+                  padding: "30px",
+                  textAlign: "center",
+                }}
+              >
+                <h3>
+                  ⚡ Menyusun Action Plan...
+                </h3>
+
+                <p>
+                  ZENAI sedang mengubah analisis menjadi
+                  langkah yang dapat dijalankan.
+                </p>
+              </div>
+            )}
+
+
+            {autopilotData && (
+              <div>
+
+                <div
+                  style={{
+                    padding: "22px",
+                    background: "#eff6ff",
+                    borderRadius: "16px",
+                    marginBottom: "20px",
+                  }}
+                >
+                  <h3>
+                    🎯 Target
+                  </h3>
+
+                  <p>
+                    {autopilotData.mission?.target ||
+                      autopilotData.target ||
+                      "Belum cukup informasi"}
+                  </p>
+
+
+                  <p>
+                    Durasi:{" "}
+                    {autopilotData.mission?.duration ||
+                      `${days} hari`}
+                  </p>
+                </div>
+
+
+                <h2>
+                  Action Plan
+                </h2>
+
+
+                {Array.isArray(
+                  autopilotData.actions
+                ) &&
+                  autopilotData.actions.map(
+                    (action, index) => (
+                      <article
+                        key={index}
+                        className="action"
+                        style={{
+                          padding: "20px",
+                          marginBottom: "16px",
+                        }}
+                      >
+                        <h3>
+                          {action.title ||
+                            `Langkah ${index + 1}`}
+                        </h3>
+
+                        {action.description && (
+                          <p>
+                            {action.description}
+                          </p>
+                        )}
+
+                        {action.action && (
+                          <p>
+                            {action.action}
+                          </p>
+                        )}
+
+                        {action.expectedResult && (
+                          <p>
+                            <strong>
+                              Hasil yang diharapkan:
+                            </strong>{" "}
+                            {action.expectedResult}
+                          </p>
+                        )}
+                      </article>
+                    )
+                  )}
+
+
+                {Array.isArray(
+                  autopilotData.actionPlan
+                ) &&
+                  autopilotData.actionPlan.map(
+                    (action, index) => (
+                      <article
+                        key={index}
+                        className="action"
+                        style={{
+                          padding: "20px",
+                          marginBottom: "16px",
+                        }}
+                      >
+                        <h3>
+                          {action.title ||
+                            `Langkah ${index + 1}`}
+                        </h3>
+
+                        <p>
+                          {action.description ||
+                            action.action ||
+                            ""}
+                        </p>
+                      </article>
+                    )
+                  )}
+
+
+                <div
+                  style={{
+                    marginTop: "24px",
+                  }}
+                >
+                  <button
+                    onClick={() =>
+                      setAutopilotData(null)
+                    }
+                  >
+                    Buat Action Plan Baru
+                  </button>
+                </div>
+
+              </div>
+            )}
+
+          </section>
+        )}
+</main>
     </div>
   );
 }
