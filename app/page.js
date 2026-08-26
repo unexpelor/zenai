@@ -32,12 +32,20 @@ export default function Home() {
   const [business, setBusiness] =
     useState(null);
 
-  const [diagnosis, setDiagnosis] =
-    useState(null);
+const [diagnosis, setDiagnosis] =
+  useState(null);
 
-  const [autopilotData, setAutopilotData] =
-    useState(null);
+const [pulseData, setPulseData] =
+  useState(null);
 
+const [businessUpdates, setBusinessUpdates] =
+  useState([]);
+
+const [updateText, setUpdateText] =
+  useState("");
+
+const [autopilotData, setAutopilotData] =
+  useState(null);
 
   const [busy, setBusy] =
     useState(false);
