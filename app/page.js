@@ -33,7 +33,15 @@ export default function Home() {
 
   const [autopilotData, setAutopilotData] =
     useState(null);
+const [marketData, setMarketData] =
+  useState(null);
 
+const [marketLoading, setMarketLoading] =
+  useState(false);
+
+const [marketError, setMarketError] =
+  useState("");
+  
 const [marketData, setMarketData] =
   useState(null);
 
@@ -978,6 +986,92 @@ Balas hanya JSON valid.
       }
     }
   };
+  const runMarketInsight = async () => {
+  if (!business) {
+    alert(
+      "Ceritakan usaha terlebih dahulu."
+    );
+
+    setTab("capture");
+    return;
+  }
+
+  setMarketLoading(true);
+  setMarketError("");
+
+  try {
+    const response = await fetch(
+      "/api/marketplace",
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type":
+            "application/json",
+        },
+
+        body: JSON.stringify({
+          action: "market-insight",
+
+          businessProfile: {
+            business:
+              business.description ||
+              business.product ||
+              "",
+
+            industry:
+              business.product ||
+              "",
+
+            location:
+              business.location ||
+              business.lokasi ||
+              "",
+          },
+        }),
+      }
+    );
+
+    const result =
+      await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        result.error ||
+        "Gagal memperbarui Wawasan Pasar."
+      );
+    }
+
+    if (!result.success) {
+      throw new Error(
+        result.error ||
+        "Wawasan Pasar tidak dapat dibuat."
+      );
+    }
+
+    setMarketData(result);
+
+    setTab("market");
+
+  } catch (error) {
+
+    console.error(
+      "MARKET INSIGHT ERROR:",
+      error
+    );
+
+    const message =
+      formatError(error) ||
+      "Terjadi kesalahan saat mengambil informasi pasar.";
+
+    setMarketError(message);
+
+  } finally {
+
+    setMarketLoading(false);
+
+  }
+};
     const runAutopilot = async (
     contextOverride = null,
     options = {}
