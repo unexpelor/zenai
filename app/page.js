@@ -1,8 +1,22 @@
 "use client";
 
-import { useRef, useState } from "react";
-
+import { useEffect, useRef, useState } from "react";
 export default function Home() {
+  const [isMobile, setIsMobile] = useState(false);
+
+useEffect(() => {
+  const checkScreen = () => {
+    setIsMobile(window.innerWidth <= 768);
+  };
+
+  checkScreen();
+
+  window.addEventListener("resize", checkScreen);
+
+  return () => {
+    window.removeEventListener("resize", checkScreen);
+  };
+}, []);
   const [tab, setTab] = useState("capture");
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
