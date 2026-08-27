@@ -1774,6 +1774,9 @@ Balas JSON valid.
 
               {tab === "autopilot" &&
                 "Strategi & Tindakan"}
+
+{tab === "market" &&
+  "Perspektif Bisnis"}
             </h2>
 
             <p
@@ -3894,6 +3897,284 @@ Balas JSON valid.
             )}
           </div>
         )}
+{/* =========================
+    PERSPEKTIF BISNIS
+========================= */}
+
+{tab === "market" && (
+  <div
+    style={{
+      maxWidth: "1000px"
+    }}
+  >
+    {!marketData &&
+      !marketLoading &&
+      !marketError && (
+        <div
+          style={{
+            background: "#ffffff",
+            border: "1px solid #e2e8f0",
+            borderRadius: "20px",
+            padding: "40px",
+            textAlign: "center"
+          }}
+        >
+          <div
+            style={{
+              fontSize: "48px",
+              marginBottom: "16px"
+            }}
+          >
+            🔭
+          </div>
+
+          <h3
+            style={{
+              margin: 0,
+              fontSize: "24px"
+            }}
+          >
+            Perspektif Bisnis
+          </h3>
+
+          <p
+            style={{
+              color: "#64748b",
+              maxWidth: "580px",
+              margin: "12px auto 24px",
+              lineHeight: "1.6"
+            }}
+          >
+            ZENAI akan melihat perkembangan,
+            tren, peluang, risiko, dan informasi
+            terbaru dari luar yang relevan dengan
+            usaha Anda.
+          </p>
+
+          <button
+            onClick={runMarketInsight}
+            style={{
+              border: "none",
+              background: "#2563eb",
+              color: "#ffffff",
+              padding: "14px 22px",
+              borderRadius: "10px",
+              cursor: "pointer",
+              fontWeight: "700"
+            }}
+          >
+            🔭 Lihat Perspektif Bisnis
+          </button>
+        </div>
+      )}
+
+    {marketLoading && (
+      <div
+        style={{
+          background: "#eff6ff",
+          border: "1px solid #bfdbfe",
+          borderRadius: "20px",
+          padding: "40px",
+          textAlign: "center"
+        }}
+      >
+        <div
+          style={{
+            fontSize: "42px",
+            marginBottom: "14px"
+          }}
+        >
+          🔭
+        </div>
+
+        <h3>
+          ZENAI sedang mencari informasi terbaru...
+        </h3>
+
+        <p
+          style={{
+            color: "#64748b",
+            lineHeight: "1.6"
+          }}
+        >
+          Mengumpulkan informasi eksternal
+          yang relevan dengan kondisi usaha Anda.
+        </p>
+      </div>
+    )}
+
+    {!marketLoading &&
+      marketError && (
+        <div
+          style={{
+            background: "#fef2f2",
+            border: "1px solid #fecaca",
+            borderRadius: "20px",
+            padding: "28px"
+          }}
+        >
+          <h3
+            style={{
+              marginTop: 0,
+              color: "#991b1b"
+            }}
+          >
+            Perspektif Bisnis belum dapat diperbarui
+          </h3>
+
+          <p
+            style={{
+              color: "#991b1b"
+            }}
+          >
+            {marketError}
+          </p>
+
+          <button
+            onClick={runMarketInsight}
+            style={{
+              border: "none",
+              background: "#991b1b",
+              color: "#ffffff",
+              padding: "11px 18px",
+              borderRadius: "10px",
+              cursor: "pointer"
+            }}
+          >
+            Coba Lagi
+          </button>
+        </div>
+      )}
+
+    {!marketLoading &&
+      !marketError &&
+      marketData && (
+        <>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              gap: "16px",
+              flexWrap: "wrap",
+              marginBottom: "20px"
+            }}
+          >
+            <div>
+              <h3
+                style={{
+                  margin: 0
+                }}
+              >
+                🌍 Perspektif Eksternal
+              </h3>
+
+              <p
+                style={{
+                  margin: "6px 0 0",
+                  color: "#64748b"
+                }}
+              >
+                Informasi terbaru yang relevan
+                dengan usaha Anda.
+              </p>
+            </div>
+
+            <button
+              onClick={runMarketInsight}
+              disabled={marketLoading}
+              style={{
+                border: "1px solid #cbd5e1",
+                background: "#ffffff",
+                color: "#334155",
+                padding: "10px 16px",
+                borderRadius: "10px",
+                cursor: "pointer",
+                fontWeight: "600"
+              }}
+            >
+              🔄 Perbarui
+            </button>
+          </div>
+
+          {Array.isArray(marketData.sources) &&
+          marketData.sources.length > 0 ? (
+            <div
+              style={{
+                display: "grid",
+                gap: "14px"
+              }}
+            >
+              {marketData.sources.map(
+                (item, index) => (
+                  <div
+                    key={item.url || index}
+                    style={{
+                      background: "#ffffff",
+                      border:
+                        "1px solid #e2e8f0",
+                      borderRadius: "16px",
+                      padding: "22px"
+                    }}
+                  >
+                    <h3
+                      style={{
+                        margin: "0 0 10px"
+                      }}
+                    >
+                      {item.title ||
+                        "Informasi Terkini"}
+                    </h3>
+
+                    {item.content && (
+                      <p
+                        style={{
+                          color: "#64748b",
+                          lineHeight: "1.7",
+                          marginBottom: "14px"
+                        }}
+                      >
+                        {item.content}
+                      </p>
+                    )}
+
+                    {item.url && (
+                      <a
+                        href={item.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{
+                          color: "#2563eb",
+                          fontWeight: "600",
+                          textDecoration: "none"
+                        }}
+                      >
+                        Buka sumber ↗
+                      </a>
+                    )}
+                  </div>
+                )
+              )}
+            </div>
+          ) : (
+            <div
+              style={{
+                background: "#ffffff",
+                border: "1px solid #e2e8f0",
+                borderRadius: "18px",
+                padding: "30px",
+                textAlign: "center",
+                color: "#64748b"
+              }}
+            >
+              Belum ditemukan informasi yang
+              cukup relevan. Silakan perbarui kembali.
+            </div>
+          )}
+        </>
+      )}
+  </div>
+)}
         {/* =========================
             STRATEGI & TINDAKAN
         ========================== */}
