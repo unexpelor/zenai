@@ -107,51 +107,52 @@ const getBusinessContext = () => {
   };
 };
 
-  const formatError = (value) => {
+ const formatError = (value) => {
+  // isi kode formatError kamu
+};
 
-    if (
-      value === null ||
-      value === undefined
-    ) {
-      return "";
-    }
 
-    if (
-      typeof value === "string"
-    ) {
-      return value;
-    }
+// TAMBAHKAN KODE INI DI SINI
+const renderStatus = (status) => {
+  const normalized = String(status || "")
+    .toLowerCase()
+    .trim();
 
-    if (
-      value instanceof Error
-    ) {
-      return value.message;
-    }
+  const statusMap = {
+    critical: "🔴 Kritis",
+    high: "🟠 Tinggi",
+    medium: "🟡 Sedang",
+    low: "🟢 Rendah",
 
-    if (
-      Array.isArray(value)
-    ) {
-      return value
-        .map(formatError)
-        .filter(Boolean)
-        .join("\n");
-    }
+    urgent: "🔴 Mendesak",
+    warning: "🟠 Perlu Perhatian",
+    attention: "🟠 Perlu Perhatian",
 
-    try {
+    good: "🟢 Baik",
+    healthy: "🟢 Sehat",
+    positive: "🟢 Positif",
 
-      return JSON.stringify(
-        value,
-        null,
-        2
-      );
+    stable: "🔵 Stabil",
+    normal: "🔵 Normal",
 
-    } catch {
+    success: "🟢 Berhasil",
+    completed: "🟢 Selesai",
 
-      return String(value);
-
-    }
-
+    pending: "🟡 Menunggu",
+    unknown: "⚪ Tidak diketahui",
   };
+
+  return (
+    statusMap[normalized] ||
+    (status
+      ? String(status)
+      : "⚪ Belum diketahui")
+  );
+};
+
+
+// SETELAH INI BIARKAN KODE LAMA
+const askAI = async (payload) => {
 
 
   const askAI = async (payload) => {
