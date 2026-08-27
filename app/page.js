@@ -1458,7 +1458,8 @@ Balas JSON valid.
     getAnalysisHistory();
     return (
     <main
-      style={{
+  className="zenai-app"
+  style={{
         flex: 1,
 minWidth: 0,
 overflowX: "hidden",
@@ -1472,6 +1473,7 @@ padding: isMobile ? "16px 12px" : "32px",
     >
       {/* SIDEBAR */}
       <aside
+  className={`zenai-sidebar ${sidebarOpen ? "open" : "closed"}`}
   style={{
     width: isMobile
   ? sidebarOpen
@@ -1914,13 +1916,14 @@ minWidth: isMobile
 
       {/* KONTEN UTAMA */}
       <section
-        style={{
-          flex: 1,
-          minWidth: 0,
-          padding: "32px",
-          boxSizing: "border-box"
-        }}
-      >
+  className="zenai-content"
+  style={{
+    flex: 1,
+    minWidth: 0,
+    padding: "32px",
+    boxSizing: "border-box"
+  }}
+>
         {/* HEADER */}
         <header
           style={{
@@ -4995,7 +4998,28 @@ minWidth: isMobile
           </div>
         )}
 
-      </section>
+            </section>
+
+      <style>{`
+        @media (max-width: 768px) {
+          .zenai-app {
+            width: 100vw !important;
+            max-width: 100vw !important;
+            overflow-x: hidden !important;
+          }
+
+          .zenai-sidebar {
+            flex-shrink: 0 !important;
+            overflow: hidden !important;
+          }
+
+          .zenai-content {
+            min-width: 0 !important;
+            overflow-x: hidden !important;
+          }
+        }
+      `}</style>
+
     </main>
   );
 }
