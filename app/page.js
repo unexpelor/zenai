@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 
 export default function Home() {
   const [tab, setTab] = useState("capture");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const [text, setText] = useState("");
   const [image, setImage] = useState("");
@@ -1453,46 +1454,72 @@ Balas JSON valid.
     >
       {/* SIDEBAR */}
       <aside
-        style={{
-          width: "280px",
-          minHeight: "100vh",
-          background: "#ffffff",
-          borderRight: "1px solid #e2e8f0",
-          padding: "24px 16px",
-          position: "sticky",
-          top: 0,
-          alignSelf: "flex-start",
-          boxSizing: "border-box"
-        }}
-      >
-        {/* LOGO */}
-        <div
-          style={{
-            padding: "8px 12px 28px"
-          }}
+  style={{
+    width: sidebarOpen ? "280px" : "72px",
+    minWidth: sidebarOpen ? "280px" : "72px",
+    minHeight: "100vh",
+    background: "#ffffff",
+    borderRight: "1px solid #e2e8f0",
+    padding: sidebarOpen ? "24px 16px" : "24px 10px",
+    position: "sticky",
+    top: 0,
+    alignSelf: "flex-start",
+    boxSizing: "border-box",
+    overflow: "hidden",
+    transition: "width 0.3s ease, min-width 0.3s ease, padding 0.3s ease"
+  }}
         >
-          <h1
-            style={{
-              margin: 0,
-              fontSize: "28px",
-              letterSpacing: "-1px"
-            }}
-          >
-            ZENAI
-          </h1>
+  <button
+    onClick={() => setSidebarOpen(!sidebarOpen)}
+    title={
+      sidebarOpen
+        ? "Tutup menu"
+        : "Buka menu"
+    }
+    style={{
+      width: "100%",
+      border: "none",
+      background: "transparent",
+      cursor: "pointer",
+      padding: "8px 10px",
+      marginBottom: "12px",
+      fontSize: "22px",
+      textAlign: sidebarOpen
+        ? "right"
+        : "center",
+      color: "#334155"
+    }}
+  >
+    ☰
+  </button>
+        {/* LOGO */}
+<div
+  style={{
+    padding: "8px 12px 28px"
+  }}
+>
+  <h1
+    style={{
+      margin: 0,
+      fontSize: "28px",
+      letterSpacing: "-1px"
+    }}
+  >
+    ZENAI
+  </h1>
 
-          <p
-            style={{
-              margin: "6px 0 0",
-              color: "#64748b",
-              fontSize: "13px",
-              lineHeight: "1.5"
-            }}
-          >
-            AI Partner untuk memahami,
-            menganalisis, dan mengembangkan usaha.
-          </p>
-        </div>
+  <p
+    style={{
+      margin: "6px 0 0",
+      color: "#64748b",
+      fontSize: "13px",
+      lineHeight: "1.5"
+    }}
+  >
+    AI Partner untuk memahami,
+    menganalisis, dan mengembangkan usaha.
+  </p>
+</div>
 
         {/* NAVIGASI */}
         <nav
@@ -1503,30 +1530,51 @@ Balas JSON valid.
           }}
         >
           <button
-            onClick={() => setTab("home")}
-            style={{
-              width: "100%",
-              border: "none",
-              padding: "12px 14px",
-              borderRadius: "10px",
-              cursor: "pointer",
-              textAlign: "left",
-              background:
-                tab === "home"
-                  ? "#eff6ff"
-                  : "transparent",
-              color:
-                tab === "home"
-                  ? "#2563eb"
-                  : "#475569",
-              fontWeight:
-                tab === "home"
-                  ? "700"
-                  : "500"
-            }}
-          >
-            🏠 Dashboard
-          </button>
+  onClick={() => setTab("home")}
+  title={sidebarOpen ? "" : "Dashboard"}
+  style={{
+    width: "100%",
+    border: "none",
+    padding: "12px 14px",
+    borderRadius: "10px",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: sidebarOpen
+      ? "flex-start"
+      : "center",
+    gap: sidebarOpen ? "10px" : "0",
+    textAlign: sidebarOpen ? "left" : "center",
+    background:
+      tab === "home"
+        ? "#eff6ff"
+        : "transparent",
+    color:
+      tab === "home"
+        ? "#2563eb"
+        : "#475569",
+    fontWeight:
+      tab === "home"
+        ? "700"
+        : "500",
+    transition: "all 0.2s ease"
+  }}
+>
+  <span
+    style={{
+      fontSize: "18px",
+      flexShrink: 0
+    }}
+  >
+    🏠
+  </span>
+
+  {sidebarOpen && (
+    <span>
+      Dashboard
+    </span>
+  )}
+</button>
 
           <button
             onClick={() => setTab("capture")}
