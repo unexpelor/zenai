@@ -33,15 +33,7 @@ export default function Home() {
 
   const [autopilotData, setAutopilotData] =
     useState(null);
-const [marketData, setMarketData] =
-  useState(null);
 
-const [marketLoading, setMarketLoading] =
-  useState(false);
-
-const [marketError, setMarketError] =
-  useState("");
-  
 const [marketData, setMarketData] =
   useState(null);
 
