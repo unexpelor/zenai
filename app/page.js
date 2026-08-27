@@ -28,24 +28,23 @@ export default function Home() {
   const [recordingTime, setRecordingTime] =
     useState(0);
 
-
   const [business, setBusiness] =
     useState(null);
 
-const [diagnosis, setDiagnosis] =
-  useState(null);
+  const [diagnosis, setDiagnosis] =
+    useState(null);
 
-const [pulseData, setPulseData] =
-  useState(null);
+  const [pulseData, setPulseData] =
+    useState(null);
 
-const [businessUpdates, setBusinessUpdates] =
-  useState([]);
+  const [businessUpdates, setBusinessUpdates] =
+    useState([]);
 
-const [updateText, setUpdateText] =
-  useState("");
+  const [updateText, setUpdateText] =
+    useState("");
 
-const [autopilotData, setAutopilotData] =
-  useState(null);
+  const [autopilotData, setAutopilotData] =
+    useState(null);
 
   const [busy, setBusy] =
     useState(false);
@@ -55,8 +54,6 @@ const [autopilotData, setAutopilotData] =
 
   const [days, setDays] =
     useState(7);
-
-
 
   const mediaRecorderRef =
     useRef(null);
@@ -74,7 +71,6 @@ const [autopilotData, setAutopilotData] =
     useRef(null);
 
 
-
   const formatError = (value) => {
 
     if (
@@ -84,20 +80,17 @@ const [autopilotData, setAutopilotData] =
       return "";
     }
 
-
     if (
       typeof value === "string"
     ) {
       return value;
     }
 
-
     if (
       value instanceof Error
     ) {
       return value.message;
     }
-
 
     if (
       Array.isArray(value)
@@ -107,7 +100,6 @@ const [autopilotData, setAutopilotData] =
         .filter(Boolean)
         .join("\n");
     }
-
 
     try {
 
@@ -126,17 +118,15 @@ const [autopilotData, setAutopilotData] =
   };
 
 
-
-
-  const askAI = async(payload)=>{
+  const askAI = async (payload) => {
 
     const response =
       await fetch(
         "/api/ai",
         {
-          method:"POST",
+          method: "POST",
 
-          headers:{
+          headers: {
             "Content-Type":
               "application/json",
           },
@@ -146,13 +136,10 @@ const [autopilotData, setAutopilotData] =
         }
       );
 
-
     const result =
       await response.json();
 
-
-
-    if(!response.ok){
+    if (!response.ok) {
 
       throw new Error(
         [
@@ -177,48 +164,39 @@ const [autopilotData, setAutopilotData] =
 
     }
 
-
     setProvider(
       result.provider || ""
     );
-
 
     return result.text;
 
   };
 
 
-
-
-  const extractJson = (rawResult)=>{
+  const extractJson = (rawResult) => {
 
     const clean =
       String(rawResult || "")
-      .replace(/```json/gi,"")
-      .replace(/```/g,"")
+      .replace(/```json/gi, "")
+      .replace(/```/g, "")
       .trim();
-
 
     const start =
       clean.indexOf("{");
 
-
     const end =
       clean.lastIndexOf("}");
 
-
-
-    if(
+    if (
       start === -1 ||
       end === -1
-    ){
+    ) {
 
       throw new Error(
         "AI tidak mengembalikan JSON valid."
       );
 
     }
-
 
     return JSON.parse(
       clean.substring(
@@ -230,24 +208,20 @@ const [autopilotData, setAutopilotData] =
   };
 
 
-
-
-  const fileToBase64=(file)=>
+  const fileToBase64 = (file) =>
     new Promise(
-      (resolve,reject)=>{
+      (resolve, reject) => {
 
         const reader =
           new FileReader();
 
-
-        reader.onload=()=>{
+        reader.onload = () => {
           resolve(
             reader.result
           );
         };
 
-
-        reader.onerror=()=>{
+        reader.onerror = () => {
           reject(
             new Error(
               "Gagal membaca file."
@@ -255,29 +229,23 @@ const [autopilotData, setAutopilotData] =
           );
         };
 
-
         reader.readAsDataURL(file);
 
       }
     );
 
 
-
-
-  const handleImage=async(event)=>{
+  const handleImage = async (event) => {
 
     const file =
       event.target.files?.[0];
 
-
-    if(!file)
+    if (!file)
       return;
 
-
-
-    if(
+    if (
       !file.type.startsWith("image/")
-    ){
+    ) {
 
       alert(
         "File harus berupa gambar."
@@ -287,15 +255,13 @@ const [autopilotData, setAutopilotData] =
 
     }
 
-
-    try{
+    try {
 
       setImage(
         await fileToBase64(file)
       );
 
-
-    }catch(error){
+    } catch (error) {
 
       alert(
         formatError(error) ||
@@ -307,22 +273,17 @@ const [autopilotData, setAutopilotData] =
   };
 
 
-
-
-  const handleAudio=async(event)=>{
+  const handleAudio = async (event) => {
 
     const file =
       event.target.files?.[0];
 
-
-    if(!file)
+    if (!file)
       return;
 
-
-
-    if(
+    if (
       !file.type.startsWith("audio/")
-    ){
+    ) {
 
       alert(
         "File yang dipilih bukan audio."
@@ -332,29 +293,23 @@ const [autopilotData, setAutopilotData] =
 
     }
 
-
-
-    try{
+    try {
 
       setAudio(
         await fileToBase64(file)
       );
-
 
       setAudioMimeType(
         file.type ||
         "audio/webm"
       );
 
-
       setAudioName(
         file.name ||
         "Voice Note"
       );
 
-
-
-    }catch(error){
+    } catch (error) {
 
       alert(
         formatError(error) ||
@@ -366,9 +321,7 @@ const [autopilotData, setAutopilotData] =
   };
 
 
-
-
-  const clearAudio=()=>{
+  const clearAudio = () => {
 
     setAudio("");
 
@@ -378,36 +331,32 @@ const [autopilotData, setAutopilotData] =
 
     setRecordingTime(0);
 
+    if (audioInputRef.current) {
 
-
-    if(audioInputRef.current){
-
-      audioInputRef.current.value="";
+      audioInputRef.current.value = "";
 
     }
 
   };
 
 
-
-
-  const formatRecordingTime=(seconds)=>{
+  const formatRecordingTime = (seconds) => {
 
     const minutes =
       Math.floor(
         seconds / 60
       );
 
-
     const remaining =
       seconds % 60;
 
-
-
-    return `${String(minutes).padStart(2,"0")}:${String(remaining).padStart(2,"0")}`;
+    return `${String(minutes).padStart(2, "0")}:${String(remaining).padStart(2, "0")}`;
 
   };
+
+
   const stopMicrophone = () => {
+
     if (mediaStreamRef.current) {
 
       mediaStreamRef.current
@@ -416,12 +365,11 @@ const [autopilotData, setAutopilotData] =
           track.stop();
         });
 
-
       mediaStreamRef.current = null;
+
     }
+
   };
-
-
 
 
   const startRecording = async () => {
@@ -436,9 +384,8 @@ const [autopilotData, setAutopilotData] =
       );
 
       return;
+
     }
-
-
 
     if (
       typeof MediaRecorder === "undefined"
@@ -449,27 +396,22 @@ const [autopilotData, setAutopilotData] =
       );
 
       return;
+
     }
-
-
 
     try {
 
       clearAudio();
 
-
       const stream =
         await navigator.mediaDevices.getUserMedia(
           {
-            audio:true,
+            audio: true,
           }
         );
 
-
       mediaStreamRef.current =
         stream;
-
-
 
       const types = [
         "audio/webm;codecs=opus",
@@ -477,49 +419,39 @@ const [autopilotData, setAutopilotData] =
         "audio/ogg;codecs=opus",
       ];
 
-
-
       const supportedType =
         types.find(
-          (type)=>
+          (type) =>
             MediaRecorder.isTypeSupported(
               type
             )
         );
 
-
-
       const recorder =
         new MediaRecorder(
           stream,
           supportedType
-          ?
-          {
-            mimeType:
-              supportedType,
-          }
-          :
-          {}
+            ?
+            {
+              mimeType:
+                supportedType,
+            }
+            :
+            {}
         );
-
-
 
       mediaRecorderRef.current =
         recorder;
 
-
-
-      audioChunksRef.current=[];
-
-
+      audioChunksRef.current = [];
 
       recorder.ondataavailable =
-        (event)=>{
+        (event) => {
 
-          if(
+          if (
             event.data &&
             event.data.size > 0
-          ){
+          ) {
 
             audioChunksRef.current.push(
               event.data
@@ -530,46 +462,35 @@ const [autopilotData, setAutopilotData] =
         };
 
 
-
-
       recorder.onstop =
-        async()=>{
+        async () => {
 
-          try{
+          try {
 
             clearInterval(
               recordingTimerRef.current
             );
 
-
             setIsRecording(false);
-
-
 
             const mimeType =
               recorder.mimeType ||
               "audio/webm";
 
-
-
             const blob =
               new Blob(
                 audioChunksRef.current,
                 {
-                  type:mimeType,
+                  type: mimeType,
                 }
               );
 
-
-
             const extension =
               mimeType.includes("ogg")
-              ?
-              "ogg"
-              :
-              "webm";
-
-
+                ?
+                "ogg"
+                :
+                "webm";
 
             const file =
               new File(
@@ -578,36 +499,29 @@ const [autopilotData, setAutopilotData] =
                 ],
                 `zenai-vn-${Date.now()}.${extension}`,
                 {
-                  type:mimeType,
+                  type: mimeType,
                 }
               );
-
-
 
             setAudio(
               await fileToBase64(file)
             );
 
-
             setAudioMimeType(
               mimeType
             );
-
 
             setAudioName(
               "Voice Note ZENAI"
             );
 
-
-
-          }catch(error){
+          } catch (error) {
 
             alert(
               formatError(error)
             );
 
-          }
-          finally{
+          } finally {
 
             stopMicrophone();
 
@@ -616,25 +530,18 @@ const [autopilotData, setAutopilotData] =
         };
 
 
-
-
       recorder.start();
-
-
 
       setRecordingTime(0);
 
-
       setIsRecording(true);
-
-
 
       recordingTimerRef.current =
         setInterval(
-          ()=>{
+          () => {
 
             setRecordingTime(
-              (current)=>
+              (current) =>
                 current + 1
             );
 
@@ -642,18 +549,13 @@ const [autopilotData, setAutopilotData] =
           1000
         );
 
-
-
-    }catch(error){
-
+    } catch (error) {
 
       alert(
         "Gagal mengakses mikrofon."
       );
 
-
       setIsRecording(false);
-
 
       stopMicrophone();
 
@@ -662,21 +564,17 @@ const [autopilotData, setAutopilotData] =
   };
 
 
+  const stopRecording = () => {
 
-
-
-  const stopRecording = ()=>{
-
-    if(
+    if (
       mediaRecorderRef.current &&
       mediaRecorderRef.current.state !==
       "inactive"
-    ){
+    ) {
 
       mediaRecorderRef.current.stop();
 
     }
-
 
     clearInterval(
       recordingTimerRef.current
@@ -685,103 +583,86 @@ const [autopilotData, setAutopilotData] =
   };
 
 
-
-
-
-
-
   const analyzeBusiness =
-    async()=>{
+    async () => {
 
+      if (
+        !text.trim() &&
+        !image &&
+        !audio
+      ) {
 
-    if(
-      !text.trim() &&
-      !image &&
-      !audio
-    ){
+        alert(
+          "Masukkan teks, gambar, atau voice note."
+        );
 
-      alert(
-        "Masukkan teks, gambar, atau voice note."
-      );
+        return;
 
-      return;
+      }
 
-    }
+      setBusy(true);
 
+      try {
 
-
-    setBusy(true);
-
-
-
-    try{
-
-
-      const prompt = `
+        const prompt = `
 
 Analisis informasi UMKM berikut.
 
 INFORMASI TEKS:
 ${text.trim() || "Tidak ada"}
 
-
 ${
-audio
-?
-`
+  audio
+    ?
+    `
 VOICE NOTE:
 Gunakan isi voice note sebagai informasi tambahan bisnis.
 `
-:
-""
+    :
+    ""
 }
 
-
 ${
-image
-?
-`
+  image
+    ?
+    `
 GAMBAR:
 Analisis produk dari gambar yang tersedia.
 `
-:
-""
+    :
+    ""
 }
-
 
 Jangan membuat informasi yang tidak tersedia.
 
 Balas JSON:
 
 {
-"product":"",
-"description":"",
-"price":"",
-"target":"",
-"problem":"",
-"opportunity":"",
-"keywords":[],
-"visualSummary":"",
-"nextStep":""
+  "product": "",
+  "description": "",
+  "price": "",
+  "target": "",
+  "problem": "",
+  "opportunity": "",
+  "keywords": [],
+  "visualSummary": "",
+  "nextStep": ""
 }
 
 `;
 
+        const raw =
+          await askAI(
+            {
+              prompt,
 
+              image,
 
-      const raw =
-        await askAI(
-          {
-            prompt,
+              audio,
 
-            image,
+              audioMimeType,
 
-            audio,
-
-            audioMimeType,
-
-
-            system:`
+              system: `
 
 Anda adalah AI Business Analyst UMKM Indonesia.
 
@@ -794,93 +675,67 @@ atau fakta yang tidak ada.
 
 Balas JSON valid.
 `
-          }
+            }
+          );
+
+        const parsed =
+          extractJson(raw);
+
+        setBusiness(
+          parsed
         );
 
+        setDiagnosis(null);
+
+        setAutopilotData(null);
+
+        setTab(
+          "command"
+        );
+
+      } catch (error) {
+
+        alert(
+          formatError(error)
+        );
+
+      } finally {
+
+        setBusy(false);
+
+      }
+
+    };
 
 
-      const parsed =
-        extractJson(raw);
+  const runDiagnosis =
+    async () => {
 
+      if (!business) {
 
+        alert(
+          "Ceritakan usaha terlebih dahulu."
+        );
 
-      setBusiness(
-        parsed
-      );
+        setTab("capture");
 
+        return;
 
-      setDiagnosis(null);
+      }
 
+      setBusy(true);
 
-      setAutopilotData(null);
+      try {
 
-
-      setTab(
-        "command"
-      );
-
-
-
-    }catch(error){
-
-
-      alert(
-        formatError(error)
-      );
-
-
-    }finally{
-
-
-      setBusy(false);
-
-
-    }
-
-};
-
-
-
-
-
-
-
-
-const runDiagnosis =
-async()=>{
-
-
-if(!business){
-
-alert(
-"Ceritakan usaha terlebih dahulu."
-);
-
-setTab("capture");
-
-return;
-
-}
-
-
-
-setBusy(true);
-
-
-
-try{
-
-
-const prompt = `
+        const prompt = `
 
 Buat Business Diagnosis berdasarkan data berikut:
 
 ${JSON.stringify(
-business,
-null,
-2
+  business,
+  null,
+  2
 )}
-
 
 Gunakan kategori:
 
@@ -889,66 +744,63 @@ Gunakan kategori:
 3. opportunity
 4. strength
 
-
 Jangan membuat:
 - skor
 - persentase
 - angka
 - omzet
 - tren
-tanpa data.
 
+tanpa data.
 
 Balas JSON:
 
 {
-"summary":"",
+  "summary": "",
 
-"areaPriority":{
-"title":"",
-"summary":"",
-"evidence":[],
-"impact":"",
-"recommendations":[]
-},
+  "areaPriority": {
+    "title": "",
+    "summary": "",
+    "evidence": [],
+    "impact": "",
+    "recommendations": []
+  },
 
-"attention":{
-"title":"",
-"summary":"",
-"evidence":[],
-"impact":"",
-"recommendations":[]
-},
+  "attention": {
+    "title": "",
+    "summary": "",
+    "evidence": [],
+    "impact": "",
+    "recommendations": []
+  },
 
-"opportunity":{
-"title":"",
-"summary":"",
-"evidence":[],
-"impact":"",
-"recommendations":[]
-},
+  "opportunity": {
+    "title": "",
+    "summary": "",
+    "evidence": [],
+    "impact": "",
+    "recommendations": []
+  },
 
-"strength":{
-"title":"",
-"summary":"",
-"evidence":[],
-"impact":"",
-"recommendations":[]
-},
+  "strength": {
+    "title": "",
+    "summary": "",
+    "evidence": [],
+    "impact": "",
+    "recommendations": []
+  },
 
-"dataUsed":[]
+  "dataUsed": []
 }
 
 `;
 
+        const raw =
+          await askAI({
 
+            prompt,
 
-const raw =
-await askAI({
-
-prompt,
-
-system:`
+            system: `
 
 Anda adalah Business Diagnosis Engine.
 
@@ -960,1510 +812,2052 @@ Jangan mengarang data.
 
 `
 
-});
+          });
 
+        setDiagnosis(
+          extractJson(raw)
+        );
 
+        setTab(
+          "diagnosis"
+        );
 
-setDiagnosis(
-extractJson(raw)
-);
+      } catch (error) {
 
+        alert(
+          formatError(error)
+        );
 
+      } finally {
 
-setTab(
-"diagnosis"
-);
+        setBusy(false);
 
+      }
 
+    };
+  const runPulse =
+    async () => {
 
-}catch(error){
+      if (!business) {
 
+        alert(
+          "Ceritakan usaha terlebih dahulu."
+        );
 
-alert(
-formatError(error)
-);
+        setTab("capture");
 
+        return;
 
-}
-finally{
+      }
 
-setBusy(false);
+      setBusy(true);
 
-}
+      try {
 
+        const prompt = `
 
-};
+Buat analisis kondisi usaha berdasarkan informasi berikut:
 
-
-
-
-
-
-  const generatePulse = async () => {
-
-    if (!business) {
-
-      alert(
-        "Ceritakan usaha terlebih dahulu."
-      );
-
-      setTab("capture");
-
-      return;
-
-    }
-
-
-    if (!updateText.trim()) {
-
-      alert(
-        "Ceritakan perubahan atau kondisi terbaru usaha Anda."
-      );
-
-      return;
-
-    }
-
-
-    setBusy(true);
-
-
-    try {
-
-      const prompt = `
-
-Analisis perubahan kondisi UMKM berdasarkan:
-
-DATA BISNIS AWAL:
 ${JSON.stringify(
   business,
   null,
   2
 )}
 
-HASIL DIAGNOSIS SEBELUMNYA:
 ${diagnosis
-  ? JSON.stringify(
-      diagnosis,
-      null,
-      2
-    )
-  : "Belum tersedia"
+  ? `
+HASIL DIAGNOSIS:
+${JSON.stringify(
+    diagnosis,
+    null,
+    2
+  )}
+`
+  : ""
 }
 
-UPDATE KONDISI TERBARU:
-${updateText}
+Tujuan analisis adalah memberikan gambaran kondisi usaha saat ini.
 
+Jangan membuat:
+- angka
+- persentase
+- omzet
+- pertumbuhan
+- tren statistik
 
-Tugas Anda:
+jika data tersebut tidak tersedia.
 
-1. Identifikasi perubahan atau sinyal terbaru.
-2. Tentukan apakah kondisi tersebut:
-   - positif
-   - perlu perhatian
-   - menjadi hambatan
-   - membuka peluang
-3. Jelaskan perubahan berdasarkan informasi yang tersedia.
-4. Jangan membuat angka, omzet, persentase, atau fakta yang tidak diberikan.
-5. Berikan rekomendasi langkah berikutnya yang realistis.
-
-Balas hanya dalam JSON valid:
+Balas dalam format JSON:
 
 {
   "summary": "",
-
-  "signal": {
-    "status": "",
-    "title": "",
-    "description": ""
-  },
-
-  "changes": [
+  "condition": "",
+  "highlights": [
     {
-      "area": "",
-      "change": "",
-      "impact": ""
+      "title": "",
+      "description": "",
+      "status": ""
     }
   ],
-
-  "priority": "",
-
-  "nextAction": "",
-
-  "observation": ""
+  "attention": [
+    ""
+  ],
+  "strengths": [
+    ""
+  ],
+  "opportunities": [
+    ""
+  ],
+  "nextFocus": ""
 }
 
 `;
 
+        const raw =
+          await askAI({
+            prompt,
 
-      const raw =
-        await askAI({
+            system: `
 
-          prompt,
+Anda adalah Business Pulse Engine.
 
-          system: `
+Tugas Anda adalah membantu pengguna
+memahami kondisi usaha berdasarkan
+informasi yang tersedia.
 
-Anda adalah AI Business Pulse Engine
-untuk UMKM Indonesia.
+Gunakan bahasa Indonesia yang mudah
+dipahami oleh pemilik usaha.
 
-Tugas Anda adalah membaca perubahan kondisi bisnis
-berdasarkan data awal dan update terbaru.
+Jangan mengarang data.
 
-Jangan mengarang angka,
-omzet,
-persentase,
-atau fakta.
-
-Gunakan bahasa profesional,
-ringkas,
-jelas,
-dan mudah dipahami pemilik UMKM.
-
-Balas JSON valid tanpa markdown.
+Balas JSON valid.
 
 `
+          });
 
-        });
+        setPulseData(
+          extractJson(raw)
+        );
 
+        setTab("pulse");
 
-      const parsed =
-        extractJson(raw);
+      } catch (error) {
 
+        alert(
+          formatError(error)
+        );
 
-      const newUpdate = {
+      } finally {
 
-        id: Date.now(),
+        setBusy(false);
 
-        text: updateText,
-
-        createdAt:
-          new Date().toLocaleString(
-            "id-ID"
-          ),
-
-        pulse: parsed
-
-      };
-
-
-      setPulseData(
-        parsed
-      );
-
-
-      setBusinessUpdates(
-        (current) => [
-
-          newUpdate,
-
-          ...current
-
-        ]
-      );
-
-
-      setUpdateText(
-        ""
-      );
-
-
-      setTab(
-        "pulse"
-      );
-
-
-    } catch (error) {
-
-      alert(
-        formatError(error) ||
-        "Business Pulse gagal diperbarui."
-      );
-
-
-    } finally {
-
-      setBusy(false);
-
-    }
-
-  };
-
-const runAutopilot =
-async()=>{
-
-
-if(!business){
-
-alert(
-"Ceritakan usaha terlebih dahulu."
-);
-
-setTab(
-"capture"
-);
-
-return;
-
-}
-
-
-
-setBusy(true);
-
-
-
-try{
-
-
-const response =
-await fetch(
-"/api/autopilot",
-{
-method:"POST",
-
-headers:{
-"Content-Type":
-"application/json",
-},
-
-body:JSON.stringify({
-
-business:{
-
-...business,
-
-diagnosis:
-diagnosis || null
-
-},
-
-duration:days
-
-})
-
-}
-);
-
-
-
-const result =
-await response.json();
-
-
-
-if(!response.ok){
-
-throw new Error(
-result.message ||
-"Autopilot gagal."
-);
-
-}
-
-
-
-setAutopilotData(
-result.result
-);
-
-
-
-setProvider(
-result.provider || ""
-);
-
-
-
-setTab(
-"autopilot"
-);
-
-
-
-}catch(error){
-
-alert(
-formatError(error)
-);
-
-}
-finally{
-
-setBusy(false);
-
-}
-
-
-};
-  const getPriority = () => {
-
-    if (
-      diagnosis?.areaPriority?.title
-    ) {
-
-      return {
-
-        title:
-          diagnosis.areaPriority.title,
-
-
-        text:
-          diagnosis.areaPriority.summary ||
-          "Lihat Business Diagnosis untuk penjelasan lengkap."
-
-      };
-
-    }
-
-
-
-    if (
-      business?.problem
-    ) {
-
-      return {
-
-        title:
-          "Memahami masalah utama",
-
-
-        text:
-          business.problem
-
-      };
-
-    }
-
-
-
-    return {
-
-      title:
-        "Bangun profil bisnis",
-
-
-      text:
-        "Ceritakan usaha Anda agar ZENAI dapat memahami kondisi bisnis dan menentukan langkah berikutnya."
+      }
 
     };
 
-  };
 
+  const runAutopilot =
+    async () => {
 
+      if (!business) {
 
+        alert(
+          "Ceritakan usaha terlebih dahulu."
+        );
 
-  const priority =
-    getPriority();
+        setTab("capture");
 
+        return;
 
+      }
 
+      setBusy(true);
 
+      try {
 
-  const navItems = [
+        const prompt = `
 
+Buat strategi dan rencana tindakan
+untuk usaha berikut:
+
+DATA USAHA:
+${JSON.stringify(
+  business,
+  null,
+  2
+)}
+
+${diagnosis
+  ? `
+HASIL DIAGNOSIS:
+${JSON.stringify(
+    diagnosis,
+    null,
+    2
+  )}
+`
+  : ""
+}
+
+${pulseData
+  ? `
+KONDISI USAHA:
+${JSON.stringify(
+    pulseData,
+    null,
+    2
+  )}
+`
+  : ""
+}
+
+${businessUpdates.length > 0
+  ? `
+PEMBARUAN USAHA:
+${JSON.stringify(
+    businessUpdates,
+    null,
+    2
+  )}
+`
+  : ""
+}
+
+Susun rekomendasi yang realistis
+dan dapat dilakukan oleh pemilik usaha.
+
+Jangan membuat:
+- angka target
+- omzet
+- persentase
+- estimasi keuntungan
+
+tanpa data pendukung.
+
+Balas dalam JSON:
+
+{
+  "summary": "",
+  "priority": [
     {
-      id:"command",
-      icon:"🏆",
-      label:"Business Command"
-    },
-
+      "title": "",
+      "reason": "",
+      "action": ""
+    }
+  ],
+  "quickActions": [
     {
-      id:"capture",
-      icon:"🎙",
-      label:"Ceritakan Usaha"
-    },
-
+      "title": "",
+      "description": ""
+    }
+  ],
+  "plan": [
     {
-      id:"diagnosis",
-      icon:"🩺",
-      label:"Business Diagnosis"
-    },
+      "step": "",
+      "action": "",
+      "purpose": ""
+    }
+  ],
+  "warning": "",
+  "nextStep": ""
+}
 
-    {
-      id:"pulse",
-      icon:"📡",
-      label:"Business Pulse"
-    },
+`;
 
-    {
-      id:"autopilot",
-      icon:"⚡",
-      label:"Action Autopilot"
+        const raw =
+          await askAI({
+            prompt,
+
+            system: `
+
+Anda adalah Business Autopilot ZENAI.
+
+Tugas Anda bukan hanya memberikan teori,
+tetapi mengubah informasi bisnis menjadi
+langkah yang dapat dilakukan.
+
+Prioritaskan tindakan yang sederhana,
+realistis, dan relevan.
+
+Gunakan bahasa Indonesia yang mudah
+dipahami.
+
+Jangan mengarang data.
+
+Balas JSON valid.
+
+`
+          });
+
+        setAutopilotData(
+          extractJson(raw)
+        );
+
+        setTab(
+          "autopilot"
+        );
+
+      } catch (error) {
+
+        alert(
+          formatError(error)
+        );
+
+      } finally {
+
+        setBusy(false);
+
+      }
+
+    };
+
+
+  const addBusinessUpdate =
+    async () => {
+
+      if (!updateText.trim()) {
+
+        alert(
+          "Masukkan pembaruan usaha terlebih dahulu."
+        );
+
+        return;
+
+      }
+
+      const newUpdate = {
+        id: Date.now(),
+        text: updateText.trim(),
+        date:
+          new Date().toLocaleString(
+            "id-ID"
+          )
+      };
+
+      setBusinessUpdates(
+        (current) => [
+          newUpdate,
+          ...current
+        ]
+      );
+
+      setUpdateText("");
+
+    };
+
+
+  const removeBusinessUpdate =
+    (id) => {
+
+      setBusinessUpdates(
+        (current) =>
+          current.filter(
+            (item) =>
+              item.id !== id
+          )
+      );
+
+    };
+
+
+  const goToBusiness =
+    () => {
+
+      setTab("capture");
+
+    };
+
+
+  const resetAnalysis =
+    () => {
+
+      setBusiness(null);
+
+      setDiagnosis(null);
+
+      setPulseData(null);
+
+      setAutopilotData(null);
+
+      setBusinessUpdates([]);
+
+      setText("");
+
+      setImage("");
+
+      clearAudio();
+
+      setTab("capture");
+
+    };
+
+
+  const renderStatus = (
+    status
+  ) => {
+
+    if (!status)
+      return "Perlu diperhatikan";
+
+    const value =
+      status.toLowerCase();
+
+    if (
+      value.includes("baik") ||
+      value.includes("positif") ||
+      value.includes("kuat")
+    ) {
+      return "Kondisi baik";
     }
 
-  ];
-
-
-
-
-  const titles = {
-
-    command:
-      "Business Command",
-
-    capture:
-      "Ceritakan Usaha",
-
-    diagnosis:
-      "Business Diagnosis",
-
-    pulse:
-      "Business Pulse",
-
-    autopilot:
-      "Action Autopilot"
-
-  };
-
-
-
-
-
-
-
-  const DiagnosisCard = ({
-    icon,
-    label,
-    data,
-  }) => {
-
-
-    if(
-      !data?.title
-    ){
-
-      return null;
-
+    if (
+      value.includes("perlu") ||
+      value.includes("waspada")
+    ) {
+      return "Perlu perhatian";
     }
 
-
-
-    return (
-
-      <article
-
-        className="action"
-
-        style={{
-
-          display:"block",
-
-          width:"100%",
-
-          padding:"22px",
-
-          marginBottom:"20px",
-
-          boxSizing:"border-box"
-
-        }}
-
-      >
-
-
-        <div
-
-          style={{
-
-            paddingBottom:"16px",
-
-            marginBottom:"18px",
-
-            borderBottom:
-              "1px solid #e5e7eb"
-
-          }}
-
-        >
-
-
-          <div
-
-            style={{
-
-              display:"flex",
-
-              alignItems:"center",
-
-              gap:"8px",
-
-              fontSize:"12px",
-
-              fontWeight:"700",
-
-              color:"#64748b",
-
-              marginBottom:"10px",
-
-              textTransform:
-                "uppercase"
-
-            }}
-
-          >
-
-
-            <span>
-
-              {icon}
-
-            </span>
-
-
-            <span>
-
-              {label}
-
-            </span>
-
-
-          </div>
-
-
-
-
-          <h2
-
-            style={{
-
-              margin:0,
-
-              fontSize:"22px",
-
-              lineHeight:"1.35"
-
-            }}
-
-          >
-
-            {data.title}
-
-          </h2>
-
-
-
-        </div>
-
-
-
-
-
-        <div
-
-          className="diagnosis-grid"
-
-          style={{
-
-            display:"grid",
-
-            gridTemplateColumns:
-              "repeat(2,minmax(0,1fr))",
-
-            gap:"16px"
-
-          }}
-
-        >
-
-
-
-          {data.summary && (
-
-            <div
-
-              className="diagnosis-item"
-
-              style={{
-
-                padding:"16px",
-
-                borderRadius:"12px",
-
-                background:"#f8fafc"
-
-              }}
-
-            >
-
-              <h4>
-
-                Ringkasan Analisis
-
-              </h4>
-
-
-              <p>
-
-                {data.summary}
-
-              </p>
-
-
-            </div>
-
-          )}
-
-
-
-
-
-
-          {
-          Array.isArray(
-            data.evidence
-          )
-          &&
-          data.evidence.length > 0
-          &&
-
-          (
-
-            <div
-
-              className="diagnosis-item"
-
-              style={{
-
-                padding:"16px",
-
-                borderRadius:"12px",
-
-                background:"#f8fafc"
-
-              }}
-
-            >
-
-
-              <h4>
-
-                Dasar Analisis
-
-              </h4>
-
-
-              <ul>
-
-
-                {
-                data.evidence.map(
-
-                  (
-                    item,
-                    index
-                  )=>(
-
-                    <li
-                      key={index}
-                    >
-
-                      {item}
-
-                    </li>
-
-                  )
-
-                )
-
-                }
-
-
-              </ul>
-
-
-            </div>
-
-          )
-
-          }
-          {data.impact && (
-
-            <div
-
-              className="diagnosis-item"
-
-              style={{
-
-                padding:"16px",
-
-                borderRadius:"12px",
-
-                background:"#f8fafc"
-
-              }}
-
-            >
-
-              <h4>
-
-                Potensi Dampak
-
-              </h4>
-
-
-              <p>
-
-                {data.impact}
-
-              </p>
-
-
-            </div>
-
-          )}
-
-
-
-
-
-
-          {
-          Array.isArray(
-            data.recommendations
-          )
-          &&
-          data.recommendations.length > 0
-          &&
-
-          (
-
-            <div
-
-              className="diagnosis-item"
-
-              style={{
-
-                padding:"16px",
-
-                borderRadius:"12px",
-
-                background:"#f8fafc"
-
-              }}
-
-            >
-
-              <h4>
-
-                Rekomendasi Prioritas
-
-              </h4>
-
-
-              <ol>
-
-
-                {
-                data.recommendations.map(
-
-                  (
-                    item,
-                    index
-                  )=>(
-
-                    <li
-                      key={index}
-                    >
-
-                      {item}
-
-                    </li>
-
-                  )
-
-                )
-
-                }
-
-
-              </ol>
-
-
-            </div>
-
-          )
-
-          }
-
-
-        </div>
-
-
-
-
-
-        <style jsx>{`
-
-          @media(max-width:768px){
-
-            .diagnosis-grid{
-
-              grid-template-columns:
-              1fr !important;
-
-            }
-
-          }
-
-        `}</style>
-
-
-
-      </article>
-
-    );
+    return status;
 
   };
 
 
+  const getAnalysisHistory =
+    () => {
+
+      const history = [];
+
+      if (business) {
+
+        history.push({
+          type: "Profil Usaha",
+          description:
+            business.product ||
+            business.description ||
+            "Informasi usaha telah dianalisis.",
+          date:
+            "Tersedia"
+        });
+
+      }
+
+      if (pulseData) {
+
+        history.push({
+          type: "Lihat Kondisi Usaha",
+          description:
+            pulseData.summary ||
+            "Analisis kondisi usaha telah dibuat.",
+          date:
+            "Selesai"
+        });
+
+      }
+
+      if (diagnosis) {
+
+        history.push({
+          type: "Diagnosis Usaha",
+          description:
+            diagnosis.summary ||
+            "Diagnosis usaha telah dibuat.",
+          date:
+            "Selesai"
+        });
+
+      }
+
+      if (autopilotData) {
+
+        history.push({
+          type: "Strategi & Tindakan",
+          description:
+            autopilotData.summary ||
+            "Rencana tindakan telah dibuat.",
+          date:
+            "Selesai"
+        });
+
+      }
+
+      return history;
+
+    };
 
 
-
+  const analysisHistory =
+    getAnalysisHistory();
 
 
   return (
+    <main
+      style={{
+        minHeight: "100vh",
+        background: "#f8fafc",
+        color: "#0f172a",
+        display: "flex",
+        fontFamily:
+          "Arial, sans-serif"
+      }}
+    >
+      <aside
+        style={{
+          width: "280px",
+          minHeight: "100vh",
+          background: "#ffffff",
+          borderRight: "1px solid #e2e8f0",
+          padding: "24px 16px",
+          position: "sticky",
+          top: 0,
+          alignSelf: "flex-start",
+          boxSizing: "border-box"
+        }}
+      >
+        {/* LOGO */}
+        <div
+          style={{
+            padding: "8px 12px 28px"
+          }}
+        >
+          <h1
+            style={{
+              margin: 0,
+              fontSize: "28px",
+              letterSpacing: "-1px"
+            }}
+          >
+            ZENAI
+          </h1>
 
-    <div className="app">
+          <p
+            style={{
+              margin: "6px 0 0",
+              fontSize: "13px",
+              color: "#64748b"
+            }}
+          >
+            Analisis cerdas untuk usaha Anda
+          </p>
+        </div>
 
 
-      <aside>
+        {/* MENU UTAMA */}
+        <div
+          style={{
+            marginBottom: "24px"
+          }}
+        >
+          <p
+            style={{
+              fontSize: "11px",
+              fontWeight: "700",
+              color: "#94a3b8",
+              letterSpacing: "1px",
+              padding: "0 12px",
+              marginBottom: "8px"
+            }}
+          >
+            UTAMA
+          </p>
+
+          <button
+            onClick={() => setTab("command")}
+            style={{
+              width: "100%",
+              textAlign: "left",
+              padding: "12px",
+              border: "none",
+              borderRadius: "10px",
+              cursor: "pointer",
+              background:
+                tab === "command"
+                  ? "#eff6ff"
+                  : "transparent",
+              color:
+                tab === "command"
+                  ? "#2563eb"
+                  : "#475569",
+              fontWeight:
+                tab === "command"
+                  ? "700"
+                  : "500",
+              marginBottom: "4px"
+            }}
+          >
+            🏠 Beranda
+          </button>
+        </div>
 
 
-        <h2>
+        {/* ANALISIS USAHA */}
+        <div
+          style={{
+            marginBottom: "24px"
+          }}
+        >
+          <p
+            style={{
+              fontSize: "11px",
+              fontWeight: "700",
+              color: "#94a3b8",
+              letterSpacing: "1px",
+              padding: "0 12px",
+              marginBottom: "8px"
+            }}
+          >
+            ANALISIS USAHA
+          </p>
 
-          ◈ ZEN
 
-          <span>
+          <button
+            onClick={() => setTab("pulse")}
+            style={{
+              width: "100%",
+              textAlign: "left",
+              padding: "12px",
+              border: "none",
+              borderRadius: "10px",
+              cursor: "pointer",
+              background:
+                tab === "pulse"
+                  ? "#eff6ff"
+                  : "transparent",
+              color:
+                tab === "pulse"
+                  ? "#2563eb"
+                  : "#475569",
+              fontWeight:
+                tab === "pulse"
+                  ? "700"
+                  : "500",
+              marginBottom: "4px"
+            }}
+          >
+            <div>
+              📊 Lihat Kondisi Usaha
+            </div>
 
-            AI
-
-          </span>
-
-        </h2>
-
-
-
-
-        {
-        navItems.map(
-
-          (item)=>(
-
-            <button
-
-              key={item.id}
-
-              onClick={()=>setTab(item.id)}
-
+            <div
               style={{
-
-                fontWeight:
-
-                tab===item.id
-                ?
-                "700"
-                :
-                undefined
-
+                fontSize: "11px",
+                opacity: "0.7",
+                marginTop: "3px",
+                paddingLeft: "24px"
               }}
-
             >
-
-              {item.icon}
-
-              {" "}
-
-              {item.label}
+              Business Pulse
+            </div>
+          </button>
 
 
-            </button>
+          <button
+            onClick={() => setTab("diagnosis")}
+            style={{
+              width: "100%",
+              textAlign: "left",
+              padding: "12px",
+              border: "none",
+              borderRadius: "10px",
+              cursor: "pointer",
+              background:
+                tab === "diagnosis"
+                  ? "#eff6ff"
+                  : "transparent",
+              color:
+                tab === "diagnosis"
+                  ? "#2563eb"
+                  : "#475569",
+              fontWeight:
+                tab === "diagnosis"
+                  ? "700"
+                  : "500",
+              marginBottom: "4px"
+            }}
+          >
+            <div>
+              🔍 Diagnosis Usaha
+            </div>
 
-          )
+            <div
+              style={{
+                fontSize: "11px",
+                opacity: "0.7",
+                marginTop: "3px",
+                paddingLeft: "24px"
+              }}
+            >
+              Business Diagnosis
+            </div>
+          </button>
 
-        )
 
-        }
+          <button
+            onClick={() => setTab("autopilot")}
+            style={{
+              width: "100%",
+              textAlign: "left",
+              padding: "12px",
+              border: "none",
+              borderRadius: "10px",
+              cursor: "pointer",
+              background:
+                tab === "autopilot"
+                  ? "#eff6ff"
+                  : "transparent",
+              color:
+                tab === "autopilot"
+                  ? "#2563eb"
+                  : "#475569",
+              fontWeight:
+                tab === "autopilot"
+                  ? "700"
+                  : "500",
+              marginBottom: "4px"
+            }}
+          >
+            <div>
+              ⚡ Strategi & Tindakan
+            </div>
+
+            <div
+              style={{
+                fontSize: "11px",
+                opacity: "0.7",
+                marginTop: "3px",
+                paddingLeft: "24px"
+              }}
+            >
+              Business Autopilot
+            </div>
+          </button>
+        </div>
 
 
+        {/* WAWASAN PASAR */}
+        <div
+          style={{
+            marginBottom: "24px"
+          }}
+        >
+          <p
+            style={{
+              fontSize: "11px",
+              fontWeight: "700",
+              color: "#94a3b8",
+              letterSpacing: "1px",
+              padding: "0 12px",
+              marginBottom: "8px"
+            }}
+          >
+            WAWASAN PASAR
+          </p>
 
+
+          <button
+            onClick={() => setTab("market")}
+            style={{
+              width: "100%",
+              textAlign: "left",
+              padding: "12px",
+              border: "none",
+              borderRadius: "10px",
+              cursor: "pointer",
+              background:
+                tab === "market"
+                  ? "#eff6ff"
+                  : "transparent",
+              color:
+                tab === "market"
+                  ? "#2563eb"
+                  : "#475569",
+              fontWeight:
+                tab === "market"
+                  ? "700"
+                  : "500",
+              marginBottom: "4px"
+            }}
+          >
+            🌐 Market Sync
+          </button>
+
+
+          <button
+            onClick={() => setTab("opportunity")}
+            style={{
+              width: "100%",
+              textAlign: "left",
+              padding: "12px",
+              border: "none",
+              borderRadius: "10px",
+              cursor: "pointer",
+              background:
+                tab === "opportunity"
+                  ? "#eff6ff"
+                  : "transparent",
+              color:
+                tab === "opportunity"
+                  ? "#2563eb"
+                  : "#475569",
+              fontWeight:
+                tab === "opportunity"
+                  ? "700"
+                  : "500",
+              marginBottom: "4px"
+            }}
+          >
+            📈 Peluang & Tren
+          </button>
+        </div>
+
+
+        {/* AKTIVITAS */}
+        <div>
+          <p
+            style={{
+              fontSize: "11px",
+              fontWeight: "700",
+              color: "#94a3b8",
+              letterSpacing: "1px",
+              padding: "0 12px",
+              marginBottom: "8px"
+            }}
+          >
+            AKTIVITAS
+          </p>
+
+          <button
+            onClick={() => setTab("history")}
+            style={{
+              width: "100%",
+              textAlign: "left",
+              padding: "12px",
+              border: "none",
+              borderRadius: "10px",
+              cursor: "pointer",
+              background:
+                tab === "history"
+                  ? "#eff6ff"
+                  : "transparent",
+              color:
+                tab === "history"
+                  ? "#2563eb"
+                  : "#475569",
+              fontWeight:
+                tab === "history"
+                  ? "700"
+                  : "500"
+            }}
+          >
+            🗂️ Riwayat Analisis
+          </button>
+        </div>
+
+
+        {/* STATUS AI */}
+        <div
+          style={{
+            position: "absolute",
+            bottom: "24px",
+            left: "16px",
+            right: "16px",
+            padding: "14px",
+            background: "#f8fafc",
+            borderRadius: "12px",
+            fontSize: "12px",
+            color: "#64748b"
+          }}
+        >
+          <div
+            style={{
+              color: "#16a34a",
+              fontWeight: "700",
+              marginBottom: "4px"
+            }}
+          >
+            ● ZENAI Siap
+          </div>
+
+          {provider
+            ? `AI: ${provider}`
+            : "Siap membantu menganalisis usaha Anda."
+          }
+        </div>
       </aside>
 
 
-
-
-
-      <main>
-
-
-        <header>
-
-
-          <div>
-
-
-            <small>
-
-              AI-POWERED BUSINESS COMMAND CENTER
-
-            </small>
-
-
-
-            <h1>
-
-              {titles[tab]}
-
-            </h1>
-
-
-          </div>
-
-
-
-
-          <div>
-
-
-            {
-
-            provider
-
-            ?
-
-            `● ${provider} aktif`
-
-            :
-
-            "● ZENAI siap membantu"
-
-            }
-
-
-          </div>
-
-
-        </header>
-        {tab === "command" && (
-
-          <section>
-
-            <h2>
-              Ringkasan Bisnis
-            </h2>
-
-
-
-            {!business ? (
-
-              <>
-
-                <p>
-                  Mulai dengan
-                  menceritakan usaha Anda.
-                  ZENAI akan membantu
-                  memahami kondisi bisnis,
-                  menemukan area yang perlu
-                  diperhatikan, dan
-                  menyiapkan langkah
-                  berikutnya.
-                </p>
-
-
-                <button
-
-                  className="primary"
-
-                  onClick={()=>setTab("capture")}
-
-                >
-
-                  🎙 Ceritakan Usaha
-
-                </button>
-
-
-              </>
-
-
-            ) : (
-
-              <>
-
-
-                <div className="cards">
-
-
-                  <article>
-
-                    <h3>
-                      🏪 Bisnis
-                    </h3>
-
-
-                    <p>
-
-                      {business.product ||
-                      "Belum teridentifikasi"}
-
-                    </p>
-
-
-                  </article>
-
-
-
-
-                  <article>
-
-                    <h3>
-                      🎯 Target
-                    </h3>
-
-
-                    <p>
-
-                      {business.target ||
-                      "Belum cukup informasi"}
-
-                    </p>
-
-
-                  </article>
-
-
-
-
-                  <article>
-
-                    <h3>
-                      📊 Data Bisnis
-                    </h3>
-
-
-                    <p>
-
-                      ZENAI menggunakan
-                      informasi yang tersedia.
-                      Skor bisnis tidak
-                      ditampilkan sebelum
-                      tersedia data aktual.
-
-                    </p>
-
-
-                  </article>
-
-
-                </div>
-
-
-
-
-
-                <div
-
-                  style={{
-
-                    marginTop:"24px",
-
-                    padding:"20px",
-
-                    borderRadius:"14px",
-
-                    background:"#fff1e6"
-
-                  }}
-
-                >
-
-
-                  <h3>
-
-                    🎯 Prioritas Saat Ini
-
-                  </h3>
-
-
-
-                  <h2>
-
-                    {priority.title}
-
-                  </h2>
-
-
-
-                  <p>
-
-                    {priority.text}
-
-                  </p>
-
-
-
-
-                  <button
-
-                    className="primary"
-
-                    disabled={busy}
-
-                    onClick={()=>{
-
-                      if(diagnosis){
-
-                        setTab("diagnosis");
-
-                      }else{
-
-                        runDiagnosis();
-
-                      }
-
-                    }}
-
-                  >
-
-                    {busy
-
-                    ?
-
-                    "ZENAI sedang menganalisis..."
-
-                    :
-
-                    diagnosis
-
-                    ?
-
-                    "🩺 Lihat Diagnosis"
-
-                    :
-
-                    "🩺 Buat Business Diagnosis"
-
-                    }
-
-
-                  </button>
-
-
-
-                </div>
-
-
-
-
-
-                <div
-
-                  style={{
-
-                    marginTop:"24px"
-
-                  }}
-
-                >
-
-
-                  <h3>
-
-                    ⚡ Status Action Autopilot
-
-                  </h3>
-
-
-
-                  <p>
-
-                    {autopilotData
-
-                    ?
-
-                    "Strategi sudah tersedia dan dapat ditinjau kembali."
-
-                    :
-
-                    "Belum ada action plan aktif."
-
-                    }
-
-
-                  </p>
-
-
-
-                  <button
-
-                    onClick={()=>setTab("autopilot")}
-
-                  >
-
-                    {autopilotData
-
-                    ?
-
-                    "Lihat Action Plan"
-
-                    :
-
-                    "Buka Action Autopilot"
-
-                    }
-
-
-                  </button>
-
-
-
-                </div>
-
-
-
-              </>
-
-
-            )}
-
-
-
-          </section>
-
-        )}
-
-
-
-
-
-
-        {tab === "capture" && (
-
-          <section>
-
-
-            <h2>
-
-              Ceritakan Usaha
-
-            </h2>
-
-
-
-            <p>
-
-              Ceritakan produk,
-              pelanggan, kondisi usaha,
-              atau masalah yang sedang
-              dihadapi.
-
-            </p>
-
-
-
-
-            <textarea
-
-              value={text}
-
-              onChange={(e)=>setText(e.target.value)}
-
-              placeholder={`Contoh:
-Saya menjual makanan ringan.
-Target saya mahasiswa.
-Masalah saya adalah pemasaran.`}
-
-            />
-
-
-
-
-            <br />
-
-
-
-            <input
-
-              type="file"
-
-              accept="image/*"
-
-              onChange={handleImage}
-
-            />
-
-
-
-
-
-            <br /><br />
-
-
-
-            <input
-
-              ref={audioInputRef}
-
-              type="file"
-
-              accept="audio/*"
-
-              onChange={handleAudio}
-
-            />
-
-
-
-
-
-            <br /><br />
-
-
-
-            <button
-
-              onClick={()=>{
-
-                isRecording
-
-                ?
-
-                stopRecording()
-
-                :
-
-                startRecording()
-
-              }}
-
-            >
-
-              {isRecording
-
-              ?
-
-              `⏹ Stop ${formatRecordingTime(recordingTime)}`
-
-              :
-
-              "🎙 Rekam Voice Note"
-
-              }
-
-
-            </button>
-
-
-
-
-
-            {audio && (
-
-              <>
-
-                <br /><br />
-
-
-                <audio
-
-                  controls
-
-                  src={audio}
-
-                />
-
-
-              </>
-
-            )}
-
-
-
-
-
-            <br /><br />
-
-
-
-            <button
-
-              className="primary"
-
-              disabled={busy || isRecording}
-
-              onClick={analyzeBusiness}
-
-            >
-
-              {busy
-
-              ?
-
-              "Menganalisis..."
-
-              :
-
-              "✨ Analisis Usaha"
-
-              }
-
-
-            </button>
-
-
-          </section>
-
-        )}
-              {/* =========================
-            BUSINESS DIAGNOSIS
+      <div
+        style={{
+          flex: 1,
+          minWidth: 0,
+          padding: "40px",
+          boxSizing: "border-box",
+          maxWidth: "1400px"
+        }}
+      >
+
+
+        {/* =========================
+            BERANDA
         ========================= */}
 
-        {tab === "diagnosis" && (
+        {tab === "command" && (
           <section>
+
+            <div
+              style={{
+                marginBottom: "32px"
+              }}
+            >
+              <h2
+                style={{
+                  margin: "0 0 10px",
+                  fontSize: "32px"
+                }}
+              >
+                Selamat datang di ZENAI 👋
+              </h2>
+
+              <p
+                style={{
+                  color: "#64748b",
+                  fontSize: "16px",
+                  lineHeight: "1.6",
+                  maxWidth: "720px"
+                }}
+              >
+                Ceritakan usaha Anda atau pilih analisis
+                yang ingin dilakukan. ZENAI membantu Anda
+                memahami kondisi usaha, menemukan masalah,
+                melihat peluang, dan menentukan langkah
+                selanjutnya.
+              </p>
+            </div>
+
+
+            {/* RINGKASAN DATA */}
+            {business && (
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns:
+                    "repeat(auto-fit, minmax(180px, 1fr))",
+                  gap: "16px",
+                  marginBottom: "28px"
+                }}
+              >
+                <div
+                  style={{
+                    background: "#ffffff",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "16px",
+                    padding: "18px"
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      color: "#64748b",
+                      marginBottom: "6px"
+                    }}
+                  >
+                    USAHA
+                  </div>
+
+                  <strong>
+                    {business.product ||
+                      "Usaha Anda"}
+                  </strong>
+                </div>
+
+
+                <div
+                  style={{
+                    background: "#ffffff",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "16px",
+                    padding: "18px"
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      color: "#64748b",
+                      marginBottom: "6px"
+                    }}
+                  >
+                    KONDISI
+                  </div>
+
+                  <strong>
+                    {pulseData
+                      ? pulseData.condition ||
+                        "Sudah dianalisis"
+                      : "Belum dianalisis"}
+                  </strong>
+                </div>
+
+
+                <div
+                  style={{
+                    background: "#ffffff",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "16px",
+                    padding: "18px"
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      color: "#64748b",
+                      marginBottom: "6px"
+                    }}
+                  >
+                    DIAGNOSIS
+                  </div>
+
+                  <strong>
+                    {diagnosis
+                      ? "Sudah tersedia"
+                      : "Belum dilakukan"}
+                  </strong>
+                </div>
+
+
+                <div
+                  style={{
+                    background: "#ffffff",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "16px",
+                    padding: "18px"
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      color: "#64748b",
+                      marginBottom: "6px"
+                    }}
+                  >
+                    STRATEGI
+                  </div>
+
+                  <strong>
+                    {autopilotData
+                      ? "Sudah tersedia"
+                      : "Belum dibuat"}
+                  </strong>
+                </div>
+              </div>
+            )}
+
+
+            {/* PILIHAN CEPAT */}
+            <div
+              style={{
+                marginBottom: "12px"
+              }}
+            >
+              <h3
+                style={{
+                  marginBottom: "6px"
+                }}
+              >
+                Mulai dengan cepat
+              </h3>
+
+              <p
+                style={{
+                  marginTop: 0,
+                  color: "#64748b"
+                }}
+              >
+                Pilih sesuai kebutuhan Anda.
+              </p>
+            </div>
+
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns:
+                  "repeat(auto-fit, minmax(230px, 1fr))",
+                gap: "16px",
+                marginBottom: "36px"
+              }}
+            >
+
+              <button
+                onClick={() => setTab("capture")}
+                style={{
+                  textAlign: "left",
+                  padding: "22px",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "16px",
+                  background: "#ffffff",
+                  cursor: "pointer"
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "28px",
+                    marginBottom: "12px"
+                  }}
+                >
+                  🏪
+                </div>
+
+                <strong>
+                  Ceritakan Usaha Anda
+                </strong>
+
+                <p
+                  style={{
+                    margin: "8px 0 0",
+                    fontSize: "13px",
+                    color: "#64748b",
+                    lineHeight: "1.5"
+                  }}
+                >
+                  Masukkan informasi dasar usaha agar
+                  ZENAI dapat membantu menganalisisnya.
+                </p>
+              </button>
+
+
+              <button
+                onClick={runPulse}
+                style={{
+                  textAlign: "left",
+                  padding: "22px",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "16px",
+                  background: "#ffffff",
+                  cursor: "pointer"
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "28px",
+                    marginBottom: "12px"
+                  }}
+                >
+                  📊
+                </div>
+
+                <strong>
+                  Lihat Kondisi Usaha
+                </strong>
+
+                <p
+                  style={{
+                    margin: "8px 0 0",
+                    fontSize: "13px",
+                    color: "#64748b",
+                    lineHeight: "1.5"
+                  }}
+                >
+                  Ketahui hal penting yang perlu
+                  diperhatikan dari usaha Anda.
+                </p>
+              </button>
+
+
+              <button
+                onClick={runDiagnosis}
+                style={{
+                  textAlign: "left",
+                  padding: "22px",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "16px",
+                  background: "#ffffff",
+                  cursor: "pointer"
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "28px",
+                    marginBottom: "12px"
+                  }}
+                >
+                  🔍
+                </div>
+
+                <strong>
+                  Diagnosis Usaha
+                </strong>
+
+                <p
+                  style={{
+                    margin: "8px 0 0",
+                    fontSize: "13px",
+                    color: "#64748b",
+                    lineHeight: "1.5"
+                  }}
+                >
+                  Cari tahu masalah, kekuatan,
+                  peluang, dan hal yang perlu diperbaiki.
+                </p>
+              </button>
+
+
+              <button
+                onClick={runAutopilot}
+                style={{
+                  textAlign: "left",
+                  padding: "22px",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "16px",
+                  background: "#ffffff",
+                  cursor: "pointer"
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "28px",
+                    marginBottom: "12px"
+                  }}
+                >
+                  ⚡
+                </div>
+
+                <strong>
+                  Strategi & Tindakan
+                </strong>
+
+                <p
+                  style={{
+                    margin: "8px 0 0",
+                    fontSize: "13px",
+                    color: "#64748b",
+                    lineHeight: "1.5"
+                  }}
+                >
+                  Dapatkan langkah prioritas yang dapat
+                  dilakukan berdasarkan kondisi usaha.
+                </p>
+              </button>
+
+            </div>
+
+
+            {/* PANDUAN */}
+            <div
+              style={{
+                background: "#ffffff",
+                border: "1px solid #e2e8f0",
+                borderRadius: "18px",
+                padding: "24px"
+              }}
+            >
+              <h3
+                style={{
+                  marginTop: 0
+                }}
+              >
+                Bagaimana ZENAI membantu?
+              </h3>
+
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns:
+                    "repeat(auto-fit, minmax(200px, 1fr))",
+                  gap: "20px"
+                }}
+              >
+                <div>
+                  <strong>
+                    1. Ceritakan
+                  </strong>
+
+                  <p
+                    style={{
+                      color: "#64748b",
+                      fontSize: "14px",
+                      lineHeight: "1.5"
+                    }}
+                  >
+                                        Berikan informasi tentang usaha,
+                    produk, kondisi, atau masalah Anda.
+                  </p>
+                </div>
+
+                <div>
+                  <strong>
+                    2. Analisis
+                  </strong>
+
+                  <p
+                    style={{
+                      color: "#64748b",
+                      fontSize: "14px",
+                      lineHeight: "1.5"
+                    }}
+                  >
+                    ZENAI membantu melihat kondisi usaha,
+                    menemukan masalah, kekuatan, peluang,
+                    serta hal yang perlu diperhatikan.
+                  </p>
+                </div>
+
+                <div>
+                  <strong>
+                    3. Tentukan Langkah
+                  </strong>
+
+                  <p
+                    style={{
+                      color: "#64748b",
+                      fontSize: "14px",
+                      lineHeight: "1.5"
+                    }}
+                  >
+                    Gunakan hasil analisis untuk menentukan
+                    langkah yang paling perlu dilakukan
+                    terlebih dahulu.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+          </section>
+        )}
+
+
+        {/* =========================
+            CERITAKAN USAHA
+        ========================= */}
+
+        {tab === "capture" && (
+          <section>
+
             <div
               style={{
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "flex-start",
-                gap: "16px",
+                gap: "20px",
                 flexWrap: "wrap",
-                marginBottom: "24px",
+                marginBottom: "28px"
               }}
             >
               <div>
-                <h2>
-                  🩺 Business Diagnosis
+                <h2
+                  style={{
+                    margin: "0 0 10px"
+                  }}
+                >
+                  🏪 Ceritakan Usaha Anda
                 </h2>
 
-                <p>
-                  Analisis kondisi bisnis berdasarkan informasi
-                  yang telah Anda berikan.
+                <p
+                  style={{
+                    color: "#64748b",
+                    maxWidth: "700px",
+                    lineHeight: "1.6"
+                  }}
+                >
+                  Ceritakan usaha Anda dengan cara yang paling
+                  nyaman. Anda dapat menulis, menambahkan gambar,
+                  atau menggunakan voice note.
                 </p>
               </div>
 
-              <button
-                className="primary"
-                disabled={busy}
-                onClick={runDiagnosis}
-              >
-                {busy
-                  ? "Menganalisis..."
-                  : "✨ Jalankan Diagnosis"}
-              </button>
+              {business && (
+                <button
+                  onClick={resetAnalysis}
+                  style={{
+                    padding: "10px 16px",
+                    border: "1px solid #fecaca",
+                    background: "#fff1f2",
+                    color: "#dc2626",
+                    borderRadius: "10px",
+                    cursor: "pointer"
+                  }}
+                >
+                  Mulai Ulang
+                </button>
+              )}
             </div>
 
-            {!business && (
-              <div
+
+            <div
+              style={{
+                background: "#ffffff",
+                border: "1px solid #e2e8f0",
+                borderRadius: "18px",
+                padding: "24px"
+              }}
+            >
+
+              <label
                 style={{
-                  padding: "24px",
-                  background: "#f8fafc",
-                  borderRadius: "16px",
+                  display: "block",
+                  fontWeight: "700",
+                  marginBottom: "10px"
                 }}
               >
+                Ceritakan usaha atau kebutuhan Anda
+              </label>
+
+              <textarea
+                value={text}
+                onChange={(event) =>
+                  setText(event.target.value)
+                }
+                placeholder="Contoh: Saya memiliki usaha makanan rumahan. Saya menjual rice bowl dan minuman. Akhir-akhir ini penjualan belum stabil dan saya ingin mengetahui apa yang perlu diperbaiki."
+                rows={8}
+                style={{
+                  width: "100%",
+                  boxSizing: "border-box",
+                  padding: "16px",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "12px",
+                  fontSize: "15px",
+                  resize: "vertical",
+                  outline: "none"
+                }}
+              />
+
+
+              <div
+                style={{
+                  display: "flex",
+                  gap: "12px",
+                  flexWrap: "wrap",
+                  marginTop: "18px"
+                }}
+              >
+
+                <label
+                  style={{
+                    padding: "10px 16px",
+                    border: "1px solid #cbd5e1",
+                    borderRadius: "10px",
+                    cursor: "pointer",
+                    fontSize: "14px"
+                  }}
+                >
+                  🖼️ Tambahkan Gambar
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImage}
+                    style={{
+                      display: "none"
+                    }}
+                  />
+                </label>
+
+
+                <label
+                  style={{
+                    padding: "10px 16px",
+                    border: "1px solid #cbd5e1",
+                    borderRadius: "10px",
+                    cursor: "pointer",
+                    fontSize: "14px"
+                  }}
+                >
+                  🎵 Upload Voice Note
+
+                  <input
+                    ref={audioInputRef}
+                    type="file"
+                    accept="audio/*"
+                    onChange={handleAudio}
+                    style={{
+                      display: "none"
+                    }}
+                  />
+                </label>
+
+
+                {!isRecording ? (
+                  <button
+                    type="button"
+                    onClick={startRecording}
+                    disabled={busy}
+                    style={{
+                      padding: "10px 16px",
+                      border: "1px solid #cbd5e1",
+                      background: "#ffffff",
+                      borderRadius: "10px",
+                      cursor: "pointer",
+                      fontSize: "14px"
+                    }}
+                  >
+                    🎙 Rekam Voice Note
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={stopRecording}
+                    style={{
+                      padding: "10px 16px",
+                      border: "none",
+                      background: "#dc2626",
+                      color: "#ffffff",
+                      borderRadius: "10px",
+                      cursor: "pointer",
+                      fontSize: "14px"
+                    }}
+                  >
+                    ⏹ Hentikan Rekaman (
+                    {formatRecordingTime(recordingTime)})
+                  </button>
+                )}
+
+              </div>
+
+
+              {image && (
+                <div
+                  style={{
+                    marginTop: "20px"
+                  }}
+                >
+                  <p
+                    style={{
+                      fontSize: "13px",
+                      color: "#64748b"
+                    }}
+                  >
+                    Gambar yang akan dianalisis:
+                  </p>
+
+                  <img
+                    src={image}
+                    alt="Preview"
+                    style={{
+                      maxWidth: "260px",
+                      maxHeight: "220px",
+                      borderRadius: "12px",
+                      border: "1px solid #e2e8f0"
+                    }}
+                  />
+                </div>
+              )}
+
+
+              {audio && (
+                <div
+                  style={{
+                    marginTop: "20px",
+                    padding: "16px",
+                    background: "#f8fafc",
+                    borderRadius: "12px"
+                  }}
+                >
+                  <strong>
+                    🎙 {audioName || "Voice Note"}
+                  </strong>
+
+                  <div
+                    style={{
+                      marginTop: "12px"
+                    }}
+                  >
+                    <audio
+                      controls
+                      src={audio}
+                      style={{
+                        width: "100%"
+                      }}
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={clearAudio}
+                    style={{
+                      marginTop: "12px",
+                      border: "none",
+                      background: "transparent",
+                      color: "#dc2626",
+                      cursor: "pointer"
+                    }}
+                  >
+                    Hapus Voice Note
+                  </button>
+                </div>
+              )}
+
+
+              <div
+                style={{
+                  marginTop: "24px"
+                }}
+              >
+                <button
+                  className="primary"
+                  disabled={
+                    busy ||
+                    isRecording
+                  }
+                  onClick={analyzeBusiness}
+                >
+                  {busy
+                    ? "ZENAI sedang menganalisis..."
+                    : "✨ Analisis Usaha"
+                  }
+                </button>
+              </div>
+
+            </div>
+
+          </section>
+        )}
+        {/* =========================
+            LIHAT KONDISI USAHA
+            BUSINESS PULSE
+        ========================= */}
+
+        {tab === "pulse" && (
+          <section>
+
+            <div
+              style={{
+                marginBottom: "28px"
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "13px",
+                  color: "#2563eb",
+                  fontWeight: "700",
+                  marginBottom: "8px"
+                }}
+              >
+                BUSINESS PULSE
+              </div>
+
+              <h2
+                style={{
+                  margin: "0 0 10px",
+                  fontSize: "32px"
+                }}
+              >
+                📊 Lihat Kondisi Usaha
+              </h2>
+
+              <p
+                style={{
+                  color: "#64748b",
+                  lineHeight: "1.6",
+                  maxWidth: "750px"
+                }}
+              >
+                Lihat gambaran kondisi usaha Anda berdasarkan
+                informasi yang telah diberikan. ZENAI akan
+                menampilkan hal penting yang perlu diperhatikan,
+                kekuatan, dan peluang yang dapat dikembangkan.
+              </p>
+            </div>
+
+
+            {!business ? (
+
+              <div
+                style={{
+                  background: "#ffffff",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "18px",
+                  padding: "32px",
+                  textAlign: "center"
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "48px",
+                    marginBottom: "16px"
+                  }}
+                >
+                  📊
+                </div>
+
                 <h3>
-                  Belum ada data bisnis
+                  Belum ada informasi usaha
                 </h3>
 
-                <p>
+                <p
+                  style={{
+                    color: "#64748b"
+                  }}
+                >
+                  Ceritakan usaha Anda terlebih dahulu agar
+                  ZENAI dapat membantu melihat kondisinya.
+                </p>
+
+                <button
+                  className="primary"
+                  onClick={() =>
+                    setTab("capture")
+                  }
+                >
+                  Ceritakan Usaha
+                </button>
+              </div>
+
+            ) : !pulseData ? (
+
+              <div
+                style={{
+                  background: "#ffffff",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "18px",
+                  padding: "32px"
+                }}
+              >
+                <h3
+                  style={{
+                    marginTop: 0
+                  }}
+                >
+                  Siap menganalisis kondisi usaha
+                </h3>
+
+                <p
+                  style={{
+                    color: "#64748b",
+                    lineHeight: "1.6"
+                  }}
+                >
+                  ZENAI akan menggunakan informasi usaha yang
+                  sudah Anda masukkan untuk memberikan gambaran
+                  kondisi saat ini.
+                </p>
+
+                <button
+                  className="primary"
+                  disabled={busy}
+                  onClick={runPulse}
+                >
+                  {busy
+                    ? "Sedang menganalisis..."
+                    : "📊 Analisis Kondisi Usaha"
+                  }
+                </button>
+              </div>
+
+            ) : (
+
+              <>
+                <div
+                  style={{
+                    background: "#ffffff",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "18px",
+                    padding: "24px",
+                    marginBottom: "20px"
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      color: "#64748b",
+                      marginBottom: "8px"
+                    }}
+                  >
+                    GAMBARAN SAAT INI
+                  </div>
+
+                  <h3
+                    style={{
+                      margin: "0 0 12px"
+                    }}
+                  >
+                    {pulseData.condition ||
+                      "Kondisi usaha Anda"}
+                  </h3>
+
+                  <p
+                    style={{
+                      margin: 0,
+                      color: "#475569",
+                      lineHeight: "1.7"
+                    }}
+                  >
+                    {pulseData.summary}
+                  </p>
+                </div>
+
+
+                {pulseData.highlights?.length > 0 && (
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns:
+                        "repeat(auto-fit, minmax(240px, 1fr))",
+                      gap: "16px",
+                      marginBottom: "20px"
+                    }}
+                  >
+                    {pulseData.highlights.map(
+                      (item, index) => (
+                        <div
+                          key={index}
+                          style={{
+                            background: "#ffffff",
+                            border: "1px solid #e2e8f0",
+                            borderRadius: "16px",
+                            padding: "20px"
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: "12px",
+                              color: "#2563eb",
+                              fontWeight: "700",
+                              marginBottom: "8px"
+                            }}
+                          >
+                            {renderStatus(
+                              item.status
+                            )}
+                          </div>
+
+                          <strong>
+                            {item.title}
+                          </strong>
+
+                          <p
+                            style={{
+                              color: "#64748b",
+                              fontSize: "14px",
+                              lineHeight: "1.6"
+                            }}
+                          >
+                            {item.description}
+                          </p>
+                        </div>
+                      )
+                    )}
+                  </div>
+                )}
+
+
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns:
+                      "repeat(auto-fit, minmax(280px, 1fr))",
+                    gap: "16px",
+                    marginBottom: "20px"
+                  }}
+                >
+
+                  <div
+                    style={{
+                      background: "#ffffff",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: "16px",
+                      padding: "20px"
+                    }}
+                  >
+                    <h3
+                      style={{
+                        marginTop: 0
+                      }}
+                    >
+                      ⚠️ Perlu Diperhatikan
+                    </h3>
+
+                    {pulseData.attention?.length > 0 ? (
+                      <ul
+                        style={{
+                          paddingLeft: "20px",
+                          color: "#64748b",
+                          lineHeight: "1.8"
+                        }}
+                      >
+                        {pulseData.attention.map(
+                          (item, index) => (
+                            <li key={index}>
+                              {item}
+                            </li>
+                          )
+                        )}
+                      </ul>
+                    ) : (
+                      <p
+                        style={{
+                          color: "#64748b"
+                        }}
+                      >
+                        Belum ada perhatian khusus yang
+                        ditemukan dari informasi saat ini.
+                      </p>
+                    )}
+                  </div>
+
+
+                  <div
+                    style={{
+                      background: "#ffffff",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: "16px",
+                      padding: "20px"
+                    }}
+                  >
+                    <h3
+                      style={{
+                        marginTop: 0
+                      }}
+                    >
+                      💪 Kekuatan Usaha
+                    </h3>
+
+                    {pulseData.strengths?.length > 0 ? (
+                      <ul
+                        style={{
+                          paddingLeft: "20px",
+                          color: "#64748b",
+                          lineHeight: "1.8"
+                        }}
+                      >
+                        {pulseData.strengths.map(
+                          (item, index) => (
+                            <li key={index}>
+                              {item}
+                            </li>
+                          )
+                        )}
+                      </ul>
+                    ) : (
+                      <p
+                        style={{
+                          color: "#64748b"
+                        }}
+                      >
+                        Belum ada kekuatan utama yang dapat
+                        disimpulkan.
+                      </p>
+                    )}
+                  </div>
+
+                </div>
+
+
+                <div
+                  style={{
+                    background: "#eff6ff",
+                    border: "1px solid #bfdbfe",
+                    borderRadius: "16px",
+                    padding: "20px"
+                  }}
+                >
+                  <strong>
+                    Fokus Selanjutnya
+                  </strong>
+
+                  <p
+                    style={{
+                      marginBottom: 0,
+                      color: "#475569",
+                      lineHeight: "1.6"
+                    }}
+                  >
+                    {pulseData.nextFocus ||
+                      "Lanjutkan ke diagnosis untuk melihat penyebab dan prioritas masalah."}
+                  </p>
+
+                  <button
+                    onClick={runDiagnosis}
+                    style={{
+                      marginTop: "16px",
+                      padding: "10px 16px",
+                      border: "none",
+                      borderRadius: "10px",
+                      background: "#2563eb",
+                      color: "#ffffff",
+                      cursor: "pointer"
+                    }}
+                  >
+                    Lanjutkan ke Diagnosis →
+                  </button>
+                </div>
+              </>
+            )}
+
+          </section>
+        )}
+
+        {/* =========================
+            DIAGNOSIS USAHA
+        ========================= */}
+
+        {tab === "diagnosis" && (
+          <section>
+
+            <div
+              style={{
+                marginBottom: "28px"
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "13px",
+                  color: "#2563eb",
+                  fontWeight: "700",
+                  marginBottom: "8px"
+                }}
+              >
+                ANALISIS USAHA
+              </div>
+
+              <h2
+                style={{
+                  margin: "0 0 10px",
+                  fontSize: "32px"
+                }}
+              >
+                🔍 Diagnosis Usaha
+              </h2>
+
+              <p
+                style={{
+                  color: "#64748b",
+                  lineHeight: "1.6",
+                  maxWidth: "750px"
+                }}
+              >
+                Temukan masalah utama, penyebab yang mungkin,
+                serta hal yang perlu diperbaiki terlebih dahulu.
+              </p>
+            </div>
+
+
+            {!business ? (
+
+              <div
+                style={{
+                  background: "#ffffff",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "18px",
+                  padding: "32px",
+                  textAlign: "center"
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "48px",
+                    marginBottom: "16px"
+                  }}
+                >
+                  🔍
+                </div>
+
+                <h3>
+                  Belum ada informasi usaha
+                </h3>
+
+                <p
+                  style={{
+                    color: "#64748b"
+                  }}
+                >
                   Ceritakan usaha Anda terlebih dahulu agar
                   ZENAI dapat melakukan diagnosis.
                 </p>
@@ -2474,693 +2868,469 @@ Masalah saya adalah pemasaran.`}
                     setTab("capture")
                   }
                 >
-                  🎙 Ceritakan Usaha
+                  Ceritakan Usaha
                 </button>
               </div>
-            )}
 
-            {business && !diagnosis && !busy && (
+            ) : !diagnosis ? (
+
               <div
                 style={{
-                  padding: "24px",
-                  background: "#f8fafc",
-                  borderRadius: "16px",
+                  background: "#ffffff",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "18px",
+                  padding: "32px"
                 }}
               >
-                <h3>
+                <h3
+                  style={{
+                    marginTop: 0
+                  }}
+                >
                   Siap melakukan diagnosis
                 </h3>
 
-                <p>
-                  ZENAI akan mengidentifikasi area prioritas,
-                  hal yang perlu diperhatikan, peluang, dan
-                  kekuatan bisnis berdasarkan informasi yang
-                  tersedia.
+                <p
+                  style={{
+                    color: "#64748b",
+                    lineHeight: "1.6",
+                    maxWidth: "700px"
+                  }}
+                >
+                  ZENAI akan mempelajari informasi usaha yang
+                  telah Anda berikan untuk menemukan masalah,
+                  penyebab, peluang, dan rekomendasi tindakan.
                 </p>
 
                 <button
                   className="primary"
+                  disabled={busy}
                   onClick={runDiagnosis}
                 >
-                  🩺 Mulai Business Diagnosis
+                  {busy
+                    ? "ZENAI sedang melakukan diagnosis..."
+                    : "🔍 Mulai Diagnosis Usaha"
+                  }
                 </button>
               </div>
-            )}
 
-            {business && busy && (
-              <div
-                style={{
-                  padding: "30px",
-                  textAlign: "center",
-                }}
-              >
-                <h3>
-                  🧠 ZENAI sedang menganalisis bisnis...
-                </h3>
+            ) : (
 
-                <p>
-                  Mengidentifikasi kondisi dan prioritas bisnis.
-                </p>
-              </div>
-            )}
-
-            {diagnosis && (
               <>
-                {diagnosis.summary && (
+                {/* RINGKASAN */}
+
+                <div
+                  style={{
+                    background: "#ffffff",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "18px",
+                    padding: "24px",
+                    marginBottom: "20px"
+                  }}
+                >
+                  <h3
+                    style={{
+                      marginTop: 0
+                    }}
+                  >
+                    📋 Gambaran Utama
+                  </h3>
+
+                  <p
+                    style={{
+                      color: "#475569",
+                      lineHeight: "1.7",
+                      marginBottom: 0
+                    }}
+                  >
+                    {diagnosis.summary}
+                  </p>
+                </div>
+
+
+                {/* MASALAH */}
+
+                {diagnosis.problems?.length > 0 && (
                   <div
                     style={{
-                      padding: "20px",
-                      background: "#eff6ff",
-                      borderRadius: "16px",
-                      marginBottom: "20px",
+                      marginBottom: "20px"
                     }}
                   >
                     <h3>
-                      Ringkasan Diagnosis
+                      🚨 Masalah yang Ditemukan
                     </h3>
 
-                    <p>
-                      {diagnosis.summary}
-                    </p>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns:
+                          "repeat(auto-fit, minmax(260px, 1fr))",
+                        gap: "16px"
+                      }}
+                    >
+                      {diagnosis.problems.map(
+                        (item, index) => (
+                          <div
+                            key={index}
+                            style={{
+                              background: "#ffffff",
+                              border: "1px solid #fecaca",
+                              borderRadius: "16px",
+                              padding: "20px"
+                            }}
+                          >
+                            <div
+                              style={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "flex-start",
+                                gap: "12px",
+                                marginBottom: "10px"
+                              }}
+                            >
+                              <strong>
+                                {item.title}
+                              </strong>
+
+                              {item.level && (
+                                <span
+                                  style={{
+                                    fontSize: "11px",
+                                    padding: "5px 8px",
+                                    borderRadius: "20px",
+                                    background: "#fff1f2",
+                                    color: "#dc2626",
+                                    whiteSpace: "nowrap"
+                                  }}
+                                >
+                                  {item.level}
+                                </span>
+                              )}
+                            </div>
+
+                            <p
+                              style={{
+                                color: "#64748b",
+                                fontSize: "14px",
+                                lineHeight: "1.6",
+                                marginBottom: "12px"
+                              }}
+                            >
+                              {item.description}
+                            </p>
+
+                            {item.cause && (
+                              <div
+                                style={{
+                                  padding: "12px",
+                                  background: "#f8fafc",
+                                  borderRadius: "10px",
+                                  fontSize: "13px",
+                                  color: "#475569"
+                                }}
+                              >
+                                <strong>
+                                  Kemungkinan Penyebab:
+                                </strong>
+
+                                <div
+                                  style={{
+                                    marginTop: "4px"
+                                  }}
+                                >
+                                  {item.cause}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      )}
+                    </div>
                   </div>
                 )}
 
-                <DiagnosisCard
-                  icon="🔴"
-                  label="AREA PRIORITAS"
-                  data={diagnosis.areaPriority}
-                />
 
-                <DiagnosisCard
-                  icon="🟡"
-                  label="PERLU DIPERHATIKAN"
-                  data={diagnosis.attention}
-                />
+                {/* PENYEBAB UTAMA */}
 
-                <DiagnosisCard
-                  icon="🔵"
-                  label="PELUANG PERBAIKAN"
-                  data={diagnosis.opportunity}
-                />
+                {diagnosis.rootCauses?.length > 0 && (
+                  <div
+                    style={{
+                      background: "#ffffff",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: "18px",
+                      padding: "24px",
+                      marginBottom: "20px"
+                    }}
+                  >
+                    <h3
+                      style={{
+                        marginTop: 0
+                      }}
+                    >
+                      🧩 Hal yang Perlu Diperhatikan
+                    </h3>
 
-                <DiagnosisCard
-                  icon="🟢"
-                  label="KEKUATAN BISNIS"
-                  data={diagnosis.strength}
-                />
+                    <p
+                      style={{
+                        color: "#64748b",
+                        lineHeight: "1.6",
+                        marginBottom: "16px"
+                      }}
+                    >
+                      Beberapa faktor berikut kemungkinan menjadi
+                      penyebab utama kondisi usaha saat ini.
+                    </p>
+
+                    <ul
+                      style={{
+                        paddingLeft: "20px",
+                        color: "#475569",
+                        lineHeight: "1.8",
+                        marginBottom: 0
+                      }}
+                    >
+                      {diagnosis.rootCauses.map(
+                        (item, index) => (
+                          <li key={index}>
+                            {item}
+                          </li>
+                        )
+                      )}
+                    </ul>
+                  </div>
+                )}
+
+
+                {/* KEKUATAN */}
+
+                {diagnosis.strengths?.length > 0 && (
+                  <div
+                    style={{
+                      marginBottom: "20px"
+                    }}
+                  >
+                    <h3>
+                      💪 Kekuatan yang Dimiliki
+                    </h3>
+
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns:
+                          "repeat(auto-fit, minmax(220px, 1fr))",
+                        gap: "14px"
+                      }}
+                    >
+                      {diagnosis.strengths.map(
+                        (item, index) => (
+                          <div
+                            key={index}
+                            style={{
+                              background: "#f0fdf4",
+                              border: "1px solid #bbf7d0",
+                              borderRadius: "14px",
+                              padding: "18px"
+                            }}
+                          >
+                            <strong>
+                              {item.title || item}
+                            </strong>
+
+                            {item.description && (
+                              <p
+                                style={{
+                                  color: "#475569",
+                                  fontSize: "14px",
+                                  lineHeight: "1.6",
+                                  marginBottom: 0
+                                }}
+                              >
+                                {item.description}
+                              </p>
+                            )}
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </div>
+                )}
+
+
+                {/* PELUANG */}
+
+                {diagnosis.opportunity && (
+                  <div
+                    style={{
+                      background: "#ffffff",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: "18px",
+                      padding: "24px",
+                      marginBottom: "20px"
+                    }}
+                  >
+                    <h3
+                      style={{
+                        marginTop: 0
+                      }}
+                    >
+                      💡 Peluang yang Bisa Dikembangkan
+                    </h3>
+
+                    <p
+                      style={{
+                        color: "#475569",
+                        lineHeight: "1.7"
+                      }}
+                    >
+                      {diagnosis.opportunity.summary}
+                    </p>
+
+                    {diagnosis.opportunity.recommendations
+                      ?.length > 0 && (
+                      <>
+                        <strong>
+                          Yang Dapat Dilakukan
+                        </strong>
+
+                        <ul
+                          style={{
+                            paddingLeft: "18px",
+                            color: "#475569",
+                            fontSize: "13px",
+                            lineHeight: "1.7"
+                          }}
+                        >
+                          {diagnosis.opportunity.recommendations.map(
+                            (item, index) => (
+                              <li key={index}>
+                                {item}
+                              </li>
+                            )
+                          )}
+                        </ul>
+                      </>
+                    )}
+                  </div>
+                )}
+
+
+                {/* LANJUT */}
 
                 <div
                   style={{
                     marginTop: "24px",
-                  }}
-                >
-                  <button
-                    className="primary"
-                    onClick={() =>
-                      runAutopilot()
-                    }
-                  >
-                    ⚡ Buat Action Plan
-                  </button>
-                </div>
-              </>
-            )}
-          </section>
-        )}
-
-
-                {/* =========================
-            BUSINESS PULSE
-        ========================= */}
-
-        {tab === "pulse" && (
-          <section>
-
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "flex-start",
-                gap: "16px",
-                flexWrap: "wrap",
-                marginBottom: "24px",
-              }}
-            >
-
-              <div>
-
-                <h2>
-                  📡 Business Pulse
-                </h2>
-
-                <p>
-                  Pantau perubahan kondisi usaha dan dapatkan
-                  sinyal terbaru dari ZENAI.
-                </p>
-
-              </div>
-
-            </div>
-
-
-            {!business && (
-
-              <div
-                style={{
-                  padding: "24px",
-                  background: "#f8fafc",
-                  borderRadius: "16px",
-                }}
-              >
-
-                <h3>
-                  Belum ada data bisnis
-                </h3>
-
-                <p>
-                  Ceritakan usaha Anda terlebih dahulu agar
-                  ZENAI dapat memahami kondisi awal bisnis.
-                </p>
-
-                <button
-                  className="primary"
-                  onClick={() =>
-                    setTab("capture")
-                  }
-                >
-                  🎙 Ceritakan Usaha
-                </button>
-
-              </div>
-
-            )}
-
-
-            {business && (
-
-              <>
-
-                {/* UPDATE KONDISI */}
-
-                <div
-                  style={{
-                    padding: "22px",
-                    background: "#f8fafc",
+                    background: "#eff6ff",
+                    border: "1px solid #bfdbfe",
                     borderRadius: "16px",
-                    border: "1px solid #e2e8f0",
-                    marginBottom: "24px",
+                    padding: "20px"
                   }}
                 >
-
-                  <h3>
-                    🎙 Update Kondisi Usaha
+                  <h3
+                    style={{
+                      marginTop: 0
+                    }}
+                  >
+                    Sudah menemukan gambaran masalah?
                   </h3>
 
-                  <p>
-                    Ceritakan apa yang terjadi pada usaha Anda
-                    hari ini. Misalnya penjualan, pelanggan,
-                    stok, promosi, atau masalah terbaru.
+                  <p
+                    style={{
+                      color: "#475569"
+                    }}
+                  >
+                    Lanjutkan untuk mendapatkan strategi dan
+                    langkah yang dapat dilakukan.
                   </p>
 
-
-                  <textarea
-                    value={updateText}
-                    onChange={(event) =>
-                      setUpdateText(
-                        event.target.value
-                      )
-                    }
-                    placeholder={`Contoh:
-
-Hari ini penjualan lebih sepi dari biasanya.
-Banyak pelanggan menanyakan produk melalui WhatsApp,
-tetapi belum banyak yang melakukan pembelian.
-
-Stok masih tersedia cukup banyak.`}
+                  <button
+                    onClick={runAutopilot}
                     style={{
-                      minHeight: "150px",
-                      marginTop: "10px",
-                    }}
-                  />
-
-
-                  <div
-                    style={{
-                      marginTop: "16px",
-                      display: "flex",
-                      justifyContent: "flex-end",
+                      padding: "10px 16px",
+                      border: "none",
+                      borderRadius: "10px",
+                      background: "#2563eb",
+                      color: "#ffffff",
+                      cursor: "pointer"
                     }}
                   >
-
-                    <button
-                      className="primary"
-                      disabled={
-                        busy ||
-                        !updateText.trim()
-                      }
-                      onClick={generatePulse}
-                    >
-
-                      {busy
-                        ? "ZENAI membaca perubahan..."
-                        : "📡 Analisis Update"}
-
-                    </button>
-
-                  </div>
-
+                    Buat Strategi & Tindakan →
+                  </button>
                 </div>
 
-
-
-                {/* HASIL PULSE */}
-
-                {!pulseData && (
-
-                  <div
-                    style={{
-                      padding: "24px",
-                      background: "#f8fafc",
-                      borderRadius: "16px",
-                      textAlign: "center",
-                    }}
-                  >
-
-                    <h3>
-                      Belum ada perubahan terbaru
-                    </h3>
-
-                    <p>
-                      Kirim update kondisi usaha untuk
-                      melihat Business Pulse pertama Anda.
-                    </p>
-
-                  </div>
-
-                )}
-
-
-
-                {pulseData && (
-
-                  <>
-
-                    {/* SINYAL UTAMA */}
-
-                    <div
-                      style={{
-                        padding: "24px",
-                        background: "#eff6ff",
-                        borderRadius: "18px",
-                        marginBottom: "20px",
-                      }}
-                    >
-
-                      <div
-                        style={{
-                          fontSize: "12px",
-                          fontWeight: "700",
-                          color: "#64748b",
-                          textTransform: "uppercase",
-                          marginBottom: "10px",
-                        }}
-                      >
-
-                        📡 SINYAL TERBARU
-
-                      </div>
-
-
-                      <h2
-                        style={{
-                          marginTop: 0,
-                        }}
-                      >
-
-                        {pulseData.signal?.title ||
-                          "Kondisi bisnis terbaru"}
-
-                      </h2>
-
-
-                      <p>
-
-                        {pulseData.signal?.description ||
-                          pulseData.summary}
-
-                      </p>
-
-
-                      {pulseData.signal?.status && (
-
-                        <div
-                          style={{
-                            marginTop: "14px",
-                            display: "inline-block",
-                            padding:
-                              "8px 14px",
-                            borderRadius:
-                              "999px",
-                            background:
-                              "#ffffff",
-                            fontSize:
-                              "13px",
-                            fontWeight:
-                              "700",
-                          }}
-                        >
-
-                          Status:{" "}
-
-                          {
-                            pulseData.signal.status
-                          }
-
-                        </div>
-
-                      )}
-
-                    </div>
-
-
-
-                    {/* RINGKASAN */}
-
-                    {pulseData.summary && (
-
-                      <div
-                        className="action"
-                        style={{
-                          padding: "20px",
-                          marginBottom: "20px",
-                        }}
-                      >
-
-                        <h3>
-                          Ringkasan Perubahan
-                        </h3>
-
-                        <p>
-                          {pulseData.summary}
-                        </p>
-
-                      </div>
-
-                    )}
-
-
-
-                    {/* PERUBAHAN */}
-
-                    {Array.isArray(
-                      pulseData.changes
-                    ) &&
-                      pulseData.changes.length > 0 && (
-
-                        <div
-                          style={{
-                            marginBottom:
-                              "20px",
-                          }}
-                        >
-
-                          <h3>
-                            Perubahan yang Terdeteksi
-                          </h3>
-
-
-                          <div
-                            className="diagnosis-grid"
-                          >
-
-                            {pulseData.changes.map(
-                              (
-                                item,
-                                index
-                              ) => (
-
-                                <div
-                                  key={index}
-                                  className="diagnosis-item"
-                                >
-
-                                  <h4>
-
-                                    {item.area ||
-                                      `Perubahan ${
-                                        index + 1
-                                      }`}
-
-                                  </h4>
-
-
-                                  <p>
-
-                                    {item.change}
-
-                                  </p>
-
-
-                                  {item.impact && (
-
-                                    <p>
-
-                                      <strong>
-                                        Dampak:
-                                      </strong>{" "}
-
-                                      {item.impact}
-
-                                    </p>
-
-                                  )}
-
-                                </div>
-
-                              )
-                            )}
-
-                          </div>
-
-                        </div>
-
-                      )}
-
-
-
-                    {/* PRIORITAS */}
-
-                    {pulseData.priority && (
-
-                      <div
-                        className="action"
-                        style={{
-                          padding: "20px",
-                          marginBottom: "20px",
-                        }}
-                      >
-
-                        <h3>
-                          🎯 Prioritas Saat Ini
-                        </h3>
-
-                        <p>
-
-                          {pulseData.priority}
-
-                        </p>
-
-                      </div>
-
-                    )}
-
-
-
-                    {/* OBSERVASI */}
-
-                    {pulseData.observation && (
-
-                      <div
-                        className="action"
-                        style={{
-                          padding: "20px",
-                          marginBottom: "20px",
-                        }}
-                      >
-
-                        <h3>
-                          🧠 Observasi ZENAI
-                        </h3>
-
-                        <p>
-
-                          {pulseData.observation}
-
-                        </p>
-
-                      </div>
-
-                    )}
-
-
-
-                    {/* NEXT ACTION */}
-
-                    {pulseData.nextAction && (
-
-                      <div
-                        style={{
-                          padding: "22px",
-                          borderRadius: "16px",
-                          background: "#fff7ed",
-                        }}
-                      >
-
-                        <h3>
-                          ⚡ Langkah Berikutnya
-                        </h3>
-
-                        <p>
-
-                          {pulseData.nextAction}
-
-                        </p>
-
-
-                        <button
-                          className="primary"
-                          onClick={() =>
-                            setTab("autopilot")
-                          }
-                        >
-
-                          ⚡ Buka Action Autopilot
-
-                        </button>
-
-                      </div>
-
-                    )}
-
-
-                  </>
-
-                )}
-
-
-
-                {/* RIWAYAT UPDATE */}
-
-                {businessUpdates.length > 0 && (
-
-                  <div
-                    style={{
-                      marginTop: "32px",
-                    }}
-                  >
-
-                    <h3>
-                      🕒 Riwayat Update
-                    </h3>
-
-
-                    {businessUpdates.map(
-                      (update) => (
-
-                        <div
-                          key={update.id}
-                          style={{
-                            padding: "16px",
-                            borderBottom:
-                              "1px solid #e2e8f0",
-                          }}
-                        >
-
-                          <small
-                            style={{
-                              color:
-                                "#64748b",
-                            }}
-                          >
-
-                            {update.createdAt}
-
-                          </small>
-
-
-                          <p
-                            style={{
-                              marginBottom: 0,
-                            }}
-                          >
-
-                            {update.text}
-
-                          </p>
-
-                        </div>
-
-                      )
-                    )}
-
-                  </div>
-
-                )}
-
-
               </>
-
             )}
 
           </section>
         )}
-
 
 
         {/* =========================
-            ACTION AUTOPILOT
+            BUSINESS AUTOPILOT
         ========================= */}
 
         {tab === "autopilot" && (
           <section>
+
             <div
               style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "flex-start",
-                gap: "16px",
-                flexWrap: "wrap",
-                marginBottom: "24px",
+                marginBottom: "28px"
               }}
             >
-              <div>
-                <h2>
-                  ⚡ Action Autopilot
-                </h2>
-
-                <p>
-                  Ubah hasil analisis bisnis menjadi langkah
-                  yang dapat langsung dijalankan.
-                </p>
+              <div
+                style={{
+                  fontSize: "13px",
+                  color: "#2563eb",
+                  fontWeight: "700",
+                  marginBottom: "8px"
+                }}
+              >
+                STRATEGI USAHA
               </div>
+
+              <h2
+                style={{
+                  margin: "0 0 10px",
+                  fontSize: "32px"
+                }}
+              >
+                ⚡ Strategi & Tindakan
+              </h2>
+
+              <p
+                style={{
+                  color: "#64748b",
+                  lineHeight: "1.6",
+                  maxWidth: "750px"
+                }}
+              >
+                Ubah hasil analisis menjadi langkah nyata.
+                ZENAI membantu menentukan tindakan yang paling
+                penting untuk dilakukan terlebih dahulu.
+              </p>
             </div>
 
 
-            {!business && (
+            {!business ? (
+
               <div
                 style={{
-                  padding: "24px",
-                  background: "#f8fafc",
-                  borderRadius: "16px",
+                  background: "#ffffff",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "18px",
+                  padding: "32px",
+                  textAlign: "center"
                 }}
               >
                 <h3>
-                  Belum ada data bisnis
+                  Belum ada informasi usaha
                 </h3>
 
-                <p>
-                  Ceritakan usaha terlebih dahulu sebelum
-                  membuat action plan.
+                <p
+                  style={{
+                    color: "#64748b"
+                  }}
+                >
+                  Masukkan informasi usaha terlebih dahulu.
                 </p>
 
                 <button
@@ -3169,213 +3339,1134 @@ Stok masih tersedia cukup banyak.`}
                     setTab("capture")
                   }
                 >
-                  🎙 Ceritakan Usaha
+                  Ceritakan Usaha
                 </button>
               </div>
-            )}
 
+            ) : !autopilotData ? (
 
-            {business && !autopilotData && (
+              <div
+                style={{
+                  background: "#ffffff",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "18px",
+                  padding: "32px"
+                }}
+              >
+                <h3
+                  style={{
+                    marginTop: 0
+                  }}
+                >
+                  Siap menyusun langkah
+                </h3>
+
+                <p
+                  style={{
+                    color: "#64748b",
+                    lineHeight: "1.6"
+                  }}
+                >
+                  ZENAI akan menggunakan informasi usaha dan
+                  hasil analisis yang tersedia untuk menyusun
+                  tindakan yang lebih terarah.
+                </p>
+
+                <button
+                  className="primary"
+                  disabled={busy}
+                  onClick={runAutopilot}
+                >
+                  {busy
+                    ? "Sedang menyusun strategi..."
+                    : "⚡ Buat Strategi & Tindakan"
+                  }
+                </button>
+              </div>
+
+            ) : (
+
               <>
                 <div
                   style={{
+                    background: "#ffffff",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "18px",
                     padding: "24px",
-                    background: "#f8fafc",
-                    borderRadius: "16px",
+                    marginBottom: "20px"
                   }}
                 >
-                  <h3>
-                    🎯 Target Action Plan
-                  </h3>
-
-                  <p>
-                    Pilih durasi untuk menyusun langkah aksi.
-                  </p>
-
-
-                  <select
-                    value={days}
-                    onChange={(event) =>
-                      setDays(
-                        Number(event.target.value)
-                      )
-                    }
+                  <h3
                     style={{
-                      padding: "12px",
-                      borderRadius: "10px",
-                      border:
-                        "1px solid #cbd5e1",
-                      marginBottom: "20px",
+                      marginTop: 0
                     }}
                   >
-                    <option value={7}>
-                      7 Hari
-                    </option>
+                    Ringkasan Strategi
+                  </h3>
 
-                    <option value={14}>
-                      14 Hari
-                    </option>
-
-                    <option value={30}>
-                      30 Hari
-                    </option>
-                  </select>
-
-
-                  <br />
-
-
-                  <button
-                    className="primary"
-                    disabled={busy}
-                    onClick={runAutopilot}
+                  <p
+                    style={{
+                      color: "#475569",
+                      lineHeight: "1.7",
+                      marginBottom: 0
+                    }}
                   >
-                    {busy
-                      ? "ZENAI sedang menyusun strategi..."
-                      : "⚡ Buat Action Plan"}
-                  </button>
+                    {autopilotData.summary}
+                  </p>
                 </div>
+
+
+                {autopilotData.priority?.length > 0 && (
+                  <div
+                    style={{
+                      marginBottom: "20px"
+                    }}
+                  >
+                    <h3>
+                      🎯 Prioritas Tindakan
+                    </h3>
+
+                    <div
+                      style={{
+                        display: "grid",
+                        gap: "14px"
+                      }}
+                    >
+                                            {autopilotData.priority.map(
+                        (item, index) => (
+                          <div
+                            key={index}
+                            style={{
+                              background: "#ffffff",
+                              border: "1px solid #e2e8f0",
+                              borderRadius: "14px",
+                              padding: "18px"
+                            }}
+                          >
+                            <strong>
+                              {index + 1}. {item.title}
+                            </strong>
+
+                            <p
+                              style={{
+                                color: "#64748b",
+                                fontSize: "14px",
+                                lineHeight: "1.6"
+                              }}
+                            >
+                              {item.reason}
+                            </p>
+
+                            <div
+                              style={{
+                                background: "#f8fafc",
+                                padding: "12px",
+                                borderRadius: "10px",
+                                fontSize: "14px"
+                              }}
+                            >
+                              <strong>
+                                Tindakan:
+                              </strong>{" "}
+                              {item.action}
+                            </div>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </div>
+                )}
+
+
+                {autopilotData.quickActions?.length > 0 && (
+                  <div
+                    style={{
+                      marginBottom: "20px"
+                    }}
+                  >
+                    <h3>
+                      ⚡ Langkah Cepat
+                    </h3>
+
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns:
+                          "repeat(auto-fit, minmax(220px, 1fr))",
+                        gap: "14px"
+                      }}
+                    >
+                      {autopilotData.quickActions.map(
+                        (item, index) => (
+                          <div
+                            key={index}
+                            style={{
+                              background: "#ffffff",
+                              border: "1px solid #e2e8f0",
+                              borderRadius: "14px",
+                              padding: "18px"
+                            }}
+                          >
+                            <strong>
+                              {item.title}
+                            </strong>
+
+                            <p
+                              style={{
+                                color: "#64748b",
+                                fontSize: "14px",
+                                lineHeight: "1.6",
+                                marginBottom: 0
+                              }}
+                            >
+                              {item.description}
+                            </p>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </div>
+                )}
+
+
+                {autopilotData.plan?.length > 0 && (
+                  <div
+                    style={{
+                      background: "#ffffff",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: "18px",
+                      padding: "24px",
+                      marginBottom: "20px"
+                    }}
+                  >
+                    <h3
+                      style={{
+                        marginTop: 0
+                      }}
+                    >
+                      🗺️ Rencana Tindakan
+                    </h3>
+
+                    {autopilotData.plan.map(
+                      (item, index) => (
+                        <div
+                          key={index}
+                          style={{
+                            display: "flex",
+                            gap: "16px",
+                            padding: "16px 0",
+                            borderBottom:
+                              index <
+                              autopilotData.plan.length - 1
+                                ? "1px solid #e2e8f0"
+                                : "none"
+                          }}
+                        >
+                          <div
+                            style={{
+                              minWidth: "32px",
+                              height: "32px",
+                              borderRadius: "50%",
+                              background: "#eff6ff",
+                              color: "#2563eb",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              fontWeight: "700"
+                            }}
+                          >
+                            {index + 1}
+                          </div>
+
+                          <div>
+                            <strong>
+                              {item.step}
+                            </strong>
+
+                            <p
+                              style={{
+                                color: "#475569",
+                                margin: "6px 0"
+                              }}
+                            >
+                              {item.action}
+                            </p>
+
+                            <small
+                              style={{
+                                color: "#64748b"
+                              }}
+                            >
+                              Tujuan: {item.purpose}
+                            </small>
+                          </div>
+                        </div>
+                      )
+                    )}
+                  </div>
+                )}
+
+
+                {autopilotData.warning && (
+                  <div
+                    style={{
+                      padding: "18px",
+                      background: "#fff7ed",
+                      border: "1px solid #fed7aa",
+                      borderRadius: "14px",
+                      color: "#9a3412"
+                    }}
+                  >
+                    <strong>
+                      ⚠️ Catatan Penting
+                    </strong>
+
+                    <p
+                      style={{
+                        marginBottom: 0,
+                        lineHeight: "1.6"
+                      }}
+                    >
+                      {autopilotData.warning}
+                    </p>
+                  </div>
+                )}
+
               </>
             )}
 
+          </section>
+        )}
 
-            {business && busy && tab === "autopilot" && (
+
+        {/* =========================
+            MARKET SYNC
+        ========================= */}
+
+        {tab === "market" && (
+          <section>
+
+            <div
+              style={{
+                marginBottom: "28px"
+              }}
+            >
               <div
                 style={{
-                  padding: "30px",
-                  textAlign: "center",
+                  fontSize: "13px",
+                  color: "#2563eb",
+                  fontWeight: "700",
+                  marginBottom: "8px"
                 }}
               >
-                <h3>
-                  ⚡ Menyusun Action Plan...
-                </h3>
-
-                <p>
-                  ZENAI sedang mengubah analisis menjadi
-                  langkah yang dapat dijalankan.
-                </p>
+                WAWASAN PASAR
               </div>
-            )}
+
+              <h2
+                style={{
+                  margin: "0 0 10px",
+                  fontSize: "32px"
+                }}
+              >
+                🌐 Market Sync
+              </h2>
+
+              <p
+                style={{
+                  color: "#64748b",
+                  lineHeight: "1.6",
+                  maxWidth: "750px"
+                }}
+              >
+                Hubungkan kondisi usaha Anda dengan konteks pasar
+                untuk melihat faktor luar yang perlu diperhatikan.
+              </p>
+            </div>
 
 
-            {autopilotData && (
-              <div>
+            {!business ? (
 
+              <div
+                style={{
+                  background: "#ffffff",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "18px",
+                  padding: "32px",
+                  textAlign: "center"
+                }}
+              >
                 <div
                   style={{
-                    padding: "22px",
-                    background: "#eff6ff",
-                    borderRadius: "16px",
-                    marginBottom: "20px",
+                    fontSize: "48px",
+                    marginBottom: "16px"
                   }}
                 >
-                  <h3>
-                    🎯 Target
+                  🌐
+                </div>
+
+                <h3>
+                  Market Sync membutuhkan informasi usaha
+                </h3>
+
+                <p
+                  style={{
+                    color: "#64748b"
+                  }}
+                >
+                  Masukkan informasi usaha terlebih dahulu agar
+                  analisis pasar menjadi lebih relevan.
+                </p>
+
+                <button
+                  className="primary"
+                  onClick={() =>
+                    setTab("capture")
+                  }
+                >
+                  Ceritakan Usaha
+                </button>
+              </div>
+
+            ) : (
+
+              <>
+                <div
+                  style={{
+                    background: "#ffffff",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "18px",
+                    padding: "24px",
+                    marginBottom: "20px"
+                  }}
+                >
+                  <h3
+                    style={{
+                      marginTop: 0
+                    }}
+                  >
+                    Usaha yang sedang dianalisis
                   </h3>
 
-                  <p>
-                    {autopilotData.mission?.target ||
-                      autopilotData.target ||
-                      "Belum cukup informasi"}
+                  <p
+                    style={{
+                      color: "#475569",
+                      lineHeight: "1.6"
+                    }}
+                  >
+                    <strong>
+                      {business.product || "Usaha Anda"}
+                    </strong>
                   </p>
 
-
-                  <p>
-                    Durasi:{" "}
-                    {autopilotData.mission?.duration ||
-                      `${days} hari`}
+                  <p
+                    style={{
+                      color: "#64748b",
+                      lineHeight: "1.6"
+                    }}
+                  >
+                    {business.description ||
+                      "ZENAI menggunakan informasi usaha yang telah Anda masukkan sebagai dasar analisis."}
                   </p>
                 </div>
 
 
-                <h2>
-                  Action Plan
-                </h2>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns:
+                      "repeat(auto-fit, minmax(260px, 1fr))",
+                    gap: "16px"
+                  }}
+                >
+                  <div
+                    style={{
+                      background: "#ffffff",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: "16px",
+                      padding: "20px"
+                    }}
+                  >
+                    <h3
+                      style={{
+                        marginTop: 0
+                      }}
+                    >
+                      🧭 Kondisi Usaha
+                    </h3>
 
+                    <p
+                      style={{
+                        color: "#64748b",
+                        lineHeight: "1.6"
+                      }}
+                    >
+                      {pulseData?.summary ||
+                        "Belum ada analisis kondisi usaha."}
+                    </p>
 
-                {Array.isArray(
-                  autopilotData.actions
-                ) &&
-                  autopilotData.actions.map(
-                    (action, index) => (
-                      <article
-                        key={index}
-                        className="action"
+                    {!pulseData && (
+                      <button
+                        onClick={runPulse}
                         style={{
-                          padding: "20px",
-                          marginBottom: "16px",
+                          padding: "9px 14px",
+                          border: "none",
+                          borderRadius: "8px",
+                          background: "#2563eb",
+                          color: "#ffffff",
+                          cursor: "pointer"
                         }}
                       >
-                        <h3>
-                          {action.title ||
-                            `Langkah ${index + 1}`}
-                        </h3>
-
-                        {action.description && (
-                          <p>
-                            {action.description}
-                          </p>
-                        )}
-
-                        {action.action && (
-                          <p>
-                            {action.action}
-                          </p>
-                        )}
-
-                        {action.expectedResult && (
-                          <p>
-                            <strong>
-                              Hasil yang diharapkan:
-                            </strong>{" "}
-                            {action.expectedResult}
-                          </p>
-                        )}
-                      </article>
-                    )
-                  )}
+                        Analisis Kondisi
+                      </button>
+                    )}
+                  </div>
 
 
-                {Array.isArray(
-                  autopilotData.actionPlan
-                ) &&
-                  autopilotData.actionPlan.map(
-                    (action, index) => (
-                      <article
-                        key={index}
-                        className="action"
-                        style={{
-                          padding: "20px",
-                          marginBottom: "16px",
-                        }}
-                      >
-                        <h3>
-                          {action.title ||
-                            `Langkah ${index + 1}`}
-                        </h3>
+                  <div
+                    style={{
+                      background: "#ffffff",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: "16px",
+                      padding: "20px"
+                    }}
+                  >
+                    <h3
+                      style={{
+                        marginTop: 0
+                      }}
+                    >
+                      🎯 Fokus Pasar
+                    </h3>
 
-                        <p>
-                          {action.description ||
-                            action.action ||
-                            ""}
-                        </p>
-                      </article>
-                    )
-                  )}
+                    <p
+                      style={{
+                        color: "#64748b",
+                        lineHeight: "1.6"
+                      }}
+                    >
+                      {business.target
+                        ? `Target utama yang teridentifikasi: ${business.target}`
+                        : "Target pasar belum cukup jelas."}
+                    </p>
+                  </div>
+
+
+                  <div
+                    style={{
+                      background: "#ffffff",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: "16px",
+                      padding: "20px"
+                    }}
+                  >
+                    <h3
+                      style={{
+                        marginTop: 0
+                      }}
+                    >
+                      💡 Peluang Awal
+                    </h3>
+
+                    <p
+                      style={{
+                        color: "#64748b",
+                        lineHeight: "1.6"
+                      }}
+                    >
+                      {business.opportunity ||
+                        pulseData?.opportunities?.[0] ||
+                        "Belum cukup informasi untuk menentukan peluang spesifik."}
+                    </p>
+                  </div>
+                </div>
 
 
                 <div
                   style={{
                     marginTop: "24px",
+                    padding: "20px",
+                    background: "#eff6ff",
+                    border: "1px solid #bfdbfe",
+                    borderRadius: "16px"
                   }}
                 >
+                  <strong>
+                    Langkah Berikutnya
+                  </strong>
+
+                  <p
+                    style={{
+                      color: "#475569",
+                      lineHeight: "1.6"
+                    }}
+                  >
+                    Gunakan informasi kondisi usaha dan peluang
+                    yang ditemukan untuk menentukan arah
+                    pengembangan.
+                  </p>
+
                   <button
                     onClick={() =>
-                      setAutopilotData(null)
+                      setTab("opportunity")
                     }
+                    style={{
+                      padding: "10px 16px",
+                      border: "none",
+                      borderRadius: "10px",
+                      background: "#2563eb",
+                      color: "#ffffff",
+                      cursor: "pointer"
+                    }}
                   >
-                    Buat Action Plan Baru
+                    Lihat Peluang & Tren →
                   </button>
+                </div>
+
+              </>
+            )}
+
+          </section>
+        )}
+
+
+        {/* =========================
+            PELUANG & TREN
+        ========================= */}
+
+        {tab === "opportunity" && (
+          <section>
+
+            <div
+              style={{
+                marginBottom: "28px"
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "13px",
+                  color: "#2563eb",
+                  fontWeight: "700",
+                  marginBottom: "8px"
+                }}
+              >
+                WAWASAN PASAR
+              </div>
+
+              <h2
+                style={{
+                  margin: "0 0 10px",
+                  fontSize: "32px"
+                }}
+              >
+                📈 Peluang & Tren
+              </h2>
+
+              <p
+                style={{
+                  color: "#64748b",
+                  lineHeight: "1.6",
+                  maxWidth: "750px"
+                }}
+              >
+                Lihat peluang yang dapat dikembangkan berdasarkan
+                kondisi usaha dan hasil analisis yang tersedia.
+              </p>
+            </div>
+
+
+            {!business ? (
+
+              <div
+                style={{
+                  background: "#ffffff",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "18px",
+                  padding: "32px",
+                  textAlign: "center"
+                }}
+              >
+                <h3>
+                  Belum ada informasi usaha
+                </h3>
+
+                <p
+                  style={{
+                    color: "#64748b"
+                  }}
+                >
+                  Masukkan informasi usaha untuk mulai
+                  menemukan peluang.
+                </p>
+
+                <button
+                  className="primary"
+                  onClick={() =>
+                    setTab("capture")
+                  }
+                >
+                  Ceritakan Usaha
+                </button>
+              </div>
+
+            ) : (
+
+              <>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns:
+                      "repeat(auto-fit, minmax(280px, 1fr))",
+                    gap: "16px"
+                  }}
+                >
+
+                  <div
+                    style={{
+                      background: "#ffffff",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: "16px",
+                      padding: "20px"
+                    }}
+                  >
+                    <h3
+                      style={{
+                        marginTop: 0
+                      }}
+                    >
+                      💡 Peluang Usaha
+                    </h3>
+
+                    <p
+                      style={{
+                        color: "#64748b",
+                        lineHeight: "1.7"
+                      }}
+                    >
+                      {business.opportunity ||
+                        diagnosis?.opportunity?.summary ||
+                        "Belum cukup informasi untuk menentukan peluang utama."}
+                    </p>
+                  </div>
+
+
+                  <div
+                    style={{
+                      background: "#ffffff",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: "16px",
+                      padding: "20px"
+                    }}
+                  >
+                    <h3
+                      style={{
+                        marginTop: 0
+                      }}
+                    >
+                      📊 Peluang dari Kondisi Saat Ini
+                    </h3>
+
+                    {pulseData?.opportunities?.length > 0 ? (
+                      <ul
+                        style={{
+                          paddingLeft: "20px",
+                          color: "#64748b",
+                          lineHeight: "1.8"
+                        }}
+                      >
+                        {pulseData.opportunities.map(
+                          (item, index) => (
+                            <li key={index}>
+                              {item}
+                            </li>
+                          )
+                        )}
+                      </ul>
+                    ) : (
+                      <p
+                        style={{
+                          color: "#64748b",
+                          lineHeight: "1.7"
+                        }}
+                      >
+                        Jalankan analisis kondisi usaha terlebih
+                        dahulu untuk mendapatkan peluang yang lebih
+                        spesifik.
+                      </p>
+                    )}
+                  </div>
+
+
+                  <div
+                    style={{
+                      background: "#ffffff",
+                      border: "1px solid #e2e8f0",
+                      borderRadius: "16px",
+                      padding: "20px"
+                    }}
+                  >
+                    <h3
+                      style={{
+                        marginTop: 0
+                      }}
+                    >
+                      🎯 Arah Pengembangan
+                    </h3>
+
+                    <p
+                      style={{
+                        color: "#64748b",
+                        lineHeight: "1.7"
+                      }}
+                    >
+                      {diagnosis?.opportunity
+                        ?.recommendations?.[0] ||
+                        autopilotData?.nextStep ||
+                        business.nextStep ||
+                        "Lakukan analisis lebih lanjut untuk menentukan langkah pengembangan yang paling relevan."}
+                    </p>
+                  </div>
+
+                </div>
+
+
+                <div
+                  style={{
+                    marginTop: "24px",
+                    background: "#eff6ff",
+                    border: "1px solid #bfdbfe",
+                    borderRadius: "16px",
+                    padding: "22px"
+                  }}
+                >
+                  <h3
+                    style={{
+                      marginTop: 0
+                    }}
+                  >
+                    Ubah Peluang Menjadi Tindakan
+                  </h3>
+
+                  <p
+                    style={{
+                      color: "#475569",
+                      lineHeight: "1.6"
+                    }}
+                  >
+                    Setelah menemukan peluang, gunakan Strategi &
+                    Tindakan untuk menyusun langkah yang lebih
+                    terarah.
+                  </p>
+
+                  <button
+                    onClick={runAutopilot}
+                    style={{
+                      padding: "10px 16px",
+                      border: "none",
+                      borderRadius: "10px",
+                      background: "#2563eb",
+                      color: "#ffffff",
+                      cursor: "pointer"
+                    }}
+                  >
+                    Buat Strategi →
+                  </button>
+                </div>
+
+              </>
+            )}
+
+          </section>
+        )}
+
+
+        {/* =========================
+            RIWAYAT ANALISIS
+        ========================= */}
+
+        {tab === "history" && (
+          <section>
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                gap: "20px",
+                flexWrap: "wrap",
+                marginBottom: "28px"
+              }}
+            >
+              <div>
+
+                <div
+                  style={{
+                    fontSize: "13px",
+                    color: "#2563eb",
+                    fontWeight: "700",
+                    marginBottom: "8px"
+                  }}
+                >
+                  AKTIVITAS
+                </div>
+
+                <h2
+                  style={{
+                    margin: "0 0 10px",
+                    fontSize: "32px"
+                  }}
+                >
+                  🗂️ Riwayat Analisis
+                </h2>
+
+                <p
+                  style={{
+                    color: "#64748b",
+                    lineHeight: "1.6"
+                  }}
+                >
+                  Lihat analisis dan pembaruan usaha yang telah
+                  dilakukan.
+                </p>
+
+              </div>
+
+
+              {business && (
+                <button
+                  onClick={resetAnalysis}
+                  style={{
+                    padding: "10px 16px",
+                    border: "1px solid #fecaca",
+                    background: "#fff1f2",
+                    color: "#dc2626",
+                    borderRadius: "10px",
+                    cursor: "pointer"
+                  }}
+                >
+                  Hapus Analisis
+                </button>
+              )}
+
+            </div>
+
+
+            <div
+              style={{
+                background: "#ffffff",
+                border: "1px solid #e2e8f0",
+                borderRadius: "18px",
+                padding: "24px",
+                marginBottom: "20px"
+              }}
+            >
+              <h3
+                style={{
+                  marginTop: 0
+                }}
+              >
+                Tambahkan Pembaruan Usaha
+              </h3>
+
+              <p
+                style={{
+                  color: "#64748b",
+                  fontSize: "14px",
+                  lineHeight: "1.6"
+                }}
+              >
+                Catat perubahan atau perkembangan terbaru agar
+                dapat digunakan sebagai konteks analisis berikutnya.
+              </p>
+
+              <textarea
+                value={updateText}
+                onChange={(event) =>
+                  setUpdateText(event.target.value)
+                }
+                placeholder="Contoh: Minggu ini saya mulai mencoba promosi melalui Instagram, tetapi respons pelanggan masih belum banyak."
+                rows={4}
+                style={{
+                  width: "100%",
+                  boxSizing: "border-box",
+                  padding: "14px",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: "10px",
+                  resize: "vertical"
+                }}
+              />
+
+              <button
+                onClick={addBusinessUpdate}
+                style={{
+                  marginTop: "12px",
+                  padding: "10px 16px",
+                  border: "none",
+                  borderRadius: "10px",
+                  background: "#2563eb",
+                  color: "#ffffff",
+                  cursor: "pointer"
+                }}
+              >
+                + Simpan Pembaruan
+              </button>
+            </div>
+
+
+            <div
+              style={{
+                display: "grid",
+                gap: "14px",
+                marginBottom: "28px"
+              }}
+            >
+              <h3
+                style={{
+                  marginBottom: 0
+                }}
+              >
+                Analisis yang Tersedia
+              </h3>
+
+
+              {analysisHistory.length === 0 ? (
+
+                <div
+                  style={{
+                    background: "#ffffff",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "16px",
+                    padding: "28px",
+                    textAlign: "center",
+                    color: "#64748b"
+                  }}
+                >
+                  Belum ada analisis yang dilakukan.
+                </div>
+
+              ) : (
+
+                analysisHistory.map(
+                  (item, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        background: "#ffffff",
+                        border: "1px solid #e2e8f0",
+                        borderRadius: "14px",
+                        padding: "18px"
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          gap: "16px",
+                          flexWrap: "wrap"
+                        }}
+                      >
+                        <strong>
+                          {item.type}
+                        </strong>
+
+                        <span
+                          style={{
+                            fontSize: "12px",
+                            color: "#64748b"
+                          }}
+                        >
+                          {item.date}
+                        </span>
+                      </div>
+
+                      <p
+                        style={{
+                          color: "#64748b",
+                          lineHeight: "1.6",
+                          marginBottom: 0
+                        }}
+                      >
+                        {item.description}
+                      </p>
+                    </div>
+                  )
+                )
+              )}
+
+            </div>
+
+
+            {businessUpdates.length > 0 && (
+              <div>
+
+                <h3>
+                  Pembaruan Usaha
+                </h3>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gap: "14px"
+                  }}
+                >
+                  {businessUpdates.map(
+                    (item) => (
+                      <div
+                        key={item.id}
+                        style={{
+                          background: "#ffffff",
+                          border: "1px solid #e2e8f0",
+                          borderRadius: "14px",
+                          padding: "18px"
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            gap: "16px",
+                            alignItems: "flex-start"
+                          }}
+                        >
+                          <div>
+
+                            <p
+                              style={{
+                                marginTop: 0,
+                                lineHeight: "1.6"
+                              }}
+                            >
+                              {item.text}
+                            </p>
+
+                            <small
+                              style={{
+                                color: "#94a3b8"
+                              }}
+                            >
+                              {item.date}
+                            </small>
+
+                          </div>
+
+
+                          <button
+                            onClick={() =>
+                              removeBusinessUpdate(item.id)
+                            }
+                            style={{
+                              border: "none",
+                              background: "transparent",
+                              color: "#dc2626",
+                              cursor: "pointer"
+                            }}
+                          >
+                            Hapus
+                          </button>
+
+                        </div>
+                      </div>
+                    )
+                  )}
                 </div>
 
               </div>
@@ -3383,7 +4474,56 @@ Stok masih tersedia cukup banyak.`}
 
           </section>
         )}
-</main>
-    </div>
+
+      </div>
+
+
+      <style jsx>{`
+
+        .primary {
+          padding: 12px 20px;
+          border: none;
+          border-radius: 10px;
+          background: #2563eb;
+          color: #ffffff;
+          font-size: 14px;
+          font-weight: 700;
+          cursor: pointer;
+        }
+
+        .primary:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+
+        @media (max-width: 900px) {
+
+          main {
+            flex-direction: column !important;
+          }
+
+          aside {
+            width: 100% !important;
+            min-height: auto !important;
+            position: relative !important;
+          }
+
+          aside > div:last-child {
+            position: relative !important;
+            bottom: auto !important;
+            left: auto !important;
+            right: auto !important;
+            margin-top: 24px;
+          }
+
+          main > div {
+            padding: 24px 16px !important;
+          }
+
+        }
+
+      `}</style>
+
+    </main>
   );
 }
