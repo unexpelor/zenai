@@ -39,22 +39,6 @@ export default function Home() {
 
   const [businessUpdates, setBusinessUpdates] =
     useState([]);
-const getBusinessContext = () => {
-  return {
-    ...business,
-
-    updates: businessUpdates.map((item) => ({
-      text: item.text,
-      createdAt: item.createdAt,
-      pulse: item.pulse || null,
-    })),
-
-    latestUpdate:
-      businessUpdates.length > 0
-        ? businessUpdates[0]
-        : null,
-  };
-};
 
   const [updateText, setUpdateText] =
     useState("");
