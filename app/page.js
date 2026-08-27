@@ -1461,7 +1461,6 @@ Balas JSON valid.
       style={{
         flex: 1,
 minWidth: 0,
-width: 0,
 overflowX: "hidden",
 padding: isMobile ? "16px 12px" : "32px",
         minHeight: "100vh",
