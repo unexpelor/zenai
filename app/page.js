@@ -70,6 +70,42 @@ export default function Home() {
   const audioInputRef =
     useRef(null);
 
+const getBusinessContext = () => {
+  return {
+    ...business,
+
+    updates: businessUpdates.map((item) => ({
+      id: item.id,
+
+      text: item.text,
+
+      createdAt:
+        item.createdAt ||
+        item.date ||
+        null,
+
+      pulse:
+        item.pulse || null,
+    })),
+
+    latestUpdate:
+      businessUpdates.length > 0
+        ? {
+            id: businessUpdates[0].id,
+
+            text: businessUpdates[0].text,
+
+            createdAt:
+              businessUpdates[0].createdAt ||
+              businessUpdates[0].date ||
+              null,
+
+            pulse:
+              businessUpdates[0].pulse || null,
+          }
+        : null,
+  };
+};
 
   const formatError = (value) => {
 
