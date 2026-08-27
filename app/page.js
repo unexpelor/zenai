@@ -2633,39 +2633,6 @@ Balas JSON valid.
                       </p>
                     </div>
 
-                    {typeof pulseData.score ===
-                      "number" && (
-                      <div
-                        style={{
-                          width: "110px",
-                          height: "110px",
-                          borderRadius: "50%",
-                          border:
-                            "8px solid #dbeafe",
-                          display: "flex",
-                          flexDirection: "column",
-                          justifyContent: "center",
-                          alignItems: "center"
-                        }}
-                      >
-                        <strong
-                          style={{
-                            fontSize: "30px"
-                          }}
-                        >
-                          {pulseData.score}
-                        </strong>
-
-                        <span
-                          style={{
-                            fontSize: "11px",
-                            color: "#64748b"
-                          }}
-                        >
-                          SCORE
-                        </span>
-                      </div>
-                    )}
                   </div>
                 </div>
 
@@ -3019,28 +2986,25 @@ Balas JSON valid.
                   </p>
 
                   <textarea
-                    value={updateText}
-                    onChange={(event) =>
-                      setUpdateText(
-                        event.target.value
-                      )
-                    }
-                    placeholder="Contoh: Penjualan minggu ini turun, saya baru menaikkan harga, ada pesaing baru, atau saya menambah produk..."
-                    style={{
-                      width: "100%",
-                      minHeight: "110px",
-                      padding: "14px",
-                      border:
-                        "1px solid #cbd5e1",
-                      borderRadius: "10px",
-                      boxSizing:
-                        "border-box",
-                      resize: "vertical",
-                      fontFamily:
-                        "inherit",
-                      lineHeight: "1.6"
-                    }}
-                  />
+  value={updateText}
+  onChange={(event) =>
+    setUpdateText(
+      event.target.value
+    )
+  }
+  placeholder="Contoh: Penjualan minggu ini turun, saya baru menaikkan harga, ada pesaing baru, atau saya menambah produk..."
+  style={{
+    width: "100%",
+    minHeight: "110px",
+    padding: "14px",
+    border: "1px solid #cbd5e1",
+    borderRadius: "10px",
+    boxSizing: "border-box",
+    resize: "vertical",
+    fontFamily: "inherit",
+    lineHeight: "1.6"
+  }}
+/>
 
                   <div
                     style={{
@@ -3051,32 +3015,28 @@ Balas JSON valid.
                     }}
                   >
                     <button
-                      onClick={
-                        addBusinessUpdate
-                      }
-                      disabled={busy}
-                      style={{
-                        border: "none",
-                        background:
-                          busy
-                            ? "#94a3b8"
-                            : "#0f172a",
-                        color: "#ffffff",
-                        padding:
-                          "12px 18px",
-                        borderRadius:
-                          "10px",
-                        cursor:
-                          busy
-                            ? "not-allowed"
-                            : "pointer",
-                        fontWeight: "700"
-                      }}
-                    >
-                      {busy
-                        ? "Memperbarui..."
-                        : "Perbarui Analisis →"}
-                    </button>
+  onClick={addBusinessUpdate}
+  disabled={busy}
+  style={{
+    border: "none",
+    background:
+      busy
+        ? "#94a3b8"
+        : "#0f172a",
+    color: "#ffffff",
+    padding: "12px 18px",
+    borderRadius: "10px",
+    cursor:
+      busy
+        ? "not-allowed"
+        : "pointer",
+    fontWeight: "700"
+  }}
+>
+  {busy
+    ? "Memperbarui..."
+    : "Perbarui Analisis →"}
+</button>
                   </div>
 
 
