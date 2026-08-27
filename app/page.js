@@ -1629,7 +1629,44 @@ Balas JSON valid.
           >
             🔍 Diagnosis
           </button>
+<button
+  onClick={() => {
+    if (!business) {
+      alert(
+        "Analisis usaha terlebih dahulu."
+      );
 
+      setTab("capture");
+
+      return;
+    }
+
+    setTab("market");
+  }}
+  style={{
+    width: "100%",
+    border: "none",
+    padding: "12px 14px",
+    borderRadius: "10px",
+    cursor: "pointer",
+    textAlign: "left",
+    background:
+      tab === "market"
+        ? "#eff6ff"
+        : "transparent",
+    color:
+      tab === "market"
+        ? "#2563eb"
+        : "#475569",
+    fontWeight:
+      tab === "market"
+        ? "700"
+        : "500"
+  }}
+>
+  🔭 Perspektif Bisnis
+</button>
+              
           <button
             onClick={() => {
               if (!business) {
