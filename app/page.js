@@ -744,222 +744,112 @@ Balas JSON valid.
     };
 
 
-  const runDiagnosis =
-    async () => {
+  const runDiagnosis = async (
+  contextOverride = null,
+  options = {}
+) => {
+  if (!business) {
+    alert(
+      "Ceritakan usaha terlebih dahulu."
+    );
 
-      if (!business) {
+    setTab("capture");
 
-        alert(
-          "Ceritakan usaha terlebih dahulu."
-        );
+    return;
+  }
 
-        setTab("capture");
+  const context =
+    contextOverride ||
+    getBusinessContext();
 
-        return;
+  const {
+    silent = false,
+    goToTab = true
+  } = options;
 
-      }
+  if (!silent) {
+    setBusy(true);
+  }
 
-      setBusy(true);
+  try {
+    const prompt = `
 
-      try {
-
-        const prompt = `
-
-Buat Business Diagnosis berdasarkan data berikut:
+Buat Diagnosis Usaha berdasarkan
+KONDISI USAHA TERBARU berikut:
 
 ${JSON.stringify(
-  business,
+  context,
   null,
   2
 )}
 
-Gunakan kategori:
+PENTING:
 
-1. areaPriority
-2. attention
-3. opportunity
-4. strength
+1. Gunakan data usaha awal sebagai dasar.
+2. Gunakan seluruh riwayat pembaruan usaha.
+3. Pembaruan terbaru menggambarkan kondisi
+   usaha saat ini.
+4. Jika pembaruan terbaru mengubah kondisi
+   sebelumnya, sesuaikan hasil diagnosis.
+5. Jangan mempertahankan kesimpulan lama jika
+   sudah tidak sesuai dengan informasi terbaru.
+6. Fokus pada kondisi usaha saat ini.
 
-Jangan membuat:
-- skor
-- persentase
-- angka
-- omzet
-- tren
-
-tanpa data.
-
-Balas JSON:
+Gunakan format:
 
 {
   "summary": "",
 
-  "areaPriority": {
-    "title": "",
-    "summary": "",
-    "evidence": [],
-    "impact": "",
-    "recommendations": []
-  },
-
-  "attention": {
-    "title": "",
-    "summary": "",
-    "evidence": [],
-    "impact": "",
-    "recommendations": []
-  },
-
-  "opportunity": {
-    "title": "",
-    "summary": "",
-    "evidence": [],
-    "impact": "",
-    "recommendations": []
-  },
-
-  "strength": {
-    "title": "",
-    "summary": "",
-    "evidence": [],
-    "impact": "",
-    "recommendations": []
-  },
-
-  "dataUsed": []
-}
-
-`;
-
-        const raw =
-          await askAI({
-
-            prompt,
-
-            system: `
-
-Anda adalah Business Diagnosis Engine.
-
-Buat diagnosis formal,
-transparan,
-dan berbasis bukti.
-
-Jangan mengarang data.
-
-`
-
-          });
-
-        setDiagnosis(
-          extractJson(raw)
-        );
-
-        setTab(
-          "diagnosis"
-        );
-
-      } catch (error) {
-
-        alert(
-          formatError(error)
-        );
-
-      } finally {
-
-        setBusy(false);
-
-      }
-
-    };
-  const runPulse =
-    async () => {
-
-      if (!business) {
-
-        alert(
-          "Ceritakan usaha terlebih dahulu."
-        );
-
-        setTab("capture");
-
-        return;
-
-      }
-
-      setBusy(true);
-
-      try {
-
-        const prompt = `
-
-Buat analisis kondisi usaha berdasarkan informasi berikut:
-
-${JSON.stringify(
-  business,
-  null,
-  2
-)}
-
-${diagnosis
-  ? `
-HASIL DIAGNOSIS:
-${JSON.stringify(
-    diagnosis,
-    null,
-    2
-  )}
-`
-  : ""
-}
-
-Tujuan analisis adalah memberikan gambaran kondisi usaha saat ini.
-
-Jangan membuat:
-- angka
-- persentase
-- omzet
-- pertumbuhan
-- tren statistik
-
-jika data tersebut tidak tersedia.
-
-Balas dalam format JSON:
-
-{
-  "summary": "",
-  "condition": "",
-  "highlights": [
+  "problems": [
     {
       "title": "",
       "description": "",
-      "status": ""
+      "cause": "",
+      "level": ""
     }
   ],
-  "attention": [
+
+  "rootCauses": [
     ""
   ],
+
   "strengths": [
-    ""
+    {
+      "title": "",
+      "description": ""
+    }
   ],
-  "opportunities": [
+
+  "opportunity": {
+    "summary": "",
+    "recommendations": [
+      ""
+    ]
+  },
+
+  "dataUsed": [
     ""
-  ],
-  "nextFocus": ""
+  ]
 }
+
+Jangan membuat angka, persentase,
+omzet, atau fakta yang tidak tersedia.
 
 `;
 
-        const raw =
-          await askAI({
-            prompt,
+    const raw =
+      await askAI({
+        prompt,
 
-            system: `
+        system: `
 
-Anda adalah Business Pulse Engine.
+Anda adalah Business Diagnosis Engine
+ZENAI.
 
-Tugas Anda adalah membantu pengguna
-memahami kondisi usaha berdasarkan
-informasi yang tersedia.
+Tugas Anda adalah membuat diagnosis berdasarkan
+kondisi usaha TERBARU.
+
+Riwayat pembaruan harus diperhitungkan.
 
 Gunakan bahasa Indonesia yang mudah
 dipahami oleh pemilik usaha.
@@ -969,111 +859,289 @@ Jangan mengarang data.
 Balas JSON valid.
 
 `
-          });
+      });
 
-        setPulseData(
-          extractJson(raw)
-        );
+    const result =
+      extractJson(raw);
 
-        setTab("pulse");
+    setDiagnosis(result);
 
-      } catch (error) {
+    if (goToTab) {
+      setTab("diagnosis");
+    }
 
-        alert(
-          formatError(error)
-        );
+    return result;
 
-      } finally {
+  } catch (error) {
 
-        setBusy(false);
+    if (!silent) {
+      alert(
+        formatError(error)
+      );
+    }
 
-      }
+    throw error;
 
-    };
+  } finally {
 
+    if (!silent) {
+      setBusy(false);
+    }
 
-  const runAutopilot =
-    async () => {
+  }
+};
+  const runPulse = async (
+  contextOverride = null,
+  options = {}
+) => {
+  if (!business) {
+    alert(
+      "Ceritakan usaha terlebih dahulu."
+    );
 
-      if (!business) {
+    setTab("capture");
 
-        alert(
-          "Ceritakan usaha terlebih dahulu."
-        );
+    return;
+  }
 
-        setTab("capture");
+  const context =
+    contextOverride ||
+    getBusinessContext();
 
-        return;
+  const {
+    diagnosisOverride = null,
+    silent = false,
+    goToTab = true
+  } = options;
 
-      }
+  const latestDiagnosis =
+    diagnosisOverride || diagnosis;
 
-      setBusy(true);
+  if (!silent) {
+    setBusy(true);
+  }
 
-      try {
+  try {
 
-        const prompt = `
+    const prompt = `
 
-Buat strategi dan rencana tindakan
-untuk usaha berikut:
+Buat analisis KONDISI USAHA TERBARU.
 
-DATA USAHA:
+DATA USAHA DAN PEMBARUAN:
+
 ${JSON.stringify(
-  business,
+  context,
   null,
   2
 )}
 
-${diagnosis
-  ? `
-HASIL DIAGNOSIS:
+${
+  latestDiagnosis
+    ? `
+HASIL DIAGNOSIS TERBARU:
+
 ${JSON.stringify(
-    diagnosis,
-    null,
-    2
-  )}
+  latestDiagnosis,
+  null,
+  2
+)}
 `
-  : ""
+    : ""
 }
 
-${pulseData
-  ? `
-KONDISI USAHA:
-${JSON.stringify(
-    pulseData,
-    null,
-    2
-  )}
-`
-  : ""
-}
+PENTING:
 
-${businessUpdates.length > 0
-  ? `
-PEMBARUAN USAHA:
-${JSON.stringify(
-    businessUpdates,
-    null,
-    2
-  )}
-`
-  : ""
-}
+1. Data awal menjelaskan kondisi dasar usaha.
+2. Riwayat pembaruan menunjukkan perubahan
+   yang terjadi.
+3. Pembaruan terbaru adalah informasi paling
+   baru tentang kondisi usaha.
+4. Jika terjadi perubahan kondisi, hasil Pulse
+   harus mencerminkan kondisi terbaru.
+5. Jangan hanya mengulang kondisi lama.
 
-Susun rekomendasi yang realistis
-dan dapat dilakukan oleh pemilik usaha.
-
-Jangan membuat:
-- angka target
-- omzet
-- persentase
-- estimasi keuntungan
-
-tanpa data pendukung.
-
-Balas dalam JSON:
+Balas JSON:
 
 {
   "summary": "",
+  "condition": "",
+
+  "highlights": [
+    {
+      "title": "",
+      "description": "",
+      "status": ""
+    }
+  ],
+
+  "attention": [
+    ""
+  ],
+
+  "strengths": [
+    ""
+  ],
+
+  "opportunities": [
+    ""
+  ],
+
+  "nextFocus": ""
+}
+
+Jangan membuat angka, persentase,
+omzet, pertumbuhan, atau tren statistik
+jika tidak tersedia.
+
+`;
+
+    const raw =
+      await askAI({
+        prompt,
+
+        system: `
+
+Anda adalah Business Pulse Engine ZENAI.
+
+Analisis harus menggambarkan KONDISI USAHA
+SAAT INI, bukan hanya kondisi awal.
+
+Prioritaskan informasi dari pembaruan terbaru,
+tetapi tetap gunakan informasi sebelumnya
+sebagai konteks.
+
+Gunakan bahasa Indonesia yang mudah dipahami.
+
+Jangan mengarang data.
+
+Balas JSON valid.
+
+`
+      });
+
+    const result =
+      extractJson(raw);
+
+    setPulseData(result);
+
+    if (goToTab) {
+      setTab("pulse");
+    }
+
+    return result;
+
+  } catch (error) {
+
+    if (!silent) {
+      alert(
+        formatError(error)
+      );
+    }
+
+    throw error;
+
+  } finally {
+
+    if (!silent) {
+      setBusy(false);
+    }
+
+  }
+};
+
+
+  const runAutopilot = async (
+  contextOverride = null,
+  options = {}
+) => {
+  if (!business) {
+    alert(
+      "Ceritakan usaha terlebih dahulu."
+    );
+
+    setTab("capture");
+
+    return;
+  }
+
+  const context =
+    contextOverride ||
+    getBusinessContext();
+
+  const {
+    diagnosisOverride = null,
+    pulseOverride = null,
+    silent = false,
+    goToTab = true
+  } = options;
+
+  const latestDiagnosis =
+    diagnosisOverride || diagnosis;
+
+  const latestPulse =
+    pulseOverride || pulseData;
+
+  if (!silent) {
+    setBusy(true);
+  }
+
+  try {
+
+    const prompt = `
+
+Buat strategi dan rencana tindakan berdasarkan
+KONDISI USAHA TERBARU.
+
+DATA USAHA:
+
+${JSON.stringify(
+  context,
+  null,
+  2
+)}
+
+${
+  latestDiagnosis
+    ? `
+DIAGNOSIS TERBARU:
+
+${JSON.stringify(
+  latestDiagnosis,
+  null,
+  2
+)}
+`
+    : ""
+}
+
+${
+  latestPulse
+    ? `
+KONDISI USAHA TERBARU:
+
+${JSON.stringify(
+  latestPulse,
+  null,
+  2
+)}
+`
+    : ""
+}
+
+PENTING:
+
+1. Gunakan informasi terbaru sebagai dasar.
+2. Jika terdapat pembaruan usaha, strategi lama
+   harus disesuaikan.
+3. Jangan membuat strategi berdasarkan kondisi
+   lama jika kondisi usaha sudah berubah.
+4. Prioritaskan masalah yang paling relevan saat ini.
+
+Balas JSON:
+
+{
+  "summary": "",
+
   "priority": [
     {
       "title": "",
@@ -1081,12 +1149,38 @@ Balas dalam JSON:
       "action": ""
     }
   ],
+
   "quickActions": [
     {
       "title": "",
       "description": ""
     }
   ],
+
+  "plan7": [
+    {
+      "day": "",
+      "title": "",
+      "action": ""
+    }
+  ],
+
+  "plan14": [
+    {
+      "phase": "",
+      "title": "",
+      "action": ""
+    }
+  ],
+
+  "plan30": [
+    {
+      "phase": "",
+      "title": "",
+      "action": ""
+    }
+  ],
+
   "plan": [
     {
       "step": "",
@@ -1094,166 +1188,223 @@ Balas dalam JSON:
       "purpose": ""
     }
   ],
+
   "warning": "",
   "nextStep": ""
 }
 
+Jangan membuat angka target, omzet,
+persentase, atau estimasi keuntungan
+tanpa data pendukung.
+
 `;
 
-        const raw =
-          await askAI({
-            prompt,
+    const raw =
+      await askAI({
+        prompt,
 
-            system: `
+        system: `
 
 Anda adalah Business Autopilot ZENAI.
 
-Tugas Anda bukan hanya memberikan teori,
-tetapi mengubah informasi bisnis menjadi
-langkah yang dapat dilakukan.
+Tugas Anda adalah mengubah kondisi usaha
+TERBARU menjadi tindakan nyata.
 
-Prioritaskan tindakan yang sederhana,
-realistis, dan relevan.
+Jika ada pembaruan usaha, strategi harus
+menyesuaikan pembaruan tersebut.
 
-Gunakan bahasa Indonesia yang mudah
-dipahami.
+Gunakan bahasa Indonesia yang mudah dipahami.
+
+Prioritaskan tindakan yang realistis,
+sederhana, dan dapat dilakukan.
 
 Jangan mengarang data.
 
 Balas JSON valid.
 
 `
-          });
+      });
 
-        setAutopilotData(
-          extractJson(raw)
-        );
+    const result =
+      extractJson(raw);
 
-        setTab(
-          "autopilot"
-        );
+    setAutopilotData(result);
 
-      } catch (error) {
+    if (goToTab) {
+      setTab("autopilot");
+    }
 
-        alert(
-          formatError(error)
-        );
+    return result;
 
-      } finally {
+  } catch (error) {
 
-        setBusy(false);
+    if (!silent) {
+      alert(
+        formatError(error)
+      );
+    }
 
-      }
+    throw error;
 
-    };
+  } finally {
+
+    if (!silent) {
+      setBusy(false);
+    }
+
+  }
+};
 
 
   const addBusinessUpdate =
-    async () => {
+  async () => {
 
-      if (!updateText.trim()) {
+    if (!updateText.trim()) {
+      alert(
+        "Masukkan pembaruan usaha terlebih dahulu."
+      );
 
-        alert(
-          "Masukkan pembaruan usaha terlebih dahulu."
+      return;
+    }
+
+    const newUpdate = {
+      id: Date.now(),
+
+      text: updateText.trim(),
+
+      date:
+        new Date().toLocaleString(
+          "id-ID"
+        ),
+
+      createdAt:
+        new Date().toISOString()
+    };
+
+
+    const latestUpdates = [
+      newUpdate,
+      ...businessUpdates
+    ];
+
+
+    const latestContext = {
+      ...business,
+
+      updates: latestUpdates.map(
+        (item) => ({
+          id: item.id,
+
+          text: item.text,
+
+          createdAt:
+            item.createdAt ||
+            item.date ||
+            null,
+
+          pulse:
+            item.pulse || null
+        })
+      ),
+
+      latestUpdate: {
+        id: newUpdate.id,
+
+        text: newUpdate.text,
+
+        createdAt:
+          newUpdate.createdAt,
+
+        pulse: null
+      }
+    };
+
+
+    setBusinessUpdates(
+      latestUpdates
+    );
+
+    setUpdateText("");
+
+    setBusy(true);
+
+    try {
+
+      /*
+        LANGKAH 1
+        Memperbarui kondisi usaha
+      */
+
+      const latestPulse =
+        await runPulse(
+          latestContext,
+          {
+            silent: true,
+            goToTab: false
+          }
         );
 
-        return;
 
-      }
+      /*
+        LANGKAH 2
+        Memperbarui diagnosis
+      */
 
-      const newUpdate = {
-        id: Date.now(),
-        text: updateText.trim(),
-        date:
-          new Date().toLocaleString(
-            "id-ID"
-          )
-      };
+      const latestDiagnosis =
+        await runDiagnosis(
+          latestContext,
+          {
+            silent: true,
+            goToTab: false
+          }
+        );
 
-      setBusinessUpdates(
-        (current) => [
-          newUpdate,
-          ...current
-        ]
+
+      /*
+        LANGKAH 3
+        Memperbarui strategi
+      */
+
+      await runAutopilot(
+        latestContext,
+        {
+          diagnosisOverride:
+            latestDiagnosis,
+
+          pulseOverride:
+            latestPulse,
+
+          silent: true,
+
+          goToTab: false
+        }
       );
 
-      setUpdateText("");
 
-    };
+      /*
+        Kembali ke kondisi terbaru
+      */
+
+      setTab("pulse");
 
 
-  const removeBusinessUpdate =
-    (id) => {
+    } catch (error) {
 
-      setBusinessUpdates(
-        (current) =>
-          current.filter(
-            (item) =>
-              item.id !== id
-          )
+      console.error(
+        "Gagal memperbarui analisis:",
+        error
       );
 
-    };
+      alert(
+        formatError(error) ||
+        "Pembaruan berhasil disimpan, tetapi analisis terbaru gagal dibuat."
+      );
 
+    } finally {
 
-  const goToBusiness =
-    () => {
+      setBusy(false);
 
-      setTab("capture");
-
-    };
-
-
-  const resetAnalysis =
-    () => {
-
-      setBusiness(null);
-
-      setDiagnosis(null);
-
-      setPulseData(null);
-
-      setAutopilotData(null);
-
-      setBusinessUpdates([]);
-
-      setText("");
-
-      setImage("");
-
-      clearAudio();
-
-      setTab("capture");
-
-    };
-
-
-  const renderStatus = (
-    status
-  ) => {
-
-    if (!status)
-      return "Perlu diperhatikan";
-
-    const value =
-      status.toLowerCase();
-
-    if (
-      value.includes("baik") ||
-      value.includes("positif") ||
-      value.includes("kuat")
-    ) {
-      return "Kondisi baik";
     }
-
-    if (
-      value.includes("perlu") ||
-      value.includes("waspada")
-    ) {
-      return "Perlu perhatian";
-    }
-
-    return status;
 
   };
 
@@ -4642,19 +4793,27 @@ Balas JSON valid.
               />
 
               <button
-                onClick={addBusinessUpdate}
-                style={{
-                  marginTop: "12px",
-                  padding: "10px 16px",
-                  border: "none",
-                  borderRadius: "10px",
-                  background: "#2563eb",
-                  color: "#ffffff",
-                  cursor: "pointer"
-                }}
-              >
-                + Simpan Pembaruan
-              </button>
+  onClick={addBusinessUpdate}
+  disabled={busy}
+  style={{
+    marginTop: "12px",
+    padding: "10px 16px",
+    border: "none",
+    borderRadius: "10px",
+    background: "#2563eb",
+    color: "#ffffff",
+    cursor: busy
+      ? "not-allowed"
+      : "pointer",
+    opacity: busy
+      ? 0.6
+      : 1
+  }}
+>
+  {busy
+    ? "ZENAI sedang memperbarui..."
+    : "⚡ Simpan & Perbarui Analisis"}
+</button>
             </div>
 
 
