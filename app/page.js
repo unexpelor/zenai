@@ -3484,7 +3484,317 @@ Balas JSON valid.
                       marginBottom: "20px"
                     }}
                   >
-                    <h3>
+                                    {/* STRATEGI 7, 14, 30 HARI */}
+
+                {(autopilotData.plan7?.length > 0 ||
+                  autopilotData.plan14?.length > 0 ||
+                  autopilotData.plan30?.length > 0) && (
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns:
+                        "repeat(auto-fit, minmax(280px, 1fr))",
+                      gap: "16px",
+                      marginBottom: "20px"
+                    }}
+                  >
+
+                    {/* 7 HARI */}
+
+                    <div
+                      style={{
+                        background: "#ffffff",
+                        border: "1px solid #bfdbfe",
+                        borderRadius: "16px",
+                        padding: "20px"
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "10px",
+                          marginBottom: "14px"
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: "36px",
+                            height: "36px",
+                            borderRadius: "10px",
+                            background: "#eff6ff",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center"
+                          }}
+                        >
+                          ⚡
+                        </div>
+
+                        <div>
+                          <strong>
+                            Strategi 7 Hari
+                          </strong>
+
+                          <div
+                            style={{
+                              fontSize: "12px",
+                              color: "#64748b"
+                            }}
+                          >
+                            Fokus tindakan cepat
+                          </div>
+                        </div>
+                      </div>
+
+                      {autopilotData.plan7?.length > 0 ? (
+                        <div
+                          style={{
+                            display: "grid",
+                            gap: "10px"
+                          }}
+                        >
+                          {autopilotData.plan7.map(
+                            (item, index) => (
+                              <div
+                                key={index}
+                                style={{
+                                  padding: "12px",
+                                  background: "#f8fafc",
+                                  borderRadius: "10px",
+                                  fontSize: "14px"
+                                }}
+                              >
+                                <strong>
+                                  Hari {index + 1}
+                                </strong>
+
+                                <div
+                                  style={{
+                                    marginTop: "4px",
+                                    color: "#475569",
+                                    lineHeight: "1.6"
+                                  }}
+                                >
+                                  {typeof item === "string"
+                                    ? item
+                                    : item.action || item.title}
+                                </div>
+                              </div>
+                            )
+                          )}
+                        </div>
+                      ) : (
+                        <p
+                          style={{
+                            color: "#94a3b8",
+                            fontSize: "14px"
+                          }}
+                        >
+                          Strategi 7 hari belum tersedia.
+                        </p>
+                      )}
+                    </div>
+
+
+                    {/* 14 HARI */}
+
+                    <div
+                      style={{
+                        background: "#ffffff",
+                        border: "1px solid #c4b5fd",
+                        borderRadius: "16px",
+                        padding: "20px"
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "10px",
+                          marginBottom: "14px"
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: "36px",
+                            height: "36px",
+                            borderRadius: "10px",
+                            background: "#f5f3ff",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center"
+                          }}
+                        >
+                          📈
+                        </div>
+
+                        <div>
+                          <strong>
+                            Strategi 14 Hari
+                          </strong>
+
+                          <div
+                            style={{
+                              fontSize: "12px",
+                              color: "#64748b"
+                            }}
+                          >
+                            Bangun dan uji strategi
+                          </div>
+                        </div>
+                      </div>
+
+                      {autopilotData.plan14?.length > 0 ? (
+                        <div
+                          style={{
+                            display: "grid",
+                            gap: "10px"
+                          }}
+                        >
+                          {autopilotData.plan14.map(
+                            (item, index) => (
+                              <div
+                                key={index}
+                                style={{
+                                  padding: "12px",
+                                  background: "#fafafa",
+                                  borderRadius: "10px",
+                                  fontSize: "14px"
+                                }}
+                              >
+                                <strong>
+                                  Tahap {index + 1}
+                                </strong>
+
+                                <div
+                                  style={{
+                                    marginTop: "4px",
+                                    color: "#475569",
+                                    lineHeight: "1.6"
+                                  }}
+                                >
+                                  {typeof item === "string"
+                                    ? item
+                                    : item.action || item.title}
+                                </div>
+                              </div>
+                            )
+                          )}
+                        </div>
+                      ) : (
+                        <p
+                          style={{
+                            color: "#94a3b8",
+                            fontSize: "14px"
+                          }}
+                        >
+                          Strategi 14 hari belum tersedia.
+                        </p>
+                      )}
+                    </div>
+
+
+                    {/* 30 HARI */}
+
+                    <div
+                      style={{
+                        background: "#ffffff",
+                        border: "1px solid #86efac",
+                        borderRadius: "16px",
+                        padding: "20px"
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "10px",
+                          marginBottom: "14px"
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: "36px",
+                            height: "36px",
+                            borderRadius: "10px",
+                            background: "#f0fdf4",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center"
+                          }}
+                        >
+                          🚀
+                        </div>
+
+                        <div>
+                          <strong>
+                            Strategi 30 Hari
+                          </strong>
+
+                          <div
+                            style={{
+                              fontSize: "12px",
+                              color: "#64748b"
+                            }}
+                          >
+                            Dorong pertumbuhan usaha
+                          </div>
+                        </div>
+                      </div>
+
+                      {autopilotData.plan30?.length > 0 ? (
+                        <div
+                          style={{
+                            display: "grid",
+                            gap: "10px"
+                          }}
+                        >
+                          {autopilotData.plan30.map(
+                            (item, index) => (
+                              <div
+                                key={index}
+                                style={{
+                                  padding: "12px",
+                                  background: "#f8fafc",
+                                  borderRadius: "10px",
+                                  fontSize: "14px"
+                                }}
+                              >
+                                <strong>
+                                  Tahap {index + 1}
+                                </strong>
+
+                                <div
+                                  style={{
+                                    marginTop: "4px",
+                                    color: "#475569",
+                                    lineHeight: "1.6"
+                                  }}
+                                >
+                                  {typeof item === "string"
+                                    ? item
+                                    : item.action || item.title}
+                                </div>
+                              </div>
+                            )
+                          )}
+                        </div>
+                      ) : (
+                        <p
+                          style={{
+                            color: "#94a3b8",
+                            fontSize: "14px"
+                          }}
+                        >
+                          Strategi 30 hari belum tersedia.
+                        </p>
+                      )}
+                    </div>
+
+                  </div>
+                )}
+<h3>
                       ⚡ Langkah Cepat
                     </h3>
 
