@@ -1546,16 +1546,16 @@ minWidth: isMobile
   </h1>
 
   <p
-    style={{
-      margin: "6px 0 0",
-      color: "#64748b",
-      fontSize: "13px",
-      lineHeight: "1.5"
-    }}
-  >
-    AI Partner untuk memahami,
-    menganalisis, dan mengembangkan usaha.
-  </p>
+  style={{
+    margin: "6px 0 0",
+    color: "#64748b",
+    fontSize: "13px",
+    lineHeight: "1.5"
+  }}
+>
+  AI Partner untuk memahami,
+  menganalisis, dan mengembangkan usaha.
+</p>
 </div>
 
         {/* NAVIGASI */}
@@ -1873,21 +1873,41 @@ minWidth: isMobile
         >
           {business && (
             <button
-              onClick={resetAnalysis}
-              style={{
-                width: "100%",
-                border:
-                  "1px solid #fecaca",
-                background: "#fff",
-                color: "#dc2626",
-                padding: "11px 12px",
-                borderRadius: "10px",
-                cursor: "pointer",
-                fontSize: "13px"
-              }}
-            >
-              ↻ Mulai Analisis Baru
-            </button>
+  onClick={resetAnalysis}
+  title={sidebarOpen ? "" : "Mulai Analisis Baru"}
+  style={{
+    width: "100%",
+    border: "1px solid #fecaca",
+    background: "#fff",
+    color: "#dc2626",
+    padding: "11px 12px",
+    borderRadius: "10px",
+    cursor: "pointer",
+    fontSize: "13px",
+
+    display: "flex",
+    alignItems: "center",
+    justifyContent: sidebarOpen ? "flex-start" : "center",
+    gap: sidebarOpen ? "8px" : "0",
+    overflow: "hidden",
+    whiteSpace: "nowrap"
+  }}
+>
+  <span
+    style={{
+      fontSize: "18px",
+      flexShrink: 0
+    }}
+  >
+    ↻
+  </span>
+
+  {sidebarOpen && (
+    <span>
+      Mulai Analisis Baru
+    </span>
+  )}
+</button>
           )}
         </div>
       </aside>
