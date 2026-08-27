@@ -414,23 +414,24 @@ try {
       "Terjadi kendala saat memproses analisis berbasis sumber eksternal.",
   };
 }
-const seenUrls = new Set();
 
-const uniqueSources = allResults.filter((item) => {
+const finalSeenUrls = new Set();
+
+const finalUniqueSources = allResults.filter((item) => {
   if (!item?.url) return false;
 
-  if (seenUrls.has(item.url)) return false;
+  if (finalSeenUrls.has(item.url)) return false;
 
-  seenUrls.add(item.url);
+  finalSeenUrls.add(item.url);
   return true;
 });
+
 return NextResponse.json({
   success: true,
 
   mode: "market-insight",
 
-  updatedAt:
-    new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
 
   profile: {
     business,
@@ -442,11 +443,9 @@ return NextResponse.json({
 
   analysis,
 
-  sources:
-    uniqueSources.slice(0, 20),
+  sources: finalUniqueSources.slice(0, 20),
 
-  totalSources:
-    uniqueSources.length,
+  totalSources: finalUniqueSources.length,
 });
     }
 
