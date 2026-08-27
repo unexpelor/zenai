@@ -1565,39 +1565,48 @@ minWidth: isMobile
           style={{
             display: "flex",
             flexDirection: "column",
-            gap: "6px"
+            gap: "10px"
           }}
         >
           <button
   onClick={() => setTab("home")}
   title={sidebarOpen ? "" : "Dashboard"}
   style={{
-    width: "100%",
-    border: "none",
-    padding: "12px 14px",
-    borderRadius: "10px",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: sidebarOpen
-      ? "flex-start"
-      : "center",
-    gap: sidebarOpen ? "10px" : "0",
-    textAlign: sidebarOpen ? "left" : "center",
-    background:
-      tab === "home"
-        ? "#eff6ff"
-        : "transparent",
-    color:
-      tab === "home"
-        ? "#2563eb"
-        : "#475569",
-    fontWeight:
-      tab === "home"
-        ? "700"
-        : "500",
-    transition: "all 0.2s ease"
-  }}
+  width: "100%",
+
+  border:
+    tab === "home"
+      ? "1px solid #bfdbfe"
+      : "1px solid #e8edf3",
+
+  padding: "12px 14px",
+  borderRadius: "10px",
+  cursor: "pointer",
+
+  textAlign: "left",
+
+  background:
+    tab === "home"
+      ? "#eff6ff"
+      : "#ffffff",
+
+  color:
+    tab === "home"
+      ? "#2563eb"
+      : "#475569",
+
+  fontWeight:
+    tab === "home"
+      ? "700"
+      : "500",
+
+  boxShadow:
+    tab === "home"
+      ? "0 4px 12px rgba(37, 99, 235, 0.10)"
+      : "0 1px 3px rgba(15, 23, 42, 0.04)",
+
+  transition: "all 0.2s ease"
+}}
 >
   <span
     style={{
@@ -1619,32 +1628,41 @@ minWidth: isMobile
   onClick={() => setTab("capture")}
   title={sidebarOpen ? "" : "Ceritakan Usaha"}
   style={{
-    width: "100%",
-    border: "none",
-    padding: "12px 14px",
-    borderRadius: "10px",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: sidebarOpen
-      ? "flex-start"
-      : "center",
-    gap: sidebarOpen ? "10px" : "0",
-    textAlign: sidebarOpen ? "left" : "center",
-    background:
-      tab === "capture"
-        ? "#eff6ff"
-        : "transparent",
-    color:
-      tab === "capture"
-        ? "#2563eb"
-        : "#475569",
-    fontWeight:
-      tab === "capture"
-        ? "700"
-        : "500",
-    transition: "all 0.2s ease"
-  }}
+  width: "100%",
+
+  border:
+    tab === "capture"
+      ? "1px solid #bfdbfe"
+      : "1px solid #e8edf3",
+
+  padding: "12px 14px",
+  borderRadius: "10px",
+  cursor: "pointer",
+
+  textAlign: "left",
+
+  background:
+    tab === "capture"
+      ? "#eff6ff"
+      : "#ffffff",
+
+  color:
+    tab === "capture"
+      ? "#2563eb"
+      : "#475569",
+
+  fontWeight:
+    tab === "capture"
+      ? "700"
+      : "500",
+
+  boxShadow:
+    tab === "capture"
+      ? "0 4px 12px rgba(37, 99, 235, 0.10)"
+      : "0 1px 3px rgba(15, 23, 42, 0.04)",
+
+  transition: "all 0.2s ease"
+}}
 >
   <span
     style={{
@@ -1666,32 +1684,52 @@ minWidth: isMobile
   onClick={() => setTab("business")}
   title={sidebarOpen ? "" : "Kondisi Usaha"}
   style={{
-    width: "100%",
-    border: "none",
-    padding: "12px 14px",
-    borderRadius: "10px",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: sidebarOpen
-      ? "flex-start"
-      : "center",
-    gap: sidebarOpen ? "10px" : "0",
-    textAlign: sidebarOpen ? "left" : "center",
-    background:
-      tab === "business"
-        ? "#eff6ff"
-        : "transparent",
-    color:
-      tab === "business"
-        ? "#2563eb"
-        : "#475569",
-    fontWeight:
-      tab === "business"
-        ? "700"
-        : "500",
-    transition: "all 0.2s ease"
-  }}
+  width: "100%",
+
+  border:
+    tab === "pulse"
+      ? "1px solid #bfdbfe"
+      : "1px solid #e8edf3",
+
+  padding: "12px 14px",
+  borderRadius: "10px",
+  cursor: "pointer",
+
+  display: "flex",
+  alignItems: "center",
+
+  justifyContent: sidebarOpen
+    ? "flex-start"
+    : "center",
+
+  gap: sidebarOpen ? "10px" : "0",
+
+  textAlign: sidebarOpen
+    ? "left"
+    : "center",
+
+  background:
+    tab === "pulse"
+      ? "#eff6ff"
+      : "#ffffff",
+
+  color:
+    tab === "pulse"
+      ? "#2563eb"
+      : "#475569",
+
+  fontWeight:
+    tab === "pulse"
+      ? "700"
+      : "500",
+
+  boxShadow:
+    tab === "pulse"
+      ? "0 4px 12px rgba(37, 99, 235, 0.10)"
+      : "0 1px 3px rgba(15, 23, 42, 0.04)",
+
+  transition: "all 0.2s ease"
+}}
 >
   <span
     style={{
@@ -1713,32 +1751,52 @@ minWidth: isMobile
   onClick={() => setTab("diagnosis")}
   title={sidebarOpen ? "" : "Diagnosis"}
   style={{
-    width: "100%",
-    border: "none",
-    padding: "12px 14px",
-    borderRadius: "10px",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: sidebarOpen
-      ? "flex-start"
-      : "center",
-    gap: sidebarOpen ? "10px" : "0",
-    textAlign: sidebarOpen ? "left" : "center",
-    background:
-      tab === "diagnosis"
-        ? "#eff6ff"
-        : "transparent",
-    color:
-      tab === "diagnosis"
-        ? "#2563eb"
-        : "#475569",
-    fontWeight:
-      tab === "diagnosis"
-        ? "700"
-        : "500",
-    transition: "all 0.2s ease"
-  }}
+  width: "100%",
+
+  border:
+    tab === "diagnosis"
+      ? "1px solid #bfdbfe"
+      : "1px solid #e8edf3",
+
+  padding: "12px 14px",
+  borderRadius: "10px",
+  cursor: "pointer",
+
+  display: "flex",
+  alignItems: "center",
+
+  justifyContent: sidebarOpen
+    ? "flex-start"
+    : "center",
+
+  gap: sidebarOpen ? "10px" : "0",
+
+  textAlign: sidebarOpen
+    ? "left"
+    : "center",
+
+  background:
+    tab === "diagnosis"
+      ? "#eff6ff"
+      : "#ffffff",
+
+  color:
+    tab === "diagnosis"
+      ? "#2563eb"
+      : "#475569",
+
+  fontWeight:
+    tab === "diagnosis"
+      ? "700"
+      : "500",
+
+  boxShadow:
+    tab === "diagnosis"
+      ? "0 4px 12px rgba(37, 99, 235, 0.10)"
+      : "0 1px 3px rgba(15, 23, 42, 0.04)",
+
+  transition: "all 0.2s ease"
+}}
 >
   <span
     style={{
@@ -1767,32 +1825,52 @@ minWidth: isMobile
   }}
   title={sidebarOpen ? "" : "Perspektif Bisnis"}
   style={{
-    width: "100%",
-    border: "none",
-    padding: "12px 14px",
-    borderRadius: "10px",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: sidebarOpen
-      ? "flex-start"
-      : "center",
-    gap: sidebarOpen ? "10px" : "0",
-    textAlign: sidebarOpen ? "left" : "center",
-    background:
-      tab === "market"
-        ? "#eff6ff"
-        : "transparent",
-    color:
-      tab === "market"
-        ? "#2563eb"
-        : "#475569",
-    fontWeight:
-      tab === "market"
-        ? "700"
-        : "500",
-    transition: "all 0.2s ease"
-  }}
+  width: "100%",
+
+  border:
+    tab === "market"
+      ? "1px solid #bfdbfe"
+      : "1px solid #e8edf3",
+
+  padding: "12px 14px",
+  borderRadius: "10px",
+  cursor: "pointer",
+
+  display: "flex",
+  alignItems: "center",
+
+  justifyContent: sidebarOpen
+    ? "flex-start"
+    : "center",
+
+  gap: sidebarOpen ? "10px" : "0",
+
+  textAlign: sidebarOpen
+    ? "left"
+    : "center",
+
+  background:
+    tab === "market"
+      ? "#eff6ff"
+      : "#ffffff",
+
+  color:
+    tab === "market"
+      ? "#2563eb"
+      : "#475569",
+
+  fontWeight:
+    tab === "market"
+      ? "700"
+      : "500",
+
+  boxShadow:
+    tab === "market"
+      ? "0 4px 12px rgba(37, 99, 235, 0.10)"
+      : "0 1px 3px rgba(15, 23, 42, 0.04)",
+
+  transition: "all 0.2s ease"
+}}
 >
   <span
     style={{
@@ -1822,32 +1900,52 @@ minWidth: isMobile
   }}
   title={sidebarOpen ? "" : "Strategi & Tindakan"}
   style={{
-    width: "100%",
-    border: "none",
-    padding: "12px 14px",
-    borderRadius: "10px",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: sidebarOpen
-      ? "flex-start"
-      : "center",
-    gap: sidebarOpen ? "10px" : "0",
-    textAlign: sidebarOpen ? "left" : "center",
-    background:
-      tab === "autopilot"
-        ? "#eff6ff"
-        : "transparent",
-    color:
-      tab === "autopilot"
-        ? "#2563eb"
-        : "#475569",
-    fontWeight:
-      tab === "autopilot"
-        ? "700"
-        : "500",
-    transition: "all 0.2s ease"
-  }}
+  width: "100%",
+
+  border:
+    tab === "autopilot"
+      ? "1px solid #bfdbfe"
+      : "1px solid #e8edf3",
+
+  padding: "12px 14px",
+  borderRadius: "10px",
+  cursor: "pointer",
+
+  display: "flex",
+  alignItems: "center",
+
+  justifyContent: sidebarOpen
+    ? "flex-start"
+    : "center",
+
+  gap: sidebarOpen ? "10px" : "0",
+
+  textAlign: sidebarOpen
+    ? "left"
+    : "center",
+
+  background:
+    tab === "autopilot"
+      ? "#eff6ff"
+      : "#ffffff",
+
+  color:
+    tab === "autopilot"
+      ? "#2563eb"
+      : "#475569",
+
+  fontWeight:
+    tab === "autopilot"
+      ? "700"
+      : "500",
+
+  boxShadow:
+    tab === "autopilot"
+      ? "0 4px 12px rgba(37, 99, 235, 0.10)"
+      : "0 1px 3px rgba(15, 23, 42, 0.04)",
+
+  transition: "all 0.2s ease"
+}}
 >
   <span
     style={{
