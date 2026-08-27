@@ -16,8 +16,34 @@ function cleanText(value) {
   return String(value).trim();
 }
 
-function uniqueArray(items) {
+function uniqueArray(items = []) {
   return [...new Set(items.filter(Boolean))];
+}
+
+function extractJson(value) {
+  if (!value) return null;
+
+  if (typeof value === "object") {
+    return value;
+  }
+
+  const text = String(value).trim();
+
+  try {
+    return JSON.parse(text);
+  } catch (_) {}
+
+  const match = text.match(/\{[\s\S]*\}/);
+
+  if (!match) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(match[0]);
+  } catch (_) {
+    return null;
+  }
 }
 
 /* =========================================================
@@ -67,9 +93,7 @@ async function searchTavily(query, topic = "general") {
 }
 
 /* =========================================================
-   BUAT QUERY OTOMATIS
-
-   Tidak dikunci ke jenis usaha tertentu.
+   QUERY OTOMATIS
 ========================================================= */
 
 function createMarketQueries({
@@ -91,11 +115,8 @@ function createMarketQueries({
 
   return uniqueArray([
     `${mainSubject} perkembangan terbaru Indonesia`,
-
     `${mainSubject} tren pasar terbaru${locationText}`,
-
     `${mainSubject} peluang dan tantangan bisnis terbaru`,
-
     `${mainSubject} persaingan dan perubahan pasar${locationText}`,
   ]).slice(0, 4);
 }
@@ -123,13 +144,57 @@ function normalizeResults(results = [], query = "") {
         ? item.score
         : null,
 
-    publishedDate:
-      cleanText(
-        item.published_date ||
-          item.publishedDate ||
-          item.date
-      ),
+    publishedDate: cleanText(
+      item.published_date ||
+        item.publishedDate ||
+        item.date
+    ),
   }));
+}
+
+/* =========================================================
+   AI ANALYSIS
+========================================================= */
+
+async function analyzeWithAI(req, prompt, system) {
+  const origin =
+    req.headers.get("origin") ||
+    `https://${req.headers.get("host")}`;
+
+  const response = await fetch(
+    `${origin}/api/ai`,
+    {
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json",
+      },
+
+      body: JSON.stringify({
+        prompt,
+        system,
+      }),
+
+      cache: "no-store",
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data?.error ||
+        "AI gagal membuat analisis."
+    );
+  }
+
+  return (
+    data?.text ||
+    data?.response ||
+    data?.result ||
+    data?.content ||
+    data
+  );
 }
 
 /* =========================================================
@@ -140,12 +205,10 @@ export async function POST(req) {
   try {
     const body = await req.json();
 
-    /*
-      =====================================================
-      MODE 1
-      WAWASAN PASAR
-      =====================================================
-    */
+    /* =====================================================
+       MODE 1
+       WAWASAN PASAR / PERSPEKTIF BISNIS
+    ===================================================== */
 
     if (body.action === "market-insight") {
       const businessProfile =
@@ -171,13 +234,6 @@ export async function POST(req) {
           body.industry
       );
 
-      /*
-        Jika frontend mengirim query sendiri,
-        gunakan query tersebut.
-
-        Jika tidak, sistem membuat query otomatis.
-      */
-
       let queries = [];
 
       if (
@@ -201,62 +257,48 @@ export async function POST(req) {
         return NextResponse.json(
           {
             success: false,
-
             error:
               "Informasi usaha belum cukup untuk mencari Wawasan Pasar.",
           },
-
           {
             status: 400,
           }
         );
       }
 
-      /*
-        Cari informasi berdasarkan seluruh query.
-      */
+      /* =================================================
+         CARI DATA EKSTERNAL
+      ================================================= */
 
-      const searchGroups =
-        await Promise.all(
-          queries.map(async (query) => {
-            try {
-              const results =
-                await searchTavily(
-                  query,
-                  "general"
-                );
+      const searchGroups = await Promise.all(
+        queries.map(async (query) => {
+          try {
+            const results = await searchTavily(
+              query,
+              "general"
+            );
 
-              return {
-                query,
+            return {
+              query,
+              results: normalizeResults(
+                results,
+                query
+              ),
+            };
+          } catch (error) {
+            console.error(
+              "TAVILY SEARCH ERROR:",
+              query,
+              error
+            );
 
-                results:
-                  normalizeResults(
-                    results,
-                    query
-                  ),
-              };
-            } catch (error) {
-              console.error(
-                "TAVILY SEARCH ERROR:",
-                query,
-                error
-              );
-
-              return {
-                query,
-
-                results: [],
-              };
-            }
-          })
-        );
-
-      /*
-        Tambahan 1 pencarian berita terbaru.
-
-        Query berita dibuat berdasarkan industri
-        atau jenis usaha.
-      */
+            return {
+              query,
+              results: [],
+            };
+          }
+        })
+      );
 
       const newsSubject =
         industry || business;
@@ -265,17 +307,15 @@ export async function POST(req) {
 
       if (newsSubject) {
         try {
-          const results =
-            await searchTavily(
-              `${newsSubject} berita terbaru`,
-              "news"
-            );
+          const results = await searchTavily(
+            `${newsSubject} berita terbaru`,
+            "news"
+          );
 
-          newsResults =
-            normalizeResults(
-              results,
-              `${newsSubject} berita terbaru`
-            );
+          newsResults = normalizeResults(
+            results,
+            `${newsSubject} berita terbaru`
+          );
         } catch (error) {
           console.error(
             "NEWS SEARCH ERROR:",
@@ -284,97 +324,112 @@ export async function POST(req) {
         }
       }
 
-      /*
-        Gabungkan semua sumber
-        lalu hapus URL duplikat.
-      */
+      /* =================================================
+         GABUNGKAN & HAPUS DUPLIKASI
+      ================================================= */
 
       const allResults = [
         ...searchGroups.flatMap(
           (group) => group.results
         ),
-
         ...newsResults,
       ];
 
       const seenUrls = new Set();
 
+      const uniqueSources = allResults.filter(
+        (item) => {
+          if (!item?.url) {
+            return false;
+          }
+
+          if (seenUrls.has(item.url)) {
+            return false;
+          }
+
+          seenUrls.add(item.url);
+
+          return true;
+        }
+      );
+
+      /* =================================================
+         SIAPKAN KONTEN SUMBER UNTUK AI
+      ================================================= */
+
       const sourceContext = uniqueSources
-  .slice(0, 12)
-  .map((item, index) => {
-    return `
+        .slice(0, 12)
+        .map((item, index) => {
+          return `
 SUMBER ${index + 1}
 Judul: ${item.title || ""}
 URL: ${item.url || ""}
-Tanggal: ${item.publishedDate || item.date || ""}
-Isi: ${item.content || item.snippet || item.description || ""}
+Tanggal: ${item.publishedDate || ""}
+Isi: ${item.content || ""}
 `;
-  })
-  .join("\n\n");
+        })
+        .join("\n\n");
 
-const analysisPrompt = `
+      /* =================================================
+         ANALISIS AI
+      ================================================= */
+
+      const analysisPrompt = `
 Anda adalah analis bisnis strategis.
 
-Tugas Anda BUKAN sekadar merangkum berita.
+Tugas Anda bukan sekadar merangkum berita.
 
-Analisis usaha berikut berdasarkan:
+Buat Perspektif Bisnis berdasarkan gabungan:
 1. Informasi bisnis pengguna.
 2. Kondisi industri.
 3. Lokasi usaha.
-4. Data dan sumber eksternal yang tersedia.
+4. Sumber eksternal terbaru.
 
-INFORMASI USAHA:
-Nama/Jenis Usaha: ${business}
-Industri: ${industry}
-Lokasi: ${location}
+INFORMASI USAHA
 
-DATA EKSTERNAL:
+Jenis/Nama Usaha:
+${business || "-"}
+
+Industri:
+${industry || "-"}
+
+Lokasi:
+${location || "-"}
+
+DATA EKSTERNAL
+
 ${sourceContext || "Tidak ada sumber eksternal yang cukup."}
 
-Lakukan ANALISIS FUNDAMENTAL DAN PERSPEKTIF BISNIS.
+Lakukan analisis bisnis yang tajam dan realistis.
 
 Fokus pada:
 
-1. KONDISI PASAR
-Jelaskan bagaimana kondisi pasar yang relevan terhadap usaha ini.
+1. Kondisi pasar.
+2. Sinyal permintaan.
+3. Faktor eksternal yang memengaruhi usaha.
+4. Risiko utama.
+5. Peluang realistis.
+6. Persaingan jika terdapat bukti.
+7. Perspektif bisnis secara keseluruhan.
+8. Tiga skenario:
+   - optimistis
+   - realistis
+   - risiko
+9. Implikasi strategis bagi pemilik usaha.
 
-2. SINYAL PERMINTAAN
-Identifikasi indikasi permintaan meningkat, stabil, atau menurun.
+Jangan mengarang data.
 
-3. FAKTOR YANG MEMPENGARUHI BISNIS
-Pisahkan faktor internal dan eksternal.
+Jika bukti eksternal terbatas, jelaskan keterbatasannya.
 
-4. RISIKO UTAMA
-Identifikasi risiko yang paling mungkin memengaruhi usaha.
+Jangan menyebut sumber yang tidak tersedia.
 
-5. PELUANG
-Cari peluang yang realistis berdasarkan kondisi pasar dan bisnis.
-
-6. PERSPEKTIF BISNIS
-Berikan interpretasi strategis, bukan ringkasan berita.
-
-7. SKENARIO
-Buat:
-- Skenario optimistis
-- Skenario realistis
-- Skenario risiko
-
-8. IMPLIKASI STRATEGIS
-Jelaskan apa yang sebaiknya diperhatikan pemilik usaha.
-
-JANGAN mengarang data.
-
-Jika bukti dari sumber tidak cukup, katakan bahwa kesimpulan memiliki keterbatasan.
-
-Gunakan bahasa Indonesia yang jelas, tajam, dan mudah dipahami.
-
-Kembalikan HANYA JSON valid dengan format:
+Kembalikan HANYA JSON valid:
 
 {
   "summary": "",
   "marketCondition": "",
   "demandSignal": {
-    "status": "meningkat | stabil | menurun | tidak pasti",
+    "status": "meningkat",
     "reason": ""
   },
   "businessPerspective": "",
@@ -388,76 +443,79 @@ Kembalikan HANYA JSON valid dengan format:
     "risk": ""
   },
   "strategicImplication": "",
-  "confidence": "tinggi | sedang | rendah",
+  "confidence": "sedang",
   "limitations": ""
 }
 `;
 
-let analysis = null;
+      let analysis = null;
 
-try {
-  const aiResult = await askAI({
-    prompt: analysisPrompt,
-    system:
-      "Anda adalah AI analis bisnis yang berpikir secara fundamental, kritis, dan berbasis bukti.",
-  });
+      try {
+        const aiResult =
+          await analyzeWithAI(
+            req,
+            analysisPrompt,
+            "Anda adalah analis bisnis yang kritis, objektif, berbasis bukti, dan tidak membuat klaim tanpa dasar."
+          );
 
-  analysis = extractJson(aiResult);
-} catch (error) {
-  console.error("MARKET ANALYSIS ERROR:", error);
+        analysis =
+          extractJson(aiResult);
 
-  analysis = {
-    summary:
-      "Sumber pasar berhasil dikumpulkan, tetapi analisis AI belum dapat dibuat.",
-    confidence: "rendah",
-    limitations:
-      "Terjadi kendala saat memproses analisis berbasis sumber eksternal.",
-  };
-}
+        if (!analysis) {
+          analysis = {
+            summary:
+              "Data eksternal berhasil dikumpulkan, tetapi hasil analisis AI tidak dapat diproses dalam format terstruktur.",
+            confidence: "rendah",
+            limitations:
+              "Respons AI tidak dapat diubah menjadi format analisis terstruktur.",
+          };
+        }
+      } catch (error) {
+        console.error(
+          "MARKET ANALYSIS ERROR:",
+          error
+        );
 
-const finalSeenUrls = new Set();
+        analysis = {
+          summary:
+            "Sumber eksternal berhasil dikumpulkan, tetapi analisis AI belum dapat dibuat.",
+          confidence: "rendah",
+          limitations:
+            error?.message ||
+            "Terjadi kendala saat memproses analisis AI.",
+        };
+      }
 
-const finalUniqueSources = allResults.filter((item) => {
-  if (!item?.url) return false;
+      return NextResponse.json({
+        success: true,
 
-  if (finalSeenUrls.has(item.url)) return false;
+        mode: "market-insight",
 
-  finalSeenUrls.add(item.url);
-  return true;
-});
+        updatedAt:
+          new Date().toISOString(),
 
-return NextResponse.json({
-  success: true,
+        profile: {
+          business,
+          industry,
+          location,
+        },
 
-  mode: "market-insight",
+        queries,
 
-  updatedAt: new Date().toISOString(),
+        analysis,
 
-  profile: {
-    business,
-    industry,
-    location,
-  },
+        sources:
+          uniqueSources.slice(0, 20),
 
-  queries,
-
-  analysis,
-
-  sources: finalUniqueSources.slice(0, 20),
-
-  totalSources: finalUniqueSources.length,
-});
+        totalSources:
+          uniqueSources.length,
+      });
     }
 
-    /*
-      =====================================================
-      MODE 2
-      FUNGSI LAMA MARKETPLACE
-
-      Dipertahankan agar tidak merusak
-      integrasi yang sudah ada.
-      =====================================================
-    */
+    /* =====================================================
+       MODE 2
+       FUNGSI LAMA MARKETPLACE
+    ===================================================== */
 
     return NextResponse.json({
       status: "connector-ready",
@@ -469,6 +527,7 @@ return NextResponse.json({
       nextStep:
         "Hubungkan OAuth/API resmi marketplace untuk direct sync.",
     });
+
   } catch (error) {
     console.error(
       "MARKETPLACE API ERROR:",
@@ -483,10 +542,9 @@ return NextResponse.json({
           error?.message ||
           "Terjadi kesalahan pada server.",
       },
-
       {
         status: 500,
       }
     );
   }
-      }
+}
