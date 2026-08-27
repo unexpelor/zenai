@@ -1577,127 +1577,169 @@ Balas JSON valid.
 </button>
 
           <button
-            onClick={() => setTab("capture")}
-            style={{
-              width: "100%",
-              border: "none",
-              padding: "12px 14px",
-              borderRadius: "10px",
-              cursor: "pointer",
-              textAlign: "left",
-              background:
-                tab === "capture"
-                  ? "#eff6ff"
-                  : "transparent",
-              color:
-                tab === "capture"
-                  ? "#2563eb"
-                  : "#475569",
-              fontWeight:
-                tab === "capture"
-                  ? "700"
-                  : "500"
-            }}
-          >
-            ✨ Ceritakan Usaha
-          </button>
-
-          <button
-            onClick={() => {
-              if (!business) {
-                alert(
-                  "Analisis usaha terlebih dahulu."
-                );
-
-                setTab("capture");
-
-                return;
-              }
-
-              setTab("pulse");
-            }}
-            style={{
-              width: "100%",
-              border: "none",
-              padding: "12px 14px",
-              borderRadius: "10px",
-              cursor: "pointer",
-              textAlign: "left",
-              background:
-                tab === "pulse"
-                  ? "#eff6ff"
-                  : "transparent",
-              color:
-                tab === "pulse"
-                  ? "#2563eb"
-                  : "#475569",
-              fontWeight:
-                tab === "pulse"
-                  ? "700"
-                  : "500"
-            }}
-          >
-            📊 Kondisi Usaha
-          </button>
-
-          <button
-            onClick={() => {
-              if (!business) {
-                alert(
-                  "Analisis usaha terlebih dahulu."
-                );
-
-                setTab("capture");
-
-                return;
-              }
-
-              setTab("diagnosis");
-            }}
-            style={{
-              width: "100%",
-              border: "none",
-              padding: "12px 14px",
-              borderRadius: "10px",
-              cursor: "pointer",
-              textAlign: "left",
-              background:
-                tab === "diagnosis"
-                  ? "#eff6ff"
-                  : "transparent",
-              color:
-                tab === "diagnosis"
-                  ? "#2563eb"
-                  : "#475569",
-              fontWeight:
-                tab === "diagnosis"
-                  ? "700"
-                  : "500"
-            }}
-          >
-            🔍 Diagnosis
-          </button>
-<button
-  onClick={() => {
-    if (!business) {
-      alert(
-        "Analisis usaha terlebih dahulu."
-      );
-
-      setTab("capture");
-
-      return;
-    }
-
-    setTab("market");
-  }}
+  onClick={() => setTab("capture")}
+  title={sidebarOpen ? "" : "Ceritakan Usaha"}
   style={{
     width: "100%",
     border: "none",
     padding: "12px 14px",
     borderRadius: "10px",
     cursor: "pointer",
-    textAlign: "left",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: sidebarOpen
+      ? "flex-start"
+      : "center",
+    gap: sidebarOpen ? "10px" : "0",
+    textAlign: sidebarOpen ? "left" : "center",
+    background:
+      tab === "capture"
+        ? "#eff6ff"
+        : "transparent",
+    color:
+      tab === "capture"
+        ? "#2563eb"
+        : "#475569",
+    fontWeight:
+      tab === "capture"
+        ? "700"
+        : "500",
+    transition: "all 0.2s ease"
+  }}
+>
+  <span
+    style={{
+      fontSize: "18px",
+      flexShrink: 0
+    }}
+  >
+    ✨
+  </span>
+
+  {sidebarOpen && (
+    <span>
+      Ceritakan Usaha
+    </span>
+  )}
+</button>
+
+          <button
+  onClick={() => setTab("business")}
+  title={sidebarOpen ? "" : "Kondisi Usaha"}
+  style={{
+    width: "100%",
+    border: "none",
+    padding: "12px 14px",
+    borderRadius: "10px",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: sidebarOpen
+      ? "flex-start"
+      : "center",
+    gap: sidebarOpen ? "10px" : "0",
+    textAlign: sidebarOpen ? "left" : "center",
+    background:
+      tab === "business"
+        ? "#eff6ff"
+        : "transparent",
+    color:
+      tab === "business"
+        ? "#2563eb"
+        : "#475569",
+    fontWeight:
+      tab === "business"
+        ? "700"
+        : "500",
+    transition: "all 0.2s ease"
+  }}
+>
+  <span
+    style={{
+      fontSize: "18px",
+      flexShrink: 0
+    }}
+  >
+    📊
+  </span>
+
+  {sidebarOpen && (
+    <span>
+      Kondisi Usaha
+    </span>
+  )}
+</button>
+
+          <button
+  onClick={() => setTab("diagnosis")}
+  title={sidebarOpen ? "" : "Diagnosis"}
+  style={{
+    width: "100%",
+    border: "none",
+    padding: "12px 14px",
+    borderRadius: "10px",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: sidebarOpen
+      ? "flex-start"
+      : "center",
+    gap: sidebarOpen ? "10px" : "0",
+    textAlign: sidebarOpen ? "left" : "center",
+    background:
+      tab === "diagnosis"
+        ? "#eff6ff"
+        : "transparent",
+    color:
+      tab === "diagnosis"
+        ? "#2563eb"
+        : "#475569",
+    fontWeight:
+      tab === "diagnosis"
+        ? "700"
+        : "500",
+    transition: "all 0.2s ease"
+  }}
+>
+  <span
+    style={{
+      fontSize: "18px",
+      flexShrink: 0
+    }}
+  >
+    🔍
+  </span>
+
+  {sidebarOpen && (
+    <span>
+      Diagnosis
+    </span>
+  )}
+</button>
+<button
+  onClick={() => {
+    if (!business) {
+      alert("Analisis usaha terlebih dahulu.");
+      setTab("capture");
+      return;
+    }
+
+    setTab("market");
+  }}
+  title={sidebarOpen ? "" : "Perspektif Bisnis"}
+  style={{
+    width: "100%",
+    border: "none",
+    padding: "12px 14px",
+    borderRadius: "10px",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: sidebarOpen
+      ? "flex-start"
+      : "center",
+    gap: sidebarOpen ? "10px" : "0",
+    textAlign: sidebarOpen ? "left" : "center",
     background:
       tab === "market"
         ? "#eff6ff"
@@ -1709,49 +1751,80 @@ Balas JSON valid.
     fontWeight:
       tab === "market"
         ? "700"
-        : "500"
+        : "500",
+    transition: "all 0.2s ease"
   }}
 >
-  🔭 Perspektif Bisnis
+  <span
+    style={{
+      fontSize: "18px",
+      flexShrink: 0
+    }}
+  >
+    🔭
+  </span>
+
+  {sidebarOpen && (
+    <span>
+      Perspektif Bisnis
+    </span>
+  )}
 </button>
               
           <button
-            onClick={() => {
-              if (!business) {
-                alert(
-                  "Analisis usaha terlebih dahulu."
-                );
+  onClick={() => {
+    if (!business) {
+      alert("Analisis usaha terlebih dahulu.");
+      setTab("capture");
+      return;
+    }
 
-                setTab("capture");
+    setTab("autopilot");
+  }}
+  title={sidebarOpen ? "" : "Strategi & Tindakan"}
+  style={{
+    width: "100%",
+    border: "none",
+    padding: "12px 14px",
+    borderRadius: "10px",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: sidebarOpen
+      ? "flex-start"
+      : "center",
+    gap: sidebarOpen ? "10px" : "0",
+    textAlign: sidebarOpen ? "left" : "center",
+    background:
+      tab === "autopilot"
+        ? "#eff6ff"
+        : "transparent",
+    color:
+      tab === "autopilot"
+        ? "#2563eb"
+        : "#475569",
+    fontWeight:
+      tab === "autopilot"
+        ? "700"
+        : "500",
+    transition: "all 0.2s ease"
+  }}
+>
+  <span
+    style={{
+      fontSize: "18px",
+      flexShrink: 0
+    }}
+  >
+    ⚡
+  </span>
 
-                return;
-              }
-
-              setTab("autopilot");
-            }}
-            style={{
-              width: "100%",
-              border: "none",
-              padding: "12px 14px",
-              borderRadius: "10px",
-              cursor: "pointer",
-              textAlign: "left",
-              background:
-                tab === "autopilot"
-                  ? "#eff6ff"
-                  : "transparent",
-              color:
-                tab === "autopilot"
-                  ? "#2563eb"
-                  : "#475569",
-              fontWeight:
-                tab === "autopilot"
-                  ? "700"
-                  : "500"
-            }}
-          >
-            ⚡ Strategi & Tindakan
-          </button>
+  {sidebarOpen && (
+    <span>
+      Strategi & Tindakan
+    </span>
+  )}
+</button>
         </nav>
 
         {/* AREA BAWAH SIDEBAR */}
