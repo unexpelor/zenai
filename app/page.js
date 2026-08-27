@@ -1459,6 +1459,11 @@ Balas JSON valid.
     return (
     <main
       style={{
+        flex: 1,
+minWidth: 0,
+width: 0,
+overflowX: "hidden",
+padding: isMobile ? "16px 12px" : "32px",
         minHeight: "100vh",
         background: "#f8fafc",
         color: "#0f172a",
@@ -1469,12 +1474,31 @@ Balas JSON valid.
       {/* SIDEBAR */}
       <aside
   style={{
-    width: sidebarOpen ? "280px" : "72px",
-    minWidth: sidebarOpen ? "280px" : "72px",
+    width: isMobile
+  ? sidebarOpen
+    ? "220px"
+    : "64px"
+  : sidebarOpen
+    ? "280px"
+    : "72px",
+
+minWidth: isMobile
+  ? sidebarOpen
+    ? "220px"
+    : "64px"
+  : sidebarOpen
+    ? "280px"
+    : "72px",
     minHeight: "100vh",
     background: "#ffffff",
     borderRight: "1px solid #e2e8f0",
-    padding: sidebarOpen ? "24px 16px" : "24px 10px",
+    padding: sidebarOpen
+  ? isMobile
+    ? "16px 10px"
+    : "24px 16px"
+  : isMobile
+    ? "16px 6px"
+    : "24px 10px",
     position: "sticky",
     top: 0,
     alignSelf: "flex-start",
