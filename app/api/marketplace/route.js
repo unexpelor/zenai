@@ -414,7 +414,16 @@ try {
       "Terjadi kendala saat memproses analisis berbasis sumber eksternal.",
   };
 }
+const seenUrls = new Set();
 
+const uniqueSources = allResults.filter((item) => {
+  if (!item?.url) return false;
+
+  if (seenUrls.has(item.url)) return false;
+
+  seenUrls.add(item.url);
+  return true;
+});
 return NextResponse.json({
   success: true,
 
