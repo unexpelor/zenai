@@ -299,43 +299,146 @@ export async function POST(req) {
 
       const seenUrls = new Set();
 
-      const uniqueSources =
-        allResults.filter((item) => {
-          if (!item.url) {
-            return false;
-          }
+      const sourceContext = uniqueSources
+  .slice(0, 12)
+  .map((item, index) => {
+    return `
+SUMBER ${index + 1}
+Judul: ${item.title || ""}
+URL: ${item.url || ""}
+Tanggal: ${item.publishedDate || item.date || ""}
+Isi: ${item.content || item.snippet || item.description || ""}
+`;
+  })
+  .join("\n\n");
 
-          if (seenUrls.has(item.url)) {
-            return false;
-          }
+const analysisPrompt = `
+Anda adalah analis bisnis strategis.
 
-          seenUrls.add(item.url);
+Tugas Anda BUKAN sekadar merangkum berita.
 
-          return true;
-        });
+Analisis usaha berikut berdasarkan:
+1. Informasi bisnis pengguna.
+2. Kondisi industri.
+3. Lokasi usaha.
+4. Data dan sumber eksternal yang tersedia.
 
-      return NextResponse.json({
-        success: true,
+INFORMASI USAHA:
+Nama/Jenis Usaha: ${business}
+Industri: ${industry}
+Lokasi: ${location}
 
-        mode: "market-insight",
+DATA EKSTERNAL:
+${sourceContext || "Tidak ada sumber eksternal yang cukup."}
 
-        updatedAt:
-          new Date().toISOString(),
+Lakukan ANALISIS FUNDAMENTAL DAN PERSPEKTIF BISNIS.
 
-        profile: {
-          business,
-          industry,
-          location,
-        },
+Fokus pada:
 
-        queries,
+1. KONDISI PASAR
+Jelaskan bagaimana kondisi pasar yang relevan terhadap usaha ini.
 
-        sources:
-          uniqueSources.slice(0, 20),
+2. SINYAL PERMINTAAN
+Identifikasi indikasi permintaan meningkat, stabil, atau menurun.
 
-        totalSources:
-          uniqueSources.length,
-      });
+3. FAKTOR YANG MEMPENGARUHI BISNIS
+Pisahkan faktor internal dan eksternal.
+
+4. RISIKO UTAMA
+Identifikasi risiko yang paling mungkin memengaruhi usaha.
+
+5. PELUANG
+Cari peluang yang realistis berdasarkan kondisi pasar dan bisnis.
+
+6. PERSPEKTIF BISNIS
+Berikan interpretasi strategis, bukan ringkasan berita.
+
+7. SKENARIO
+Buat:
+- Skenario optimistis
+- Skenario realistis
+- Skenario risiko
+
+8. IMPLIKASI STRATEGIS
+Jelaskan apa yang sebaiknya diperhatikan pemilik usaha.
+
+JANGAN mengarang data.
+
+Jika bukti dari sumber tidak cukup, katakan bahwa kesimpulan memiliki keterbatasan.
+
+Gunakan bahasa Indonesia yang jelas, tajam, dan mudah dipahami.
+
+Kembalikan HANYA JSON valid dengan format:
+
+{
+  "summary": "",
+  "marketCondition": "",
+  "demandSignal": {
+    "status": "meningkat | stabil | menurun | tidak pasti",
+    "reason": ""
+  },
+  "businessPerspective": "",
+  "externalFactors": [],
+  "risks": [],
+  "opportunities": [],
+  "competitionInsight": "",
+  "scenarios": {
+    "optimistic": "",
+    "realistic": "",
+    "risk": ""
+  },
+  "strategicImplication": "",
+  "confidence": "tinggi | sedang | rendah",
+  "limitations": ""
+}
+`;
+
+let analysis = null;
+
+try {
+  const aiResult = await askAI({
+    prompt: analysisPrompt,
+    system:
+      "Anda adalah AI analis bisnis yang berpikir secara fundamental, kritis, dan berbasis bukti.",
+  });
+
+  analysis = extractJson(aiResult);
+} catch (error) {
+  console.error("MARKET ANALYSIS ERROR:", error);
+
+  analysis = {
+    summary:
+      "Sumber pasar berhasil dikumpulkan, tetapi analisis AI belum dapat dibuat.",
+    confidence: "rendah",
+    limitations:
+      "Terjadi kendala saat memproses analisis berbasis sumber eksternal.",
+  };
+}
+
+return NextResponse.json({
+  success: true,
+
+  mode: "market-insight",
+
+  updatedAt:
+    new Date().toISOString(),
+
+  profile: {
+    business,
+    industry,
+    location,
+  },
+
+  queries,
+
+  analysis,
+
+  sources:
+    uniqueSources.slice(0, 20),
+
+  totalSources:
+    uniqueSources.length,
+});
     }
 
     /*
