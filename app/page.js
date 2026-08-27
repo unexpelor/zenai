@@ -743,35 +743,46 @@ Balas JSON valid.
 
     };
 
+    const runDiagnosis = async (
+    contextOverride = null,
+    options = {}
+  ) => {
+    if (
+      contextOverride &&
+      typeof contextOverride === "object" &&
+      (
+        contextOverride.nativeEvent ||
+        contextOverride.currentTarget ||
+        contextOverride.target
+      )
+    ) {
+      contextOverride = null;
+    }
 
-  const runDiagnosis = async (
-  contextOverride = null,
-  options = {}
-) => {
-  if (!business) {
-    alert(
-      "Ceritakan usaha terlebih dahulu."
-    );
+    if (!business) {
+      alert(
+        "Ceritakan usaha terlebih dahulu."
+      );
 
-    setTab("capture");
+      setTab("capture");
 
-    return;
-  }
+      return;
+    }
 
-  const context =
-    contextOverride ||
-    getBusinessContext();
+    const context =
+      contextOverride ||
+      getBusinessContext();
 
-  const {
-    silent = false,
-    goToTab = true
-  } = options;
+    const {
+      silent = false,
+      goToTab = true
+    } = options;
 
-  if (!silent) {
-    setBusy(true);
-  }
+    if (!silent) {
+      setBusy(true);
+    }
 
-  try {
+    try {
     const prompt = `
 
 Buat Diagnosis Usaha berdasarkan
@@ -890,38 +901,50 @@ Balas JSON valid.
 
   }
 };
-  const runPulse = async (
-  contextOverride = null,
-  options = {}
-) => {
-  if (!business) {
-    alert(
-      "Ceritakan usaha terlebih dahulu."
-    );
+    const runPulse = async (
+    contextOverride = null,
+    options = {}
+  ) => {
+    if (
+      contextOverride &&
+      typeof contextOverride === "object" &&
+      (
+        contextOverride.nativeEvent ||
+        contextOverride.currentTarget ||
+        contextOverride.target
+      )
+    ) {
+      contextOverride = null;
+    }
 
-    setTab("capture");
+    if (!business) {
+      alert(
+        "Ceritakan usaha terlebih dahulu."
+      );
 
-    return;
-  }
+      setTab("capture");
 
-  const context =
-    contextOverride ||
-    getBusinessContext();
+      return;
+    }
 
-  const {
-    diagnosisOverride = null,
-    silent = false,
-    goToTab = true
-  } = options;
+    const context =
+      contextOverride ||
+      getBusinessContext();
 
-  const latestDiagnosis =
-    diagnosisOverride || diagnosis;
+    const {
+      diagnosisOverride = null,
+      silent = false,
+      goToTab = true
+    } = options;
 
-  if (!silent) {
-    setBusy(true);
-  }
+    const latestDiagnosis =
+      diagnosisOverride || diagnosis;
 
-  try {
+    if (!silent) {
+      setBusy(true);
+    }
+
+    try {
 
     const prompt = `
 
@@ -1050,43 +1073,54 @@ Balas JSON valid.
 };
 
 
-  const runAutopilot = async (
-  contextOverride = null,
-  options = {}
-) => {
-  if (!business) {
-    alert(
-      "Ceritakan usaha terlebih dahulu."
-    );
+    const runAutopilot = async (
+    contextOverride = null,
+    options = {}
+  ) => {
+    if (
+      contextOverride &&
+      typeof contextOverride === "object" &&
+      (
+        contextOverride.nativeEvent ||
+        contextOverride.currentTarget ||
+        contextOverride.target
+      )
+    ) {
+      contextOverride = null;
+    }
 
-    setTab("capture");
+    if (!business) {
+      alert(
+        "Ceritakan usaha terlebih dahulu."
+      );
 
-    return;
-  }
+      setTab("capture");
 
-  const context =
-    contextOverride ||
-    getBusinessContext();
+      return;
+    }
 
-  const {
-    diagnosisOverride = null,
-    pulseOverride = null,
-    silent = false,
-    goToTab = true
-  } = options;
+    const context =
+      contextOverride ||
+      getBusinessContext();
 
-  const latestDiagnosis =
-    diagnosisOverride || diagnosis;
+    const {
+      diagnosisOverride = null,
+      pulseOverride = null,
+      silent = false,
+      goToTab = true
+    } = options;
 
-  const latestPulse =
-    pulseOverride || pulseData;
+    const latestDiagnosis =
+      diagnosisOverride || diagnosis;
 
-  if (!silent) {
-    setBusy(true);
-  }
+    const latestPulse =
+      pulseOverride || pulseData;
 
-  try {
+    if (!silent) {
+      setBusy(true);
+    }
 
+    try {
     const prompt = `
 
 Buat strategi dan rencana tindakan berdasarkan
@@ -1255,6 +1289,63 @@ Balas JSON valid.
   }
 };
 
+  const resetAnalysis = () => {
+    try {
+      if (
+        mediaRecorderRef.current &&
+        mediaRecorderRef.current.state !== "inactive"
+      ) {
+        mediaRecorderRef.current.stop();
+      }
+
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current
+          .getTracks()
+          .forEach((track) => track.stop());
+      }
+
+      if (recordingTimerRef.current) {
+        clearInterval(recordingTimerRef.current);
+        recordingTimerRef.current = null;
+      }
+
+      mediaRecorderRef.current = null;
+      mediaStreamRef.current = null;
+      audioChunksRef.current = [];
+
+      setIsRecording(false);
+      setRecordingTime(0);
+
+      setText("");
+      setImage("");
+
+      setAudio("");
+      setAudioMimeType("");
+      setAudioName("");
+
+      setBusiness(null);
+      setDiagnosis(null);
+      setPulseData(null);
+      setBusinessUpdates([]);
+      setUpdateText("");
+      setAutopilotData(null);
+
+      setProvider("");
+      setBusy(false);
+
+      setDays(7);
+
+      setTab("capture");
+    } catch (error) {
+      console.error(
+        "Gagal mereset analisis:",
+        error
+      );
+
+      setBusy(false);
+      setTab("capture");
+    }
+  };
 
   const addBusinessUpdate =
   async () => {
@@ -2112,7 +2203,7 @@ Balas JSON valid.
 
 
               <button
-                onClick={runPulse}
+                onClick={() => runPulse()}
                 style={{
                   textAlign: "left",
                   padding: "22px",
@@ -2150,7 +2241,7 @@ Balas JSON valid.
 
 
               <button
-                onClick={runDiagnosis}
+                onClick={() => runDiagnosis()}
                 style={{
                   textAlign: "left",
                   padding: "22px",
@@ -2188,7 +2279,7 @@ Balas JSON valid.
 
 
               <button
-                onClick={runAutopilot}
+                onClick={() => runAutopilot()}
                 style={{
                   textAlign: "left",
                   padding: "22px",
