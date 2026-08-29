@@ -1,7 +1,7 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "ZenAI || Business Assistant",
+  title: "ZenAI || AI Business Assistant",
   description: "AI Business Assistant",
 };
 
