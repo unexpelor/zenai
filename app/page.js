@@ -58,6 +58,393 @@ const [marketLoading, setMarketLoading] =
 const [marketError, setMarketError] =
   useState("");
 
+  // =========================
+  // LAPORAN KEUANGAN
+  // Data disimpan lokal di browser untuk MVP.
+  // Struktur ini siap dipindahkan ke database/API.
+  // =========================
+  const [financePeriod, setFinancePeriod] =
+    useState(new Date().toISOString().slice(0, 7));
+
+  const [financeTransactions, setFinanceTransactions] =
+    useState([]);
+
+  const [financeForm, setFinanceForm] =
+    useState({
+      date: new Date().toISOString().slice(0, 10),
+      description: "",
+      amount: "",
+      type: "income",
+      account: "bank"
+    });
+
+  const [financeView, setFinanceView] =
+    useState("summary");
+
+  const [financeMessage, setFinanceMessage] =
+    useState("");
+
+  const financeTypes = [
+    { value: "income", label: "Penjualan / Pendapatan" },
+    { value: "expense", label: "Biaya Usaha" },
+    { value: "hpp", label: "Pembelian / HPP" },
+    { value: "capital", label: "Modal Masuk" },
+    { value: "withdrawal", label: "Prive / Ambil Uang" },
+    { value: "receivable", label: "Terima Piutang" },
+    { value: "loan", label: "Pinjaman Masuk" }
+  ];
+
+  const financeAccounts = [
+    { value: "cash", label: "Kas" },
+    { value: "bank", label: "Bank" },
+    { value: "receivable", label: "Piutang" }
+  ];
+
+  useEffect(() => {
+    try {
+      const saved =
+        window.localStorage.getItem("zenai_finance_transactions");
+
+      if (saved) {
+        setFinanceTransactions(
+          JSON.parse(saved)
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Gagal memuat data keuangan:",
+        error
+      );
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        "zenai_finance_transactions",
+        JSON.stringify(financeTransactions)
+      );
+    } catch (error) {
+      console.error(
+        "Gagal menyimpan data keuangan:",
+        error
+      );
+    }
+  }, [financeTransactions]);
+
+  const formatRupiah = (value) => {
+    const number = Number(value) || 0;
+
+    return new Intl.NumberFormat(
+      "id-ID",
+      {
+        style: "currency",
+        currency: "IDR",
+        maximumFractionDigits: 0
+      }
+    ).format(number);
+  };
+
+  const financePeriodLabel = (period) => {
+    const [year, month] =
+      String(period).split("-");
+
+    const date = new Date(
+      Number(year),
+      Number(month) - 1,
+      1
+    );
+
+    return date.toLocaleDateString(
+      "id-ID",
+      {
+        month: "long",
+        year: "numeric"
+      }
+    );
+  };
+
+  const financeCurrent = financeTransactions.filter(
+    (item) =>
+      item.date &&
+      item.date.slice(0, 7) === financePeriod
+  );
+
+  const financePreviousPeriod = (() => {
+    const [year, month] =
+      financePeriod.split("-").map(Number);
+
+    const date = new Date(
+      year,
+      month - 2,
+      1
+    );
+
+    return `${date.getFullYear()}-${String(
+      date.getMonth() + 1
+    ).padStart(2, "0")}`;
+  })();
+
+  const financePrevious =
+    financeTransactions.filter(
+      (item) =>
+        item.date &&
+        item.date.slice(0, 7) ===
+          financePreviousPeriod
+    );
+
+  const calculateFinance = (items) => {
+    const result = {
+      income: 0,
+      hpp: 0,
+      expense: 0,
+      capital: 0,
+      withdrawal: 0,
+      receivable: 0,
+      debt: 0,
+      loan: 0,
+      cash: 0,
+      bank: 0,
+      inventory: 0,
+      cashIn: 0,
+      cashOut: 0
+    };
+
+    items.forEach((item) => {
+      const amount =
+        Math.max(0, Number(item.amount) || 0);
+
+      if (item.type === "income") {
+        result.income += amount;
+
+        if (item.account === "cash") {
+          result.cash += amount;
+          result.cashIn += amount;
+        } else if (item.account === "bank") {
+          result.bank += amount;
+          result.cashIn += amount;
+        } else if (item.account === "receivable") {
+          result.receivable += amount;
+        }
+      }
+
+      if (item.type === "expense") {
+        result.expense += amount;
+
+        if (item.account === "cash") {
+          result.cash -= amount;
+          result.cashOut += amount;
+        } else {
+          result.bank -= amount;
+          result.cashOut += amount;
+        }
+      }
+
+      if (item.type === "hpp") {
+        result.hpp += amount;
+
+        if (item.account === "cash") {
+          result.cash -= amount;
+          result.cashOut += amount;
+        } else {
+          result.bank -= amount;
+          result.cashOut += amount;
+        }
+      }
+
+      if (item.type === "capital") {
+        result.capital += amount;
+
+        if (item.account === "cash") {
+          result.cash += amount;
+          result.cashIn += amount;
+        } else {
+          result.bank += amount;
+          result.cashIn += amount;
+        }
+      }
+
+      if (item.type === "withdrawal") {
+        result.withdrawal += amount;
+
+        if (item.account === "cash") {
+          result.cash -= amount;
+          result.cashOut += amount;
+        } else {
+          result.bank -= amount;
+          result.cashOut += amount;
+        }
+      }
+
+      if (item.type === "receivable") {
+        result.receivable -= amount;
+
+        if (item.account === "cash") {
+          result.cash += amount;
+          result.cashIn += amount;
+        } else {
+          result.bank += amount;
+          result.cashIn += amount;
+        }
+      }
+
+      if (item.type === "loan") {
+        result.loan += amount;
+        result.debt += amount;
+
+        if (item.account === "cash") {
+          result.cash += amount;
+          result.cashIn += amount;
+        } else {
+          result.bank += amount;
+          result.cashIn += amount;
+        }
+      }
+    });
+
+    result.grossProfit =
+      result.income - result.hpp;
+
+    result.netProfit =
+      result.grossProfit - result.expense;
+
+    result.cashTotal =
+      result.cash + result.bank;
+
+    result.totalAssets =
+      result.cashTotal +
+      result.receivable +
+      result.inventory;
+
+    result.totalEquity =
+      result.capital +
+      result.netProfit -
+      result.withdrawal;
+
+    return result;
+  };
+
+  const financeCurrentTotals =
+    calculateFinance(financeCurrent);
+
+  const financePreviousTotals =
+    calculateFinance(financePrevious);
+
+  const financeChange = (current, previous) => {
+    if (!previous) {
+      return null;
+    }
+
+    return ((current - previous) / Math.abs(previous)) * 100;
+  };
+
+  const handleFinanceSubmit = (event) => {
+    event.preventDefault();
+
+    const amount =
+      Number(financeForm.amount);
+
+    if (
+      !financeForm.description.trim() ||
+      !Number.isFinite(amount) ||
+      amount <= 0 ||
+      !financeForm.date
+    ) {
+      setFinanceMessage(
+        "Lengkapi transaksi dan masukkan nominal yang valid."
+      );
+      return;
+    }
+
+    const transaction = {
+      id:
+        `${Date.now()}-${Math.random()
+          .toString(36)
+          .slice(2, 8)}`,
+      date: financeForm.date,
+      description:
+        financeForm.description.trim(),
+      amount,
+      type: financeForm.type,
+      account: financeForm.account
+    };
+
+    setFinanceTransactions((current) => [
+      transaction,
+      ...current
+    ]);
+
+    setFinanceForm({
+      date: financeForm.date,
+      description: "",
+      amount: "",
+      type: "income",
+      account: "bank"
+    });
+
+    setFinanceMessage(
+      "Transaksi berhasil dicatat."
+    );
+
+    setFinanceView("transactions");
+  };
+
+  const deleteFinanceTransaction = (id) => {
+    setFinanceTransactions((current) =>
+      current.filter(
+        (item) => item.id !== id
+      )
+    );
+
+    setFinanceMessage(
+      "Transaksi dihapus."
+    );
+  };
+
+  const financeInsight = (() => {
+    const current =
+      financeCurrentTotals;
+
+    const previous =
+      financePreviousTotals;
+
+    if (
+      current.income === 0 &&
+      current.expense === 0 &&
+      current.hpp === 0
+    ) {
+      return "Belum ada transaksi pada periode ini. Tambahkan transaksi untuk mendapatkan laporan dan insight ZenAI.";
+    }
+
+    const profitChange =
+      financeChange(
+        current.netProfit,
+        previous.netProfit
+      );
+
+    if (
+      current.netProfit < 0
+    ) {
+      return "Periode ini mencatat rugi. Periksa HPP dan biaya usaha, lalu gunakan rincian transaksi untuk menemukan pengeluaran terbesar.";
+    }
+
+    if (
+      profitChange !== null &&
+      profitChange > 0
+    ) {
+      return `Laba bersih meningkat ${Math.abs(profitChange).toFixed(1)}% dibanding ${financePeriodLabel(financePreviousPeriod)}. Pertahankan pertumbuhan pendapatan sambil mengendalikan biaya.`;
+    }
+
+    if (
+      profitChange !== null &&
+      profitChange < 0
+    ) {
+      return `Laba bersih menurun ${Math.abs(profitChange).toFixed(1)}% dibanding ${financePeriodLabel(financePreviousPeriod)}. Periksa perubahan HPP dan biaya usaha.`;
+    }
+
+    return "Keuangan periode ini sudah tercatat. Bandingkan dengan periode sebelumnya untuk melihat arah perkembangan usaha.";
+  })();
+
   const [businessUpdates, setBusinessUpdates] =
     useState([]);
 
@@ -594,7 +981,6 @@ Balas hanya dengan JSON valid.
       setBusy(false);
     }
   };
-
 
   const runPulse = async (
     contextOverride = null,
@@ -1819,8 +2205,8 @@ minWidth: isMobile
       alert("Analisis usaha terlebih dahulu.");
       setTab("capture");
       return;
-    }
-
+          }
+    
     setTab("market");
   }}
   title={sidebarOpen ? "" : "Perspektif Bisnis"}
@@ -1964,6 +2350,62 @@ minWidth: isMobile
 </button>
         </nav>
 
+        {/* LAPORAN KEUANGAN */}
+        <button
+          onClick={() => setTab("finance")}
+          title={sidebarOpen ? "" : "Laporan Keuangan"}
+          style={{
+            width: "100%",
+            border:
+              tab === "finance"
+                ? "1px solid #bfdbfe"
+                : "1px solid #e8edf3",
+            padding: "12px 14px",
+            borderRadius: "10px",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: sidebarOpen
+              ? "flex-start"
+              : "center",
+            gap: sidebarOpen ? "10px" : "0",
+            textAlign: sidebarOpen ? "left" : "center",
+            background:
+              tab === "finance"
+                ? "#eff6ff"
+                : "#ffffff",
+            color:
+              tab === "finance"
+                ? "#2563eb"
+                : "#475569",
+            fontWeight:
+              tab === "finance"
+                ? "700"
+                : "500",
+            boxShadow:
+              tab === "finance"
+                ? "0 4px 12px rgba(37, 99, 235, 0.10)"
+                : "0 1px 3px rgba(15, 23, 42, 0.04)",
+            transition: "all 0.2s ease",
+            marginTop: "0"
+          }}
+        >
+          <span
+            style={{
+              fontSize: "18px",
+              flexShrink: 0
+            }}
+          >
+            💰
+          </span>
+
+          {sidebarOpen && (
+            <span>
+              Laporan Keuangan
+            </span>
+          )}
+        </button>
+
         {/* AREA BAWAH SIDEBAR */}
         <div
           style={{
@@ -2053,6 +2495,9 @@ minWidth: isMobile
 
               {tab === "autopilot" &&
                 "Strategi & Tindakan"}
+
+              {tab === "finance" &&
+                "Laporan Keuangan"}
 
 {tab === "market" &&
   "Perspektif Bisnis"}
@@ -2523,7 +2968,7 @@ minWidth: isMobile
                               {item.type}
                             </strong>
 
-                            <p
+                                                        <p
                               style={{
                                 margin:
                                   "6px 0",
@@ -3951,7 +4396,7 @@ minWidth: isMobile
                   )}
 
 
-                {/* REKOMENDASI */}
+                                {/* REKOMENDASI */}
                 {Array.isArray(
                   diagnosis.recommendations
                 ) &&
@@ -4457,6 +4902,794 @@ minWidth: isMobile
         {/* =========================
             STRATEGI & TINDAKAN
         ========================== */}
+
+
+        {/* =========================
+            LAPORAN KEUANGAN
+        ========================== */}
+
+        {tab === "finance" && (
+          <div>
+            <div
+              style={{
+                background: "#ffffff",
+                border: "1px solid #e2e8f0",
+                borderRadius: "18px",
+                padding: "20px",
+                marginBottom: "18px"
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: "16px",
+                  flexWrap: "wrap"
+                }}
+              >
+                <div>
+                  <h3
+                    style={{
+                      margin: 0,
+                      fontSize: "20px"
+                    }}
+                  >
+                    Keuangan Usaha
+                  </h3>
+
+                  <p
+                    style={{
+                      margin: "6px 0 0",
+                      color: "#64748b"
+                    }}
+                  >
+                    Catat transaksi sederhana, ZenAI menyiapkan laporan.
+                  </p>
+                </div>
+
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    fontSize: "14px",
+                    fontWeight: "600"
+                  }}
+                >
+                  Periode
+                  <input
+                    type="month"
+                    value={financePeriod}
+                    onChange={(event) =>
+                      setFinancePeriod(event.target.value)
+                    }
+                    style={{
+                      border: "1px solid #cbd5e1",
+                      borderRadius: "10px",
+                      padding: "10px 12px",
+                      background: "#ffffff",
+                      color: "#0f172a"
+                    }}
+                  />
+                </label>
+              </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  gap: "8px",
+                  flexWrap: "wrap",
+                  marginTop: "18px"
+                }}
+              >
+                {[
+                  ["summary", "Ringkasan"],
+                  ["transactions", "Input Transaksi"],
+                  ["profit", "Laba Rugi"],
+                  ["cashflow", "Arus Kas"],
+                  ["balance", "Posisi Keuangan"]
+                ].map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setFinanceView(value)}
+                    style={{
+                      border:
+                        financeView === value
+                          ? "1px solid #2563eb"
+                          : "1px solid #e2e8f0",
+                      background:
+                        financeView === value
+                          ? "#eff6ff"
+                          : "#ffffff",
+                      color:
+                        financeView === value
+                          ? "#2563eb"
+                          : "#475569",
+                      padding: "10px 14px",
+                      borderRadius: "10px",
+                      fontWeight:
+                        financeView === value
+                          ? "700"
+                          : "600"
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {financeMessage && (
+              <div
+                style={{
+                  background: "#f0fdf4",
+                  border: "1px solid #bbf7d0",
+                  color: "#166534",
+                  borderRadius: "12px",
+                  padding: "12px 14px",
+                  marginBottom: "18px",
+                  fontSize: "14px"
+                }}
+              >
+                ✓ {financeMessage}
+              </div>
+            )}
+
+            {financeView === "summary" && (
+              <>
+                <div className="finance-cards">
+                  {[
+                    [
+                      "Pendapatan",
+                      financeCurrentTotals.income,
+                      financeChange(
+                        financeCurrentTotals.income,
+                        financePreviousTotals.income
+                      )
+                    ],
+                    [
+                      "Laba Bersih",
+                      financeCurrentTotals.netProfit,
+                      financeChange(
+                        financeCurrentTotals.netProfit,
+                        financePreviousTotals.netProfit
+                      )
+                    ],
+                    [
+                      "Kas & Bank",
+                      financeCurrentTotals.cashTotal,
+                      financeChange(
+                        financeCurrentTotals.cashTotal,
+                        financePreviousTotals.cashTotal
+                      )
+                    ],
+                    [
+                      "Utang",
+                      financeCurrentTotals.debt,
+                      financeChange(
+                        financeCurrentTotals.debt,
+                        financePreviousTotals.debt
+                      )
+                    ]
+                  ].map(([label, value, change]) => (
+                    <article
+                      key={label}
+                      style={{
+                        background: "#ffffff",
+                        border: "1px solid #e2e8f0",
+                        borderRadius: "16px",
+                        padding: "20px"
+                      }}
+                    >
+                      <div
+                        style={{
+                          color: "#64748b",
+                          fontSize: "13px",
+                          fontWeight: "600"
+                        }}
+                      >
+                        {label}
+                      </div>
+
+                      <div
+                        style={{
+                          fontSize: "24px",
+                          fontWeight: "800",
+                          marginTop: "8px"
+                        }}
+                      >
+                        {formatRupiah(value)}
+                      </div>
+
+                      <div
+                        style={{
+                          color:
+                            change === null
+                              ? "#64748b"
+                              : change >= 0
+                              ? "#16a34a"
+                              : "#dc2626",
+                          fontSize: "13px",
+                          marginTop: "6px"
+                        }}
+                      >
+                        {change === null
+                          ? "Belum ada pembanding"
+                          : `${change >= 0 ? "↑" : "↓"} ${Math.abs(change).toFixed(1)}% vs periode sebelumnya`}
+                      </div>
+                    </article>
+                  ))}
+                </div>
+
+                <section
+                  style={{
+                    marginTop: "18px",
+                    background: "#ffffff",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "18px",
+                    padding: "22px"
+                  }}
+                >
+                  <h3 style={{ marginTop: 0 }}>
+                    🧠 Insight ZenAI
+                  </h3>
+
+                  <p
+                    style={{
+                      marginBottom: 0,
+                      color: "#475569",
+                      lineHeight: "1.7"
+                    }}
+                  >
+                    {financeInsight}
+                  </p>
+                </section>
+              </>
+            )}
+
+            {financeView === "transactions" && (
+              <>
+                <section
+                  style={{
+                    background: "#ffffff",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "18px",
+                    padding: "22px",
+                    marginBottom: "18px"
+                  }}
+                >
+                  <h3 style={{ marginTop: 0 }}>
+                    Tambah Transaksi
+                  </h3>
+
+                  <form
+                    onSubmit={handleFinanceSubmit}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns:
+                        "repeat(2, minmax(0, 1fr))",
+                      gap: "14px"
+                    }}
+                  >
+                    <label style={{ fontSize: "14px", fontWeight: "600" }}>
+                      Apa yang terjadi?
+                      <input
+                        type="text"
+                        value={financeForm.description}
+                        onChange={(event) =>
+                          setFinanceForm((current) => ({
+                            ...current,
+                            description: event.target.value
+                          }))
+                        }
+                        placeholder="Contoh: Penjualan produk"
+                        style={{
+                          display: "block",
+                          width: "100%",
+                          marginTop: "7px",
+                          padding: "12px",
+                          border: "1px solid #cbd5e1",
+                          borderRadius: "10px"
+                        }}
+                      />
+                    </label>
+
+                    <label style={{ fontSize: "14px", fontWeight: "600" }}>
+                      Nominal
+                      <input
+                        type="number"
+                        min="1"
+                        step="1"
+                        value={financeForm.amount}
+                        onChange={(event) =>
+                          setFinanceForm((current) => ({
+                            ...current,
+                            amount: event.target.value
+                          }))
+                        }
+                        placeholder="2500000"
+                        style={{
+                          display: "block",
+                          width: "100%",
+                          marginTop: "7px",
+                          padding: "12px",
+                          border: "1px solid #cbd5e1",
+                          borderRadius: "10px"
+                        }}
+                      />
+                    </label>
+
+                    <label style={{ fontSize: "14px", fontWeight: "600" }}>
+                      Jenis transaksi
+                      <select
+                        value={financeForm.type}
+                        onChange={(event) =>
+                          setFinanceForm((current) => ({
+                            ...current,
+                            type: event.target.value
+                          }))
+                        }
+                        style={{
+                          display: "block",
+                          width: "100%",
+                          marginTop: "7px",
+                          padding: "12px",
+                          border: "1px solid #cbd5e1",
+                          borderRadius: "10px",
+                          background: "#ffffff"
+                        }}
+                      >
+                        {financeTypes.map((item) => (
+                          <option
+                            key={item.value}
+                            value={item.value}
+                          >
+                            {item.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <label style={{ fontSize: "14px", fontWeight: "600" }}>
+                      Uang melalui
+                      <select
+                        value={financeForm.account}
+                        onChange={(event) =>
+                          setFinanceForm((current) => ({
+                            ...current,
+                            account: event.target.value
+                          }))
+                        }
+                        style={{
+                          display: "block",
+                          width: "100%",
+                          marginTop: "7px",
+                          padding: "12px",
+                          border: "1px solid #cbd5e1",
+                          borderRadius: "10px",
+                          background: "#ffffff"
+                        }}
+                      >
+                        {financeAccounts.map((item) => (
+                          <option
+                            key={item.value}
+                            value={item.value}
+                          >
+                            {item.label}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+
+                    <label style={{ fontSize: "14px", fontWeight: "600" }}>
+                      Tanggal
+                      <input
+                        type="date"
+                        value={financeForm.date}
+                        onChange={(event) =>
+                          setFinanceForm((current) => ({
+                            ...current,
+                            date: event.target.value
+                          }))
+                        }
+                        style={{
+                          display: "block",
+                          width: "100%",
+                          marginTop: "7px",
+                          padding: "12px",
+                          border: "1px solid #cbd5e1",
+                          borderRadius: "10px"
+                        }}
+                      />
+                    </label>
+
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "end"
+                      }}
+                    >
+                      <button
+                        type="submit"
+                        className="primary"
+                        style={{
+                          width: "100%"
+                        }}
+                      >
+                        + Simpan Transaksi
+                      </button>
+                    </div>
+                  </form>
+                </section>
+
+                <section
+                  style={{
+                    background: "#ffffff",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "18px",
+                    padding: "22px"
+                  }}
+                >
+                  <h3 style={{ marginTop: 0 }}>
+                    Transaksi {financePeriodLabel(financePeriod)}
+                  </h3>
+
+                  {financeCurrent.length === 0 ? (
+                    <p>
+                      Belum ada transaksi pada periode ini.
+                    </p>
+                  ) : (
+                    <div style={{ overflowX: "auto" }}>
+                      <table
+                        style={{
+                          width: "100%",
+                          borderCollapse: "collapse",
+                          minWidth: "620px"
+                        }}
+                      >
+                        <thead>
+                          <tr>
+                            {[
+                              "Tanggal",
+                              "Keterangan",
+                              "Jenis",
+                              "Nominal",
+                              ""
+                            ].map((heading) => (
+                              <th
+                                key={heading}
+                                style={{
+                                  textAlign: "left",
+                                  padding: "12px 8px",
+                                  borderBottom:
+                                    "1px solid #e2e8f0",
+                                  color: "#64748b",
+                                  fontSize: "13px"
+                                }}
+                              >
+                                {heading}
+                              </th>
+                            ))}
+                          </tr>
+                        </thead>
+
+                        <tbody>
+                          {financeCurrent.map((item) => (
+                            <tr key={item.id}>
+                              <td
+                                style={{
+                                  padding: "12px 8px",
+                                  borderBottom:
+                                    "1px solid #f1f5f9"
+                                }}
+                              >
+                                {new Date(
+                                  `${item.date}T00:00:00`
+                                ).toLocaleDateString("id-ID")}
+                              </td>
+
+                              <td
+                                style={{
+                                  padding: "12px 8px",
+                                  borderBottom:
+                                    "1px solid #f1f5f9"
+                                }}
+                              >
+                                {item.description}
+                              </td>
+
+                              <td
+                                style={{
+                                  padding: "12px 8px",
+                                  borderBottom:
+                                    "1px solid #f1f5f9"
+                                }}
+                              >
+                                {
+                                  financeTypes.find(
+                                    (type) =>
+                                      type.value ===
+                                      item.type
+                                  )?.label ||
+                                  item.type
+                                }
+                              </td>
+
+                              <td
+                                style={{
+                                  padding: "12px 8px",
+                                  borderBottom:
+                                    "1px solid #f1f5f9",
+                                  fontWeight: "700"
+                                }}
+                              >
+                                {formatRupiah(item.amount)}
+                              </td>
+
+                              <td
+                                style={{
+                                  padding: "12px 8px",
+                                  borderBottom:
+                                    "1px solid #f1f5f9"
+                                }}
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    deleteFinanceTransaction(
+                                      item.id
+                                    )
+                                  }
+                                  style={{
+                                    color: "#dc2626",
+                                    background: "#fff1f2",
+                                    padding: "8px 10px",
+                                    borderRadius: "8px",
+                                    fontSize: "12px"
+                                  }}
+                                >
+                                  Hapus
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </section>
+              </>
+            )}
+
+            {financeView === "profit" && (
+              <section
+                style={{
+                  background: "#ffffff",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "18px",
+                  padding: "22px"
+                }}
+              >
+                <h3 style={{ marginTop: 0 }}>
+                  Laba Rugi — {financePeriodLabel(financePeriod)}
+                </h3>
+
+                {[
+                  ["Pendapatan", financeCurrentTotals.income, true],
+                  ["HPP", financeCurrentTotals.hpp, false],
+                  ["Laba Kotor", financeCurrentTotals.grossProfit, true],
+                  ["Biaya Usaha", financeCurrentTotals.expense, false],
+                  ["Laba Bersih", financeCurrentTotals.netProfit, true]
+                ].map(([label, value, emphasis]) => (
+                  <div
+                    key={label}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      gap: "20px",
+                      padding: "15px 0",
+                      borderBottom: "1px solid #f1f5f9",
+                      fontWeight:
+                        emphasis ? "800" : "500",
+                      fontSize:
+                        label === "Laba Bersih"
+                          ? "18px"
+                          : "15px"
+                    }}
+                  >
+                    <span>{label}</span>
+                    <span>{formatRupiah(value)}</span>
+                  </div>
+                ))}
+              </section>
+            )}
+
+            {financeView === "cashflow" && (
+              <section
+                style={{
+                  background: "#ffffff",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "18px",
+                  padding: "22px"
+                }}
+              >
+                <h3 style={{ marginTop: 0 }}>
+                  Arus Kas — {financePeriodLabel(financePeriod)}
+                </h3>
+
+                {[
+                  ["Uang Masuk", financeCurrentTotals.income + financeCurrentTotals.capital + financeCurrentTotals.loan + Math.max(0, financeCurrentTotals.receivable), true],
+                  ["Uang Keluar", financeCurrentTotals.hpp + financeCurrentTotals.expense + financeCurrentTotals.withdrawal, false],
+                  ["Perubahan Kas", financeCurrentTotals.cashTotal, true],
+                  ["Kas & Bank", financeCurrentTotals.cashTotal, true]
+                ].map(([label, value, emphasis]) => (
+                  <div
+                    key={label}
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      gap: "20px",
+                      padding: "15px 0",
+                      borderBottom: "1px solid #f1f5f9",
+                      fontWeight:
+                        emphasis ? "800" : "500"
+                    }}
+                  >
+                    <span>{label}</span>
+                    <span>{formatRupiah(value)}</span>
+                  </div>
+                ))}
+              </section>
+            )}
+
+            {financeView === "balance" && (
+              <section
+                style={{
+                  background: "#ffffff",
+                  border: "1px solid #e2e8f0",
+                  borderRadius: "18px",
+                  padding: "22px"
+                }}
+              >
+                <h3 style={{ marginTop: 0 }}>
+                  Posisi Keuangan — {financePeriodLabel(financePeriod)}
+                </h3>
+
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns:
+                      "repeat(2, minmax(0, 1fr))",
+                    gap: "24px"
+                  }}
+                >
+                  <div>
+                    <h4>Yang Dimiliki</h4>
+                    {[
+                      ["Kas & Bank", financeCurrentTotals.cashTotal],
+                      ["Piutang", financeCurrentTotals.receivable],
+                      ["Persediaan", financeCurrentTotals.inventory]
+                    ].map(([label, value]) => (
+                      <div
+                        key={label}
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          padding: "12px 0",
+                          borderBottom:
+                            "1px solid #f1f5f9"
+                        }}
+                      >
+                        <span>{label}</span>
+                        <strong>{formatRupiah(value)}</strong>
+                      </div>
+                    ))}
+
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        padding: "14px 0",
+                        fontWeight: "800"
+                      }}
+                    >
+                      <span>Total Aset</span>
+                      <span>
+                        {formatRupiah(
+                          financeCurrentTotals.totalAssets
+                        )}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4>Utang & Modal</h4>
+
+                    {[
+                      ["Utang", financeCurrentTotals.debt],
+                      [
+                        "Modal + Laba",
+                        financeCurrentTotals.totalEquity
+                      ]
+                    ].map(([label, value]) => (
+                      <div
+                        key={label}
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          padding: "12px 0",
+                          borderBottom:
+                            "1px solid #f1f5f9"
+                        }}
+                      >
+                        <span>{label}</span>
+                        <strong>{formatRupiah(value)}</strong>
+                      </div>
+                    ))}
+
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        padding: "14px 0",
+                        fontWeight: "800"
+                      }}
+                    >
+                      <span>Total</span>
+                      <span>
+                        {formatRupiah(
+                          financeCurrentTotals.debt +
+                          financeCurrentTotals.totalEquity
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    marginTop: "18px",
+                    padding: "14px",
+                    borderRadius: "12px",
+                    background:
+                      Math.abs(
+                        financeCurrentTotals.totalAssets -
+                        (
+                          financeCurrentTotals.debt +
+                          financeCurrentTotals.totalEquity
+                        )
+                      ) < 1
+                        ? "#f0fdf4"
+                        : "#fff7ed",
+                    color:
+                      Math.abs(
+                        financeCurrentTotals.totalAssets -
+                        (
+                          financeCurrentTotals.debt +
+                          financeCurrentTotals.totalEquity
+                        )
+                      ) < 1
+                        ? "#166534"
+                        : "#9a3412",
+                    fontSize: "13px"
+                  }}
+                >
+                  {Math.abs(
+                    financeCurrentTotals.totalAssets -
+                    (
+                      financeCurrentTotals.debt +
+                      financeCurrentTotals.totalEquity
+                    )
+                  ) < 1
+                    ? "✓ Posisi keuangan seimbang."
+                    : "⚠️ Data belum seimbang. Periksa transaksi modal, utang, atau aset."}
+                </div>
+              </section>
+            )}
+          </div>
+        )}
 
         {tab === "autopilot" && (
           <div
