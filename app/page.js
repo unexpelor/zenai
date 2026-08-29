@@ -1,7 +1,20 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createClient } from "../lib/supabase/client";
 export default function Home() {
+  const supabase = createClient();
+  const [authReady, setAuthReady] = useState(false);
+  const [session, setSession] = useState(null);
+  const [authMode, setAuthMode] = useState("login");
+  const [authEmail, setAuthEmail] = useState("");
+  const [authPassword, setAuthPassword] = useState("");
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authMessage, setAuthMessage] = useState("");
+  const [cloudSaving, setCloudSaving] = useState(false);
+  const [cloudLoaded, setCloudLoaded] = useState(false);
+  const cloudHydratedRef = useRef(false);
+  const cloudSaveTimerRef = useRef(null);
   const [isMobile, setIsMobile] = useState(false);
 
 useEffect(() => {
@@ -12,6 +25,45 @@ useEffect(() => {
   checkScreen();
 
   window.addEventListener("resize", checkScreen);
+
+  if (supabase && !authReady) {
+    return (
+      <main
+      {supabase && session && (
+        <div style={{ position: "fixed", top: "12px", right: "12px", zIndex: 9999, display: "flex", alignItems: "center", gap: "8px", background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "999px", padding: "6px 10px 6px 12px", boxShadow: "0 4px 16px rgba(15,23,42,.08)", fontSize: "12px" }}>
+          <span style={{ color: cloudSaving ? "#d97706" : "#16a34a", fontWeight: "700" }}>{cloudSaving ? "Menyimpan..." : cloudLoaded ? "Tersimpan" : "Cloud"}</span>
+          <button type="button" onClick={handleLogout} style={{ border: "none", background: "#f1f5f9", color: "#334155", borderRadius: "999px", padding: "6px 9px", cursor: "pointer", fontWeight: "600" }}>Keluar</button>
+        </div>
+      )}
+ style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: "24px", fontFamily: "Inter, Arial, sans-serif" }}>
+        <div style={{ color: "#64748b" }}>Memuat ZenAI...</div>
+      </main>
+    );
+  }
+
+  if (supabase && !session) {
+    return (
+      <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: "24px", background: "#f8fafc", fontFamily: "Inter, Arial, sans-serif" }}>
+        <form onSubmit={handleAuth} style={{ width: "100%", maxWidth: "420px", background: "#fff", border: "1px solid #e2e8f0", borderRadius: "20px", padding: "28px", boxSizing: "border-box" }}>
+          <div style={{ fontSize: "28px", fontWeight: "800", marginBottom: "8px" }}>ZenAI</div>
+          <div style={{ color: "#64748b", marginBottom: "24px", lineHeight: "1.5" }}>
+            {authMode === "login" ? "Masuk untuk menyimpan data bisnis dan hasil AI secara permanen." : "Buat akun ZenAI agar data tersimpan di cloud."}
+          </div>
+          <label style={{ display: "block", fontWeight: "600", marginBottom: "7px" }}>Email</label>
+          <input type="email" value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} autoComplete="email" style={{ width: "100%", padding: "12px", border: "1px solid #cbd5e1", borderRadius: "10px", marginBottom: "14px", boxSizing: "border-box" }} />
+          <label style={{ display: "block", fontWeight: "600", marginBottom: "7px" }}>Password</label>
+          <input type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} autoComplete={authMode === "login" ? "current-password" : "new-password"} style={{ width: "100%", padding: "12px", border: "1px solid #cbd5e1", borderRadius: "10px", marginBottom: "16px", boxSizing: "border-box" }} />
+          <button type="submit" disabled={authLoading} style={{ width: "100%", padding: "13px", border: "none", borderRadius: "10px", background: "#2563eb", color: "#fff", fontWeight: "700", cursor: authLoading ? "not-allowed" : "pointer" }}>
+            {authLoading ? "Memproses..." : authMode === "login" ? "Masuk" : "Buat Akun"}
+          </button>
+          {authMessage && <div style={{ marginTop: "14px", color: "#475569", fontSize: "14px", lineHeight: "1.5" }}>{authMessage}</div>}
+          <button type="button" onClick={() => { setAuthMode(authMode === "login" ? "signup" : "login"); setAuthMessage(""); }} style={{ marginTop: "16px", border: "none", background: "transparent", color: "#2563eb", fontWeight: "600", cursor: "pointer", padding: 0 }}>
+            {authMode === "login" ? "Belum punya akun? Buat akun" : "Sudah punya akun? Masuk"}
+          </button>
+        </form>
+      </main>
+    );
+  }
 
   return () => {
     window.removeEventListener("resize", checkScreen);
@@ -131,6 +183,189 @@ const [marketError, setMarketError] =
       );
     }
   }, [financeTransactions]);
+
+  // =========================
+  // CLOUD PERSISTENCE
+  // Semua hasil penting ZenAI disimpan ke Supabase berdasarkan user.
+  // Jika Supabase belum dikonfigurasi, aplikasi tetap memakai localStorage.
+  // =========================
+  const persistState = {
+    business,
+    pulseData,
+    diagnosis,
+    autopilotData,
+    marketData,
+    businessUpdates,
+    financeTransactions,
+    financePeriod,
+    tab
+  };
+
+  useEffect(() => {
+    if (!supabase) {
+      setAuthReady(true);
+      return;
+    }
+
+    let active = true;
+
+    const loadCloudState = async (currentSession) => {
+      if (!currentSession?.user?.id) {
+        if (active) {
+          setSession(null);
+          setAuthReady(true);
+          setCloudLoaded(false);
+        }
+        return;
+      }
+
+      if (active) setSession(currentSession);
+
+      const { data, error } = await supabase
+        .from("zenai_user_state")
+        .select("state")
+        .eq("user_id", currentSession.user.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Gagal memuat data ZenAI:", error);
+        if (active) setAuthMessage("Data cloud belum dapat dimuat. Coba refresh.");
+      } else if (data?.state && active) {
+        const saved = data.state;
+        if (saved.business !== undefined) setBusiness(saved.business);
+        if (saved.pulseData !== undefined) setPulseData(saved.pulseData);
+        if (saved.diagnosis !== undefined) setDiagnosis(saved.diagnosis);
+        if (saved.autopilotData !== undefined) setAutopilotData(saved.autopilotData);
+        if (saved.marketData !== undefined) setMarketData(saved.marketData);
+        if (Array.isArray(saved.businessUpdates)) setBusinessUpdates(saved.businessUpdates);
+        if (Array.isArray(saved.financeTransactions)) setFinanceTransactions(saved.financeTransactions);
+        if (saved.financePeriod) setFinancePeriod(saved.financePeriod);
+        if (saved.tab) setTab(saved.tab);
+      }
+
+      if (active) {
+        cloudHydratedRef.current = true;
+        setCloudLoaded(true);
+        setAuthReady(true);
+      }
+    };
+
+    supabase.auth.getSession().then(({ data }) => loadCloudState(data.session));
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      if (!nextSession) {
+        cloudHydratedRef.current = false;
+        setCloudLoaded(false);
+        setSession(null);
+        setAuthReady(true);
+        return;
+      }
+      loadCloudState(nextSession);
+    });
+
+    return () => {
+      active = false;
+      listener?.subscription?.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!supabase || !session?.user?.id || !cloudHydratedRef.current) return;
+
+    if (cloudSaveTimerRef.current) {
+      clearTimeout(cloudSaveTimerRef.current);
+    }
+
+    cloudSaveTimerRef.current = setTimeout(async () => {
+      setCloudSaving(true);
+      const { error } = await supabase
+        .from("zenai_user_state")
+        .upsert(
+          {
+            user_id: session.user.id,
+            state: {
+              business,
+              pulseData,
+              diagnosis,
+              autopilotData,
+              marketData,
+              businessUpdates,
+              financeTransactions,
+              financePeriod,
+              tab
+            },
+            updated_at: new Date().toISOString()
+          },
+          { onConflict: "user_id" }
+        );
+
+      if (error) {
+        console.error("Gagal menyimpan data ZenAI:", error);
+      }
+
+      setCloudSaving(false);
+    }, 700);
+
+    return () => {
+      if (cloudSaveTimerRef.current) clearTimeout(cloudSaveTimerRef.current);
+    };
+  }, [
+    session?.user?.id,
+    business,
+    pulseData,
+    diagnosis,
+    autopilotData,
+    marketData,
+    businessUpdates,
+    financeTransactions,
+    financePeriod,
+    tab
+  ]);
+
+  const handleAuth = async (event) => {
+    event.preventDefault();
+
+    if (!supabase) {
+      setAuthMessage("Supabase belum dikonfigurasi. Tambahkan NEXT_PUBLIC_SUPABASE_URL dan NEXT_PUBLIC_SUPABASE_ANON_KEY.");
+      return;
+    }
+
+    if (!authEmail.trim() || authPassword.length < 6) {
+      setAuthMessage("Masukkan email dan password minimal 6 karakter.");
+      return;
+    }
+
+    setAuthLoading(true);
+    setAuthMessage("");
+
+    const result = authMode === "signup"
+      ? await supabase.auth.signUp({
+          email: authEmail.trim(),
+          password: authPassword
+        })
+      : await supabase.auth.signInWithPassword({
+          email: authEmail.trim(),
+          password: authPassword
+        });
+
+    if (result.error) {
+      setAuthMessage(result.error.message);
+    } else if (authMode === "signup" && !result.data.session) {
+      setAuthMessage("Akun berhasil dibuat. Cek email untuk verifikasi, lalu masuk.");
+      setAuthMode("login");
+    } else {
+      setAuthMessage("Berhasil masuk.");
+    }
+
+    setAuthLoading(false);
+  };
+
+  const handleLogout = async () => {
+    if (!supabase) return;
+    await supabase.auth.signOut();
+    cloudHydratedRef.current = false;
+    setCloudLoaded(false);
+  };
 
   const formatRupiah = (value) => {
     const number = Number(value) || 0;
@@ -474,7 +709,7 @@ const [marketError, setMarketError] =
     return "Terjadi kesalahan. Silakan coba lagi.";
   };
 
-  const getBusinessContext = () => {
+    const getBusinessContext = () => {
     if (!business) {
       return null;
     }
@@ -1230,9 +1465,8 @@ menggunakan struktur:
   ],
 
   "nextStep": ""
-}
-
-Aturan:
+        }
+    Aturan:
 
 - Jangan membuat data keuangan.
 - Jangan membuat angka tanpa data pendukung.
@@ -2406,7 +2640,7 @@ minWidth: isMobile
           )}
         </button>
 
-        {/* AREA BAWAH SIDEBAR */}
+                    {/* AREA BAWAH SIDEBAR */}
         <div
           style={{
             marginTop: "auto",
@@ -3714,7 +3948,7 @@ minWidth: isMobile
                                   gap: "12px"
                                 }}
                               >
-                                <div
+                                                                <div
                                   style={{
                                     minWidth:
                                       "28px",
@@ -4314,7 +4548,7 @@ minWidth: isMobile
                   diagnosis.opportunities
                 ) &&
                   diagnosis.opportunities.length > 0 && (
-                    <div
+                                        <div
                       style={{
                         background: "#ffffff",
                         border:
@@ -4975,7 +5209,7 @@ minWidth: isMobile
                 </label>
               </div>
 
-              <div
+                            <div
                 style={{
                   display: "flex",
                   gap: "8px",
@@ -5519,7 +5753,7 @@ minWidth: isMobile
                   Arus Kas — {financePeriodLabel(financePeriod)}
                 </h3>
 
-                {[
+                                {[
                   ["Uang Masuk", financeCurrentTotals.income + financeCurrentTotals.capital + financeCurrentTotals.loan + Math.max(0, financeCurrentTotals.receivable), true],
                   ["Uang Keluar", financeCurrentTotals.hpp + financeCurrentTotals.expense + financeCurrentTotals.withdrawal, false],
                   ["Perubahan Kas", financeCurrentTotals.cashTotal, true],
@@ -6079,6 +6313,7 @@ minWidth: isMobile
                                 </div>
                               )}
 
+               
                               <strong>
                                 {item.title ||
                                   "Langkah Strategis"}
@@ -6353,4 +6588,4 @@ minWidth: isMobile
 
     </main>
   );
-}
+                                        }
