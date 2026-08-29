@@ -2373,8 +2373,8 @@ minWidth: isMobile
     lineHeight: "1.5"
   }}
 >
-  AI Partner untuk memahami,
-  menganalisis, dan mengembangkan usaha.
+  Partner AI untuk keputusan
+    bisnis yang lebih cerdas..
 </p>
 </div>
 
