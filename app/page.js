@@ -2199,7 +2199,7 @@ Balas JSON valid.
                 color: darkMode ? "#93c5fd" : "#2563eb"
               }}
             >
-              Mulai kembangkan bisnis Anda..
+              Know More Grow More
             </div>
           </div>
 
