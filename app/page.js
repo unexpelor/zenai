@@ -2199,7 +2199,7 @@ Balas JSON valid.
                 color: darkMode ? "#93c5fd" : "#2563eb"
               }}
             >
-              PAHAMI. PUTUSKAN. TUMBUH.
+              Mulai kembangkan bisnis Anda..
             </div>
           </div>
 
@@ -2426,7 +2426,7 @@ minWidth: isMobile
         color: darkMode ? "#cbd5e1" : "#64748b"
       }}
     >
-      PAHAMI. PUTUSKAN. TUMBUH.
+      AI Business Assistant
     </div>
   )}
 </div>
