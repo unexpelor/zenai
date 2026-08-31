@@ -2170,18 +2170,27 @@ Balas JSON valid.
   }
 
   if (supabase && !session) {
-    return (
-      <main
-        style={{
-          minHeight: "100vh",
-          display: "grid",
-          placeItems: "center",
-          padding: "24px",
-          background: darkMode ? "#0b1120" : "#f8fafc",
-          color: darkMode ? "#f8fafc" : "#0f172a",
-          fontFamily: "Inter, Arial, sans-serif"
-        }}
-      >
+  return (
+    <main
+      style={{
+        width: "100%",
+        minHeight: "100vh",
+        maxWidth: "none",
+        margin: 0,
+        padding: "24px",
+        boxSizing: "border-box",
+
+        display: "grid",
+        placeItems: "center",
+
+        background: darkMode ? "#0b1120" : "#f8fafc",
+        color: darkMode ? "#f8fafc" : "#0f172a",
+        fontFamily: "Inter, Arial, sans-serif",
+
+        position: "relative",
+        overflowX: "hidden",
+      }}
+    >
         <form
           onSubmit={handleAuth}
           style={{
@@ -2349,111 +2358,154 @@ padding: isMobile ? "16px 12px" : "32px",
         fontFamily: "Arial, sans-serif"
       }}
     >
-      {/* SIDEBAR */}
-      <aside
+     {/* SIDEBAR */}
+<aside
   className={`zenai-sidebar ${sidebarOpen ? "open" : "closed"}`}
   style={{
     width: isMobile
-  ? sidebarOpen
-    ? "220px"
-    : "64px"
-  : sidebarOpen
-    ? "280px"
-    : "72px",
+      ? sidebarOpen
+        ? "220px"
+        : "64px"
+      : sidebarOpen
+        ? "280px"
+        : "72px",
 
-minWidth: isMobile
-  ? sidebarOpen
-    ? "220px"
-    : "64px"
-  : sidebarOpen
-    ? "280px"
-    : "72px",
+    minWidth: isMobile
+      ? sidebarOpen
+        ? "220px"
+        : "64px"
+      : sidebarOpen
+        ? "280px"
+        : "72px",
+
+    height: "100vh",
     minHeight: "100vh",
+
+    flexShrink: 0,
+
     background: "#ffffff",
     borderRight: "1px solid #e2e8f0",
+
     padding: sidebarOpen
-  ? isMobile
-    ? "16px 10px"
-    : "24px 16px"
-  : isMobile
-    ? "16px 6px"
-    : "24px 10px",
+      ? isMobile
+        ? "16px 10px"
+        : "24px 16px"
+      : isMobile
+        ? "16px 6px"
+        : "24px 10px",
+
     position: "sticky",
     top: 0,
     alignSelf: "flex-start",
+
     boxSizing: "border-box",
-    overflow: "hidden",
-    transition: "width 0.3s ease, min-width 0.3s ease, padding 0.3s ease"
+
+    overflowY: "auto",
+    overflowX: "hidden",
+
+    transition:
+      "width 0.3s ease, min-width 0.3s ease, padding 0.3s ease",
+
+    scrollbarWidth: "thin",
   }}
-        >
+>
+  {/* TOGGLE SIDEBAR */}
   <button
     onClick={() => setSidebarOpen(!sidebarOpen)}
-    title={
-      sidebarOpen
-        ? "Tutup menu"
-        : "Buka menu"
-    }
+    title={sidebarOpen ? "Tutup menu" : "Buka menu"}
     style={{
       width: "100%",
+      minHeight: "42px",
       border: "none",
       background: "transparent",
       cursor: "pointer",
       padding: "8px 10px",
       marginBottom: "12px",
       fontSize: "22px",
-      textAlign: sidebarOpen
-        ? "right"
-        : "center",
-      color: "#334155"
+      lineHeight: 1,
+      textAlign: sidebarOpen ? "right" : "center",
+      color: "#334155",
+      flexShrink: 0,
     }}
   >
     ☰
   </button>
-        {/* LOGO ZENAI */}
-<div
-  style={{
-    padding: sidebarOpen ? "8px 8px 24px" : "8px 0 20px",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: sidebarOpen ? "flex-start" : "center",
-    justifyContent: "center",
-    overflow: "hidden"
-  }}
->
-  <img
-    src={sidebarOpen ? "/zenai-logo.png" : "/zenai-mark.png"}
-    alt="ZENAI"
+
+  {/* LOGO ZENAI */}
+  <div
     style={{
-      display: "block",
-      width: sidebarOpen
-        ? (isMobile ? "150px" : "175px")
-        : (isMobile ? "44px" : "48px"),
-      height: sidebarOpen
-        ? (isMobile ? "150px" : "175px")
-        : (isMobile ? "44px" : "48px"),
-      objectFit: "contain",
-      objectPosition: "center",
-      filter: darkMode ? "brightness(1.08) saturate(1.05)" : "none",
-      transition: "all 0.25s ease"
+      padding: sidebarOpen
+        ? "8px 8px 24px"
+        : "8px 0 20px",
+
+      display: "flex",
+      flexDirection: "column",
+      alignItems: sidebarOpen
+        ? "flex-start"
+        : "center",
+
+      justifyContent: "center",
+
+      overflow: "hidden",
+      flexShrink: 0,
     }}
-  />
-
-  {sidebarOpen && (
-    <div
+  >
+    <img
+      src={
+        sidebarOpen
+          ? "/zenai-logo.png"
+          : "/zenai-mark.png"
+      }
+      alt="ZENAI"
       style={{
-        marginTop: "-8px",
-        paddingLeft: "4px",
-        fontSize: "12px",
-        fontWeight: "700",
-        letterSpacing: "1.2px",
-        color: darkMode ? "#cbd5e1" : "#64748b"
-      }}
-    >
-      AI Business Assistant
-    </div>
-  )}
-</div>
+        display: "block",
 
+        width: sidebarOpen
+          ? isMobile
+            ? "150px"
+            : "175px"
+          : isMobile
+            ? "44px"
+            : "48px",
+
+        height: sidebarOpen
+          ? isMobile
+            ? "150px"
+            : "175px"
+          : isMobile
+            ? "44px"
+            : "48px",
+
+        objectFit: "contain",
+        objectPosition: "center",
+
+        filter: darkMode
+          ? "brightness(1.08) saturate(1.05)"
+          : "none",
+
+        transition: "all 0.25s ease",
+      }}
+    />
+
+    {sidebarOpen && (
+      <div
+        style={{
+          marginTop: "-8px",
+          paddingLeft: "4px",
+          fontSize: "12px",
+          fontWeight: "700",
+          letterSpacing: "1.2px",
+          color: darkMode
+            ? "#cbd5e1"
+            : "#64748b",
+
+          whiteSpace: "nowrap",
+        }}
+      >
+        AI Business Assistant
+      </div>
+    )}
+  </div>
         {/* NAVIGASI */}
         <nav
           style={{
