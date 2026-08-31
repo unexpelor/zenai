@@ -6437,7 +6437,18 @@ minWidth: isMobile
                       "ZENAI telah membuat strategi berdasarkan kondisi usaha Anda."}
                   </p>
                 </div>
+{/* bagian strategi/autopilot yang sudah ada */}
 
+<BusinessGrowthLoop
+  strategies={
+    Array.isArray(autopilotData?.plan7)
+      ? autopilotData.plan7
+      : []
+  }
+  onEvaluate={(action) => {
+    setTab("pulse");
+  }}
+/>
 
                 {/* RENCANA 7 HARI */}
                 {Array.isArray(
