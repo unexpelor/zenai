@@ -30,43 +30,25 @@ export default function BusinessGrowthLoop({
 
   function activateStrategy(strategy) {
     const action = {
-      id: Date.now(),
-      title:
-        strategy?.title ||
-        strategy?.action ||
-        "Tindakan Usaha",
-      description:
-        strategy?.action ||
-        strategy?.description ||
-        "",
-      progress: 0,
-      status: "Rencana",
-      createdAt: new Date().toISOString(),
-    };
+  id: Date.now(),
+  title:
+    strategy?.title ||
+    strategy?.action ||
+    "Tindakan Usaha",
+  description:
+    strategy?.action ||
+    strategy?.description ||
+    "",
+  started: false,
+  completed: false,
+  status: "Rencana",
+  createdAt: new Date().toISOString(),
+};
 
     setActions((prev) => [action, ...prev]);
   }
 
-  function updateProgress(id, progress) {
-    const value = Number(progress);
-
-    setActions((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              progress: value,
-              status:
-                value >= 100
-                  ? "Selesai"
-                  : value > 0
-                    ? "Berjalan"
-                    : "Rencana",
-            }
-          : item
-      )
-    );
-  }
+  
 
   function removeAction(id) {
     setActions((prev) =>
