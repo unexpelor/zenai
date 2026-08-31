@@ -249,24 +249,22 @@ export default function BusinessGrowthLoop({
                       marginBottom: 6,
                     }}
                   >
-                    <span>Progress</span>
-                    <strong>{item.progress}%</strong>
                   </div>
 
                   <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    step="10"
-                    value={item.progress}
-                    onChange={(e) =>
-                      updateProgress(
-                        item.id,
-                        e.target.value
-                      )
-                    }
-                    style={{ width: "100%" }}
-                  />
+  type="range"
+  min="0"
+  max="100"
+  step="10"
+  value={item.progress}
+  onChange={(e) =>
+    updateProgress(
+      item.id,
+      e.target.value
+    )
+  }
+  style={{ width: "100%" }}
+/>
                 </div>
 
                 {item.progress >= 100 && (
