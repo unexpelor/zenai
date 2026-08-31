@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "../lib/supabase/client";
+import BusinessGrowthLoop from "../components/BusinessGrowthLoop";
 export default function Home() {
   const supabase = createClient();
   const [authReady, setAuthReady] = useState(false);
