@@ -1,45 +1,85 @@
+import { jsonError, rateLimit, requireApiUser } from "../../../lib/api-security";
 export async function POST(req) {
+  const auth = await requireApiUser(req);
+  if (!auth.ok) return jsonError(auth.message, auth.status);
+
+  const limited = rateLimit(req, "autopilot", 10, 60_000, auth.user?.id);
+  if (!limited.ok) return jsonError("Terlalu banyak permintaan. Silakan coba lagi.", 429, { "Retry-After": String(limited.retryAfter) });
+
   try {
-    const body = await req.json();
+    let body;
+    try { body = await req.json(); } catch { return jsonError("Format permintaan tidak valid.", 400); }
+    if (!body || typeof body !== "object" || Array.isArray(body)) return jsonError("Data permintaan tidak valid.", 400);
 
     if (!body.business) {
       return Response.json(
-        { message: "Data bisnis tidak tersedia." },
-        { status: 400 }
+        {
+          message: "Data bisnis tidak ditemukan.",
+        },
+        {
+          status: 400,
+        }
       );
     }
 
-    const duration = body.duration || 7;
+    const duration = Number(body.duration || 7);
+    if (![7, 14, 30].includes(duration)) {
+      return jsonError("Durasi Autopilot tidak valid.", 400);
+    }
+
+    const businessPayload = JSON.stringify(body.business);
+    if (businessPayload.length > 20000) {
+      return jsonError("Data usaha terlalu besar.", 413);
+    }
 
     const prompt = `
-Buat strategi bisnis UMKM selama ${duration} hari berdasarkan data berikut:
+Anda adalah Business Autopilot untuk UMKM Indonesia.
 
-${JSON.stringify(body.business)}
+Buat strategi bisnis selama ${duration} hari berdasarkan data berikut.
 
-WAJIB balas dengan SATU objek JSON valid.
-Tidak boleh markdown.
-Tidak boleh menggunakan \`\`\`.
-Tidak boleh ada teks sebelum atau sesudah JSON.
+DATA BISNIS:
+${JSON.stringify(body.business, null, 2)}
 
-Format wajib:
+ATURAN WAJIB:
+
+1. JANGAN menampilkan proses berpikir.
+2. JANGAN menggunakan tag <think>.
+3. JANGAN menampilkan reasoning atau analisis internal.
+4. JANGAN menggunakan markdown.
+5. JANGAN menggunakan \`\`\`json.
+6. LANGSUNG mulai output dengan karakter {
+7. LANGSUNG akhiri output dengan karakter }
+8. Jangan menulis teks apa pun sebelum JSON.
+9. Jangan menulis teks apa pun setelah JSON.
+10. Output HARUS JSON valid.
+
+Gunakan struktur JSON berikut:
 
 {
   "mission": {
-    "title": "judul strategi",
-    "target": "target utama",
+    "title": "Judul strategi",
+    "target": "Target utama",
     "duration": "${duration} hari",
     "priority": "HIGH"
   },
   "actions": [
     {
       "id": 1,
-      "title": "judul aksi",
+      "title": "Judul aksi",
       "type": "CONTENT",
-      "description": "penjelasan aksi",
-      "output": "hasil yang diharapkan"
+      "description": "Penjelasan aksi",
+      "output": "Hasil yang diharapkan"
     }
   ]
 }
+
+Buat jumlah action yang sesuai dengan durasi ${duration} hari.
+
+Untuk 7 hari: buat maksimal 7 action.
+Untuk 14 hari: buat maksimal 14 action.
+Untuk 30 hari: buat maksimal 30 action.
+
+Tetap ringkas agar JSON selesai dihasilkan.
 `;
 
     const response = await fetch(
@@ -47,180 +87,224 @@ Format wajib:
       {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          ...(req.headers.get("authorization")
+            ? { Authorization: req.headers.get("authorization") }
+            : {}),
         },
         body: JSON.stringify({
           prompt,
-          system:
-            "Anda adalah AI Business Autopilot. Output harus berupa JSON valid saja."
-        })
+          system: `
+Anda adalah Business Autopilot UMKM Indonesia.
+
+PENTING:
+Jangan tampilkan <think>.
+Jangan tampilkan proses berpikir.
+Jangan tampilkan reasoning internal.
+Jangan gunakan markdown.
+Jangan gunakan code block.
+Output harus langsung berupa JSON valid.
+Karakter pertama harus {
+Karakter terakhir harus }
+`,
+        }),
       }
     );
 
-    const data = await response.json();
+    let data;
+
+    try {
+      data = await response.json();
+    } catch (error) {
+      return Response.json(
+        {
+          message:
+            "Respons dari AI Router bukan JSON valid.",
+          error: "Respons AI tidak dapat diproses."
+        },
+        {
+          status: 500,
+        }
+      );
+    }
 
     if (!response.ok) {
+      console.error("AI ROUTER ERROR:", data);
+
       return Response.json(
         {
-          message: data.message || "AI Router gagal",
-          details: data.details
+          message:
+            data.message ||
+            data.error ||
+            "AI gagal",
+
+          details: [],
         },
-        { status: response.status }
+        {
+          status: response.status || 500,
+        }
       );
     }
 
-    const raw = data.text;
+    let raw = String(data.text || "").trim();
 
-    if (!raw || typeof raw !== "string") {
+    if (!raw) {
       return Response.json(
         {
-          message: "AI tidak mengembalikan teks.",
-          raw
+          message:
+            "AI tidak mengembalikan respons.",
         },
-        { status: 500 }
+        {
+          status: 500,
+        }
       );
     }
 
-    // Bersihkan markdown
-    let text = raw
+    // =========================
+    // BERSIHKAN MARKDOWN
+    // =========================
+
+    raw = raw
       .replace(/```json/gi, "")
+      .replace(/```JSON/gi, "")
       .replace(/```/g, "")
       .trim();
 
-    // Ambil JSON pertama
-    const start = text.indexOf("{");
+    // =========================
+    // HAPUS THINKING BLOCK
+    // =========================
 
-    if (start === -1) {
+    raw = raw
+      .replace(
+        /<think>[\s\S]*?<\/think>/gi,
+        ""
+      )
+      .trim();
+
+    // Jika AI menggunakan tag reasoning lain
+    raw = raw
+      .replace(
+        /<thinking>[\s\S]*?<\/thinking>/gi,
+        ""
+      )
+      .trim();
+
+    // =========================
+    // CARI JSON
+    // =========================
+
+    const start = raw.indexOf("{");
+    const end = raw.lastIndexOf("}");
+
+    if (
+      start === -1 ||
+      end === -1 ||
+      end <= start
+    ) {
+      console.error(
+        "AI TIDAK MENGHASILKAN JSON:",
+        raw
+      );
+
       return Response.json(
         {
-          message: "Output AI tidak mengandung JSON.",
-          raw
+          message:
+            "AI tidak menghasilkan JSON lengkap.",
+
+          hint:
+            "Model kemungkinan menghasilkan proses berpikir atau output terpotong sebelum JSON selesai.",
         },
-        { status: 500 }
+        {
+          status: 500,
+        }
       );
     }
 
-    // Cari penutup JSON yang benar dengan menghitung kurung
-    let depth = 0;
-    let end = -1;
-    let inString = false;
-    let escaped = false;
+    const jsonText = raw
+      .substring(
+        start,
+        end + 1
+      )
+      .trim();
 
-    for (let i = start; i < text.length; i++) {
-      const char = text[i];
-
-      if (inString) {
-        if (escaped) {
-          escaped = false;
-        } else if (char === "\\") {
-          escaped = true;
-        } else if (char === '"') {
-          inString = false;
-        }
-        continue;
-      }
-
-      if (char === '"') {
-        inString = true;
-      } else if (char === "{") {
-        depth++;
-      } else if (char === "}") {
-        depth--;
-
-        if (depth === 0) {
-          end = i + 1;
-          break;
-        }
-      }
-    }
-
-    if (end === -1) {
-      return Response.json(
-        {
-          message: "JSON dari AI tidak lengkap.",
-          raw
-        },
-        { status: 500 }
-      );
-    }
-
-    const jsonText = text.substring(start, end);
+    // =========================
+    // PARSE JSON
+    // =========================
 
     let result;
 
     try {
       result = JSON.parse(jsonText);
+
     } catch (error) {
+      console.error(
+        "JSON PARSE ERROR:",
+        error.message
+      );
+
       return Response.json(
         {
-          message: "JSON AI tidak valid.",
-          error: error.message,
-          raw,
-          jsonText
+          message:
+            "JSON AI tidak valid.",
+
+          error: "Format respons AI tidak valid."
         },
-        { status: 500 }
+        {
+          status: 500,
+        }
       );
+    }
+
+    // =========================
+    // VALIDASI HASIL
+    // =========================
+
+    if (
+      !result ||
+      typeof result !== "object"
+    ) {
+      return Response.json(
+        {
+          message:
+            "Format respons AI tidak valid.",
+        },
+        {
+          status: 500,
+        }
+      );
+    }
+
+    if (!result.mission) {
+      result.mission = {
+        title: "Strategi Bisnis",
+        target: "Meningkatkan pertumbuhan bisnis",
+        duration: `${duration} hari`,
+        priority: "HIGH",
+      };
+    }
+
+    if (!Array.isArray(result.actions)) {
+      result.actions = [];
     }
 
     return Response.json({
       result,
-      provider: data.provider
+      provider:
+        data.provider || "AI",
     });
 
   } catch (error) {
-    console.error("AUTOPILOT ERROR:", error);
+    console.error(
+      "AUTOPILOT FATAL ERROR:",
+      error
+    );
 
     return Response.json(
       {
-        message: error.message || "Autopilot gagal."
+        success: false,
+        message: "Terjadi kesalahan pada Autopilot."
       },
       { status: 500 }
-    );
-  }
-}        {
-          status: 500
-        }
-      );
-    }
-
-    cleanJson = cleanJson.substring(
-      start,
-      end + 1
-    );
-
-    let result;
-
-    try {
-      result = JSON.parse(cleanJson);
-    } catch (error) {
-      return Response.json(
-        {
-          message: "JSON dari AI tidak valid.",
-          error: error.message,
-          raw: data.text
-        },
-        {
-          status: 500
-        }
-      );
-    }
-
-    return Response.json({
-      result,
-      provider: data.provider
-    });
-
-  } catch (error) {
-
-    console.error("AUTOPILOT ERROR:", error);
-
-    return Response.json(
-      {
-        message: error.message || "Autopilot gagal dijalankan."
-      },
-      {
-        status: 500
-      }
     );
   }
 }
