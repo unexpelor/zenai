@@ -2460,7 +2460,7 @@ Balas JSON valid.
   style={{
         flex: 1,
 minWidth: 0,
-overflowX: "hidden",
+overflowX: "auto",
 padding: isMobile ? "16px 12px" : "32px",
         minHeight: "100vh",
         background: darkMode ? "#0B1120" : "#F8FAFC",
@@ -7244,9 +7244,30 @@ darkMode={darkMode}
 .zenai-dark button[style*="#2563EB"],.zenai-dark button[style*="#2563EB"] { color:#FFFFFF !important; }
 
 @media (max-width:768px) {
-  .zenai-app { width:100vw !important; max-width:100vw !important; overflow-x:hidden !important; }
-  .zenai-sidebar { flex-shrink:0 !important; overflow:hidden !important; }
-  .zenai-content { min-width:0 !important; overflow-x:hidden !important; margin-left:0 !important; width:100% !important; }
+  .zenai-app {
+    width:100vw !important;
+    max-width:none !important;
+    overflow-x:auto !important;
+    overflow-y:auto !important;
+  }
+
+  .zenai-sidebar {
+    flex-shrink:0 !important;
+    overflow-x:hidden !important;
+    overflow-y:auto !important;
+    height:100vh !important;
+    max-height:100vh !important;
+    -webkit-overflow-scrolling:touch !important;
+  }
+
+  .zenai-content {
+    min-width:0 !important;
+    overflow-x:auto !important;
+    overflow-y:visible !important;
+    margin-left:0 !important;
+    width:auto !important;
+    min-width:calc(100vw - 133px) !important;
+  }
 }
 `}</style>
 
