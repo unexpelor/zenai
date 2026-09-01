@@ -5150,15 +5150,6 @@ padding: isMobile ? "16px 12px" : "32px",
               </div>
             )}
 
-            <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", flexWrap: "wrap", alignItems: "center", padding: "12px 2px" }}>
-              <span style={{ fontSize: "12px", color: darkMode ? "#94a3b8" : "#64748b" }}>
-                Tingkat keyakinan analisis: <strong>{marketData.analysis.confidence || "tidak ditentukan"}</strong>
-              </span>
-              <span style={{ fontSize: "12px", color: darkMode ? "#94a3b8" : "#64748b" }}>
-                Informasi eksternal dianalisis oleh ZenAI dengan dukungan Tavily.
-              </span>
-            </div>
-
             {marketData.analysis.limitations && (
               <div style={{ fontSize: "12px", color: darkMode ? "#94a3b8" : "#64748b", padding: "0 2px" }}>
                 Keterbatasan: {marketData.analysis.limitations}
