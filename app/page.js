@@ -5435,9 +5435,9 @@ padding: isMobile ? "16px 12px" : "32px",
               <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "18px", padding: "22px" }}>
                 <div style={{ fontWeight: "800", marginBottom: "14px" }}>🧭 Skenario Bisnis</div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "12px" }}>
-                  <div style={{ padding: "15px", borderRadius: "12px", background: "#f0fdf4" }}><strong>Optimistis</strong><p style={{ margin: "7px 0 0", lineHeight: "1.6" }}>{marketData.analysis.scenarios.optimistic || "-"}</p></div>
-                  <div style={{ padding: "15px", borderRadius: "12px", background: "#eff6ff" }}><strong>Realistis</strong><p style={{ margin: "7px 0 0", lineHeight: "1.6" }}>{marketData.analysis.scenarios.realistic || "-"}</p></div>
-                  <div style={{ padding: "15px", borderRadius: "12px", background: "#fff7ed" }}><strong>Risiko</strong><p style={{ margin: "7px 0 0", lineHeight: "1.6" }}>{marketData.analysis.scenarios.risk || "-"}</p></div>
+                  <div style={{ padding: "15px", borderRadius: "12px", background: darkMode ? "#064E3B" : "#f0fdf4", color: darkMode ? "#F0FDF4" : "#0F172A" }}><strong style={{ color: darkMode ? "#F0FDF4" : "#0F172A" }}>Optimistis</strong><p style={{ margin: "7px 0 0", lineHeight: "1.6", color: darkMode ? "#D1FAE5" : "#334155" }}>{marketData.analysis.scenarios.optimistic || "-"}</p></div>
+                  <div style={{ padding: "15px", borderRadius: "12px", background: darkMode ? "#1E3A8A" : "#eff6ff", color: darkMode ? "#EFF6FF" : "#0F172A" }}><strong style={{ color: darkMode ? "#EFF6FF" : "#0F172A" }}>Realistis</strong><p style={{ margin: "7px 0 0", lineHeight: "1.6", color: darkMode ? "#DBEAFE" : "#334155" }}>{marketData.analysis.scenarios.realistic || "-"}</p></div>
+                  <div style={{ padding: "15px", borderRadius: "12px", background: darkMode ? "#78350F" : "#fff7ed", color: darkMode ? "#FFF7ED" : "#0F172A" }}><strong style={{ color: darkMode ? "#FFF7ED" : "#0F172A" }}>Risiko</strong><p style={{ margin: "7px 0 0", lineHeight: "1.6", color: darkMode ? "#FFEDD5" : "#334155" }}>{marketData.analysis.scenarios.risk || "-"}</p></div>
                 </div>
               </div>
             )}
