@@ -5407,15 +5407,52 @@ padding: isMobile ? "16px 12px" : "32px",
 </div>
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "14px" }}>
-              <div style={{ background: "#EFF6FF", border: "1px solid #86efac", borderRadius: "16px", padding: "20px" }}>
-                <div style={{ fontWeight: "800", color: darkMode ? "#60A5FA" : "#2563EB", marginBottom: "10px" }}>💡 Peluang</div>
-                {Array.isArray(marketData.analysis.opportunities) && marketData.analysis.opportunities.length > 0 ? (
-                  <ul style={{ margin: 0, paddingLeft: "20px", lineHeight: "1.7" }}>
-                    {marketData.analysis.opportunities.map((item, index) => <li key={index}>{item}</li>)}
-                  </ul>
-                ) : <p style={{ margin: 0 }}>Belum tersedia.</p>}
-              </div>
+            <div
+  style={{
+    background: darkMode ? "#052E1B" : "#EFF6FF",
+    border: `1px solid ${darkMode ? "#22C55E" : "#86efac"}`,
+    borderRadius: "16px",
+    padding: "20px",
+    color: darkMode ? "#DCFCE7" : "#0F172A"
+  }}
+>
+  <div
+    style={{
+      fontWeight: "800",
+      color: darkMode ? "#4ADE80" : "#15803D",
+      marginBottom: "10px"
+    }}
+  >
+    💡 Peluang
+  </div>
+
+  {Array.isArray(marketData.analysis.opportunities) &&
+  marketData.analysis.opportunities.length > 0 ? (
+    <ul
+      style={{
+        margin: 0,
+        paddingLeft: "20px",
+        lineHeight: "1.7",
+        color: darkMode ? "#DCFCE7" : "#334155"
+      }}
+    >
+      {marketData.analysis.opportunities.map(
+        (item, index) => (
+          <li key={index}>{item}</li>
+        )
+      )}
+    </ul>
+  ) : (
+    <p
+      style={{
+        margin: 0,
+        color: darkMode ? "#CBD5E1" : "#334155"
+      }}
+    >
+      Belum tersedia.
+    </p>
+  )}
+</div>
               <div style={{ background: "#FFFFFFbeb", border: "1px solid #FDE68A", borderRadius: "16px", padding: "20px" }}>
                 <div style={{ fontWeight: "800", color: "#b45309", marginBottom: "10px" }}>⚠ Risiko Utama</div>
                 {Array.isArray(marketData.analysis.risks) && marketData.analysis.risks.length > 0 ? (
