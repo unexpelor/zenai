@@ -2762,8 +2762,15 @@ padding: isMobile ? "16px 12px" : "32px",
   style={{
     flex: 1,
     minWidth: 0,
-    marginLeft: isMobile ? 0 : (sidebarOpen ? "280px" : "72px"),
-    width: isMobile ? "100%" : `calc(100% - ${sidebarOpen ? "280px" : "72px"})`,
+
+    marginLeft: isMobile
+      ? (sidebarOpen ? "220px" : "64px")
+      : (sidebarOpen ? "280px" : "72px"),
+
+    width: isMobile
+      ? `calc(100% - ${sidebarOpen ? "220px" : "64px"})`
+      : `calc(100% - ${sidebarOpen ? "280px" : "72px"})`,
+
     padding: isMobile ? "24px 12px" : "32px",
     boxSizing: "border-box",
     transition: "margin-left 0.25s ease, width 0.25s ease"
