@@ -6604,6 +6604,7 @@ padding: isMobile ? "16px 12px" : "32px",
   actions={growthActions}
   onActionsChange={setGrowthActions}
   evaluating={growthEvaluating}
+darkMode={darkMode}
   onEvaluate={async (action) => {
     setGrowthEvaluating(true);
 
