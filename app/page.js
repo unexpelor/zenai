@@ -5405,9 +5405,8 @@ padding: isMobile ? "16px 12px" : "32px",
     {marketData.analysis.demandSignal?.reason || "Belum tersedia."}
   </p>
 </div>
-            </div>
 
-            <div
+<div
   style={{
     background: darkMode ? "#052E1B" : "#EFF6FF",
     border: `1px solid ${darkMode ? "#22C55E" : "#86efac"}`,
@@ -5436,11 +5435,9 @@ padding: isMobile ? "16px 12px" : "32px",
         color: darkMode ? "#DCFCE7" : "#334155"
       }}
     >
-      {marketData.analysis.opportunities.map(
-        (item, index) => (
-          <li key={index}>{item}</li>
-        )
-      )}
+      {marketData.analysis.opportunities.map((item, index) => (
+        <li key={index}>{item}</li>
+      ))}
     </ul>
   ) : (
     <p
@@ -5453,15 +5450,51 @@ padding: isMobile ? "16px 12px" : "32px",
     </p>
   )}
 </div>
-              <div style={{ background: "#FFFFFFbeb", border: "1px solid #FDE68A", borderRadius: "16px", padding: "20px" }}>
-                <div style={{ fontWeight: "800", color: "#b45309", marginBottom: "10px" }}>⚠ Risiko Utama</div>
-                {Array.isArray(marketData.analysis.risks) && marketData.analysis.risks.length > 0 ? (
-                  <ul style={{ margin: 0, paddingLeft: "20px", lineHeight: "1.7" }}>
-                    {marketData.analysis.risks.map((item, index) => <li key={index}>{item}</li>)}
-                  </ul>
-                ) : <p style={{ margin: 0 }}>Belum tersedia.</p>}
-              </div>
-            </div>
+
+<div
+  style={{
+    background: darkMode ? "#4C0519" : "#FFF1F2",
+    border: `1px solid ${darkMode ? "#FB7185" : "#FECDD3"}`,
+    borderRadius: "16px",
+    padding: "20px",
+    color: darkMode ? "#FFE4E6" : "#9F1239"
+  }}
+>
+  <div
+    style={{
+      fontWeight: "800",
+      color: darkMode ? "#FB7185" : "#BE123C",
+      marginBottom: "10px"
+    }}
+  >
+    ⚠ Risiko Utama
+  </div>
+
+  {Array.isArray(marketData.analysis.risks) &&
+  marketData.analysis.risks.length > 0 ? (
+    <ul
+      style={{
+        margin: 0,
+        paddingLeft: "20px",
+        lineHeight: "1.7",
+        color: darkMode ? "#FFE4E6" : "#9F1239"
+      }}
+    >
+      {marketData.analysis.risks.map((item, index) => (
+        <li key={index}>{item}</li>
+      ))}
+    </ul>
+  ) : (
+    <p
+      style={{
+        margin: 0,
+        color: darkMode ? "#CBD5E1" : "#334155"
+      }}
+    >
+      Belum tersedia.
+    </p>
+  )}
+</div>
 
             <div style={{ background: darkMode ? "#0B1120" : "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: "18px", padding: "22px" }}>
               <div style={{ fontWeight: "800", marginBottom: "8px" }}>🚀 Implikasi Strategis</div>
