@@ -5126,9 +5126,9 @@ padding: isMobile ? "16px 12px" : "32px",
 {diagnosis.nextStep && (
   <div
     style={{
-      background: darkMode ? "#172554" : "#EFF6FF",
+      background: darkMode ? "#172033" : "#EFF6FF",
       border: `1px solid ${
-        darkMode ? "#3B82F6" : "#BFDBFE"
+        darkMode ? "#60A5FA" : "#BFDBFE"
       }`,
       borderRadius: "16px",
       padding: "20px",
@@ -5136,17 +5136,17 @@ padding: isMobile ? "16px 12px" : "32px",
     }}
   >
     <strong
-  style={{
-    color: darkMode ? "#1E40AF" : "inherit"
-  }}
->
-  💡 Langkah Berikutnya
-</strong>
+      style={{
+        color: darkMode ? "#F8FAFC" : "#0F172A"
+      }}
+    >
+      💡 Langkah Berikutnya
+    </strong>
 
     <p
       style={{
         margin: "8px 0 0",
-        color: darkMode ? "#DBEAFE" : "#334155",
+        color: darkMode ? "#CBD5E1" : "#334155",
         lineHeight: "1.6"
       }}
     >
