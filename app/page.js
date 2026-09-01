@@ -4394,36 +4394,37 @@ padding: isMobile ? "16px 12px" : "32px",
 
 
                 {/* NEXT STEP */}
-                {pulseData.nextStep && (
-                  <div
-                    style={{
-                      background: "#EFF6FF",
-                      border:
-                        "1px solid #BFDBFE",
-                      borderRadius:
-                        "16px",
-                      padding: "20px",
-                      marginBottom: "24px"
-                    }}
-                  >
-                    <strong>
-                      💡 Langkah Berikutnya
-                    </strong>
+{pulseData.nextStep && (
+  <div
+    style={{
+      background: darkMode ? "#172033" : "#EFF6FF",
+      border: `1px solid ${
+        darkMode ? "#60A5FA" : "#BFDBFE"
+      }`,
+      borderRadius: "16px",
+      padding: "20px",
+      marginBottom: "24px"
+    }}
+  >
+    <strong
+      style={{
+        color: darkMode ? "#F8FAFC" : "#0F172A"
+      }}
+    >
+      💡 Langkah Berikutnya
+    </strong>
 
-                    <p
-                      style={{
-                        margin:
-                          "8px 0 0",
-                        lineHeight: "1.6",
-                        color: "#334155"
-                      }}
-                    >
-                      {pulseData.nextStep}
-                    </p>
-                  </div>
-                )}
-
-
+    <p
+      style={{
+        margin: "8px 0 0",
+        lineHeight: "1.6",
+        color: darkMode ? "#CBD5E1" : "#334155"
+      }}
+    >
+      {pulseData.nextStep}
+    </p>
+  </div>
+)}
                 {/* UPDATE USAHA */}
                 <div
                   style={{
