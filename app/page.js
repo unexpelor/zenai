@@ -5136,14 +5136,12 @@ padding: isMobile ? "16px 12px" : "32px",
     }}
   >
     <strong
-      style={{
-        display: "block",
-        color: darkMode ? "#93C5FD" : "#2563EB",
-        fontWeight: "800"
-      }}
-    >
-      💡 Langkah Berikutnya
-    </strong>
+  style={{
+    color: darkMode ? "#1E40AF" : "inherit"
+  }}
+>
+  💡 Langkah Berikutnya
+</strong>
 
     <p
       style={{
