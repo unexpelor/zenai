@@ -5136,12 +5136,12 @@ padding: isMobile ? "16px 12px" : "32px",
     }}
   >
     <strong
-      style={{
-        color: darkMode ? "#93C5FD" : "#0F172A"
-      }}
-    >
-      💡 Langkah Berikutnya
-    </strong>
+  style={{
+    color: darkMode ? "#93C5FD" : "#2563EB"
+  }}
+>
+  💡 Langkah Berikutnya
+</strong>
 
     <p
       style={{
