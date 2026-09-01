@@ -1,337 +1,121 @@
-{/* =========================
-    PERSPEKTIF BISNIS
-========================= */}
+"use client";
 
-{tab === "market" && (
-  <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
-    {!marketData && !marketLoading && !marketError && (
-      <div
-        style={{
-          background: darkMode ? "#111827" : "#FFFFFF",
-          border: "1px solid #E2E8F0",
-          borderRadius: "22px",
-          padding: "44px 36px",
-          textAlign: "center",
-          boxShadow: "0 10px 30px rgba(15, 23, 42, 0.05)"
-        }}
-      >
-        <div style={{ fontSize: "48px", marginBottom: "12px" }}>⚖</div>
-        <h3 style={{ margin: 0, fontSize: "26px" }}>Perspektif Bisnis</h3>
-        <p
-          style={{
-            color: darkMode ? "#CBD5E1" : "#64748B",
-            maxWidth: "650px",
-            margin: "12px auto 24px",
-            lineHeight: "1.7",
-            fontSize: "15px"
-          }}
-        >
-          ZenAI menggabungkan kondisi usaha Anda dengan informasi pasar terbaru untuk menghasilkan perspektif, peluang, risiko, dan implikasi strategis yang relevan.
-        </p>
-        <button
-          onClick={runMarketInsight}
-          style={{
-            border: "none",
-            background: darkMode ? "#2563EB" : "#2563EB",
-            color: "#FFFFFF",
-            padding: "14px 24px",
-            borderRadius: "11px",
-            cursor: "pointer",
-            fontWeight: "700"
-          }}
-        >
-          ⚖ Analisis Perspektif Bisnis
-        </button>
+import { useState } from "react";
+
+export default function BusinessGrowthLoop({
+  strategies = [],
+  actions = [],
+  onActionsChange,
+  onEvaluate,
+  evaluating = false,
+}) {
+  const [evaluationOpen, setEvaluationOpen] = useState(null);
+  const [outcome, setOutcome] = useState("membaik");
+  const [note, setNote] = useState("");
+
+  const updateActions = (updater) => {
+    const next = typeof updater === "function" ? updater(actions) : updater;
+    onActionsChange?.(next);
+  };
+
+  function activateStrategy(strategy) {
+    const action = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      title: strategy?.title || strategy?.action || "Tindakan Usaha",
+      description: strategy?.action || strategy?.description || "",
+      purpose: strategy?.purpose || "",
+      started: false,
+      completed: false,
+      status: "Rencana",
+      createdAt: new Date().toISOString(),
+      completedAt: null,
+      evaluation: null,
+    };
+
+    updateActions((prev) => {
+      const exists = prev.some(
+        (item) => item.title === action.title && item.description === action.description
+      );
+      return exists ? prev : [action, ...prev];
+    });
+  }
+
+  function startAction(id) {
+    updateActions((prev) =>
+      prev.map((item) =>
+        item.id === id
+          ? { ...item, started: true, status: "Berjalan" }
+          : item
+      )
+    );
+  }
+
+  function completeAction(id) {
+    updateActions((prev) =>
+      prev.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              started: true,
+              completed: true,
+              status: "Menunggu Evaluasi",
+              completedAt: new Date().toISOString(),
+            }
+          : item
+      )
+    );
+  }
+
+  function removeAction(id) {
+    updateActions((prev) => prev.filter((item) => item.id !== id));
+    if (evaluationOpen === id) setEvaluationOpen(null);
+  }
+
+  function openEvaluation(item) {
+    setOutcome(item.evaluation?.outcome || "membaik");
+    setNote(item.evaluation?.note || "");
+    setEvaluationOpen(item.id);
+  }
+
+  async function submitEvaluation(item) {
+    const evaluatedAction = {
+      ...item,
+      status: "Dievaluasi",
+      evaluation: {
+        outcome,
+        note: note.trim(),
+        evaluatedAt: new Date().toISOString(),
+      },
+    };
+
+    updateActions((prev) =>
+      prev.map((current) =>
+        current.id === item.id ? evaluatedAction : current
+      )
+    );
+
+    setEvaluationOpen(null);
+    setNote("");
+
+    await onEvaluate?.(evaluatedAction);
+  }
+
+  return (
+    <section
+      style={{
+        marginTop: 24,
+        padding: 24,
+        borderRadius: 20,
+        border: "1px solid #e2e8f0",
+        background: "#ffffff",
+      }}
+    >
+      <div style={{ marginBottom: 20 }}>
         <div
           style={{
-            marginTop: "18px",
-            fontSize: "12px",
-            color: darkMode ? "#94A3B8" : "#94A3B8"
-          }}
-        >
-          Informasi eksternal digunakan sebagai bahan analisis, bukan sekadar daftar hasil pencarian.
-        </div>
-      </div>
-    )}
-
-    {marketLoading && (
-      <div
-        style={{
-          background: "#EFF6FF",
-          border: "1px solid #BFDBFE",
-          borderRadius: "22px",
-          padding: "44px",
-          textAlign: "center"
-        }}
-      >
-        <div style={{ fontSize: "42px", marginBottom: "14px" }}>⚖</div>
-        <h3 style={{ margin: "0 0 8px" }}>ZenAI sedang menyusun perspektif bisnis...</h3>
-        <p style={{ color: darkMode ? "#CBD5E1" : "#64748B", lineHeight: "1.6", margin: 0 }}>
-          ZenAI mengumpulkan informasi eksternal, menyaring sumber, lalu menghubungkannya dengan konteks usaha Anda.
-        </p>
-      </div>
-    )}
-
-    {!marketLoading && marketError && (
-      <div
-        style={{
-          background: "#FFFFFF1f2",
-          border: "1px solid #fda4af",
-          borderRadius: "20px",
-          padding: "28px"
-        }}
-      >
-        <h3 style={{ marginTop: 0, color: "#9f1239" }}>Perspektif Bisnis belum dapat diperbarui</h3>
-        <p style={{ color: "#9f1239", lineHeight: "1.6" }}>{marketError}</p>
-        <button
-          onClick={runMarketInsight}
-          style={{ border: "none", background: "#9f1239", color: "#FFFFFF", padding: "11px 18px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}
-        >
-          Coba Lagi
-        </button>
-      </div>
-    )}
-
-    {!marketLoading && !marketError && marketData && (
-      <>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            gap: "16px",
-            flexWrap: "wrap",
-            marginBottom: "18px"
-          }}
-        >
-          <div>
-            <div style={{ fontSize: "12px", fontWeight: "800", color: darkMode ? "#60A5FA" : "#2563EB", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "5px" }}>
-              Business Intelligence
-            </div>
-            <h3 style={{ margin: 0, fontSize: "24px" }}>⚖ Perspektif Bisnis</h3>
-            <p style={{ margin: "6px 0 0", color: darkMode ? "#CBD5E1" : "#64748B", lineHeight: "1.5" }}>
-              Insight pasar yang sudah dianalisis dan dikaitkan dengan usaha Anda.
-            </p>
-          </div>
-          <button
-            onClick={runMarketInsight}
-            disabled={marketLoading}
-            style={{
-              border: "1px solid #CBD5E1",
-              background: darkMode ? "#111827" : "#FFFFFF",
-              color: "#334155",
-              padding: "10px 16px",
-              borderRadius: "10px",
-              cursor: marketLoading ? "not-allowed" : "pointer",
-              fontWeight: "700"
-            }}
-          >
-            🔄 Perbarui Perspektif
-          </button>
-        </div>
-
-        {marketData.analysis && (
-          <div style={{ display: "grid", gap: "14px", marginBottom: "22px" }}>
-            <div style={{ background: darkMode ? "#111827" : "#FFFFFF", border: "1px solid #d1fae5", borderRadius: "18px", padding: "22px", boxShadow: "0 8px 24px rgba(37, 99, 235, 0.06)" }}>
-              <div style={{ fontSize: "12px", fontWeight: "800", color: darkMode ? "#60A5FA" : "#2563EB", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px" }}>🎯 Perspektif Utama</div>
-              <p style={{ margin: 0, fontSize: "16px", lineHeight: "1.75", color: darkMode ? "#F8FAFC" : "#0F172A" }}>
-                {marketData.analysis.businessPerspective || marketData.analysis.summary || "Belum tersedia."}
-              </p>
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "14px" }}>
-              <div style={{ background: darkMode ? "#111827" : "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: "16px", padding: "20px" }}>
-                <div style={{ fontWeight: "800", marginBottom: "8px" }}>📈 Kondisi Pasar</div>
-                <p style={{ margin: 0, color: darkMode ? "#CBD5E1" : "#64748B", lineHeight: "1.65" }}>{marketData.analysis.marketCondition || "Belum tersedia."}</p>
-              </div>
-              <div
-  style={{
-    background: darkMode ? "#172033" : "#FFFFFF",
-    border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}`,
-    borderRadius: "16px",
-    padding: "20px"
-  }}
->
-  <div
-    style={{
-      fontWeight: "800",
-      marginBottom: "8px",
-      color: darkMode ? "#F8FAFC" : "#0F172A"
-    }}
-  >
-    📊 Sinyal Permintaan
-  </div>
-
-  <p
-    style={{
-      margin: "0 0 6px",
-      fontWeight: "800",
-      color: darkMode ? "#F8FAFC" : "#0F172A"
-    }}
-  >
-    {marketData.analysis.demandSignal?.status || "Tidak pasti"}
-  </p>
-
-  <p
-    style={{
-      margin: 0,
-      color: darkMode ? "#CBD5E1" : "#475569",
-      lineHeight: "1.65"
-    }}
-  >
-    {marketData.analysis.demandSignal?.reason || "Belum tersedia."}
-  </p>
-</div>
-
-<div
-  style={{
-    background: darkMode ? "#052E1B" : "#EFF6FF",
-    border: `1px solid ${darkMode ? "#22C55E" : "#86efac"}`,
-    borderRadius: "16px",
-    padding: "20px",
-    color: darkMode ? "#DCFCE7" : "#0F172A"
-  }}
->
-  <div
-    style={{
-      fontWeight: "800",
-      color: darkMode ? "#4ADE80" : "#15803D",
-      marginBottom: "10px"
-    }}
-  >
-    💡 Peluang
-  </div>
-
-  {Array.isArray(marketData.analysis.opportunities) &&
-  marketData.analysis.opportunities.length > 0 ? (
-    <ul
-      style={{
-        margin: 0,
-        paddingLeft: "20px",
-        lineHeight: "1.7",
-        color: darkMode ? "#DCFCE7" : "#334155"
-      }}
-    >
-      {marketData.analysis.opportunities.map((item, index) => (
-        <li key={index}>{item}</li>
-      ))}
-    </ul>
-  ) : (
-    <p
-      style={{
-        margin: 0,
-        color: darkMode ? "#CBD5E1" : "#334155"
-      }}
-    >
-      Belum tersedia.
-    </p>
-  )}
-</div>
-
-<div
-  style={{
-    background: darkMode ? "#4C0519" : "#FFF1F2",
-    border: `1px solid ${darkMode ? "#FB7185" : "#FECDD3"}`,
-    borderRadius: "16px",
-    padding: "20px",
-    color: darkMode ? "#FFE4E6" : "#9F1239"
-  }}
->
-  <div
-    style={{
-      fontWeight: "800",
-      color: darkMode ? "#FB7185" : "#BE123C",
-      marginBottom: "10px"
-    }}
-  >
-    ⚠ Risiko Utama
-  </div>
-
-  {Array.isArray(marketData.analysis.risks) &&
-  marketData.analysis.risks.length > 0 ? (
-    <ul
-      style={{
-        margin: 0,
-        paddingLeft: "20px",
-        lineHeight: "1.7",
-        color: darkMode ? "#FFE4E6" : "#9F1239"
-      }}
-    >
-      {marketData.analysis.risks.map((item, index) => (
-        <li key={index}>{item}</li>
-      ))}
-    </ul>
-  ) : (
-    <p
-      style={{
-        margin: 0,
-        color: darkMode ? "#CBD5E1" : "#334155"
-      }}
-    >
-      Belum tersedia.
-    </p>
-  )}
-</div>
-
-            <div style={{ background: darkMode ? "#0B1120" : "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: "18px", padding: "22px" }}>
-              <div style={{ fontWeight: "800", marginBottom: "8px" }}>🚀 Implikasi Strategis</div>
-              <p style={{ margin: 0, color: darkMode ? "#E2E8F0" : "#334155", lineHeight: "1.75" }}>
-                {marketData.analysis.strategicImplication || "Belum tersedia."}
-              </p>
-              {marketData.analysis.competitionInsight && (
-                <p style={{ margin: "14px 0 0", color: darkMode ? "#CBD5E1" : "#64748B", lineHeight: "1.7" }}>
-                  <strong>Persaingan:</strong> {marketData.analysis.competitionInsight}
-                </p>
-              )}
-            </div>
-
-            {marketData.analysis.scenarios && (
-              <div style={{ background: darkMode ? "#111827" : "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: "18px", padding: "22px" }}>
-                <div style={{ fontWeight: "800", marginBottom: "14px" }}>🧭 Skenario Bisnis</div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "12px" }}>
-                  <div style={{ padding: "15px", borderRadius: "12px", background: darkMode ? "#064E3B" : "#EFF6FF", color: darkMode ? "#EFF6FF" : "#0F172A" }}><strong style={{ color: darkMode ? "#EFF6FF" : "#0F172A" }}>Optimistis</strong><p style={{ margin: "7px 0 0", lineHeight: "1.6", color: darkMode ? "#D1FAE5" : "#334155" }}>{marketData.analysis.scenarios.optimistic || "-"}</p></div>
-                  <div style={{ padding: "15px", borderRadius: "12px", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#EFF6FF" : "#0F172A" }}><strong style={{ color: darkMode ? "#EFF6FF" : "#0F172A" }}>Realistis</strong><p style={{ margin: "7px 0 0", lineHeight: "1.6", color: darkMode ? "#d1fae5" : "#334155" }}>{marketData.analysis.scenarios.realistic || "-"}</p></div>
-                  <div style={{ padding: "15px", borderRadius: "12px", background: darkMode ? "#78350F" : "#FFFFFFbeb", color: darkMode ? "#FFFFFFbeb" : "#0F172A" }}><strong style={{ color: darkMode ? "#FFFFFFbeb" : "#0F172A" }}>Risiko</strong><p style={{ margin: "7px 0 0", lineHeight: "1.6", color: darkMode ? "#fef3c7" : "#334155" }}>{marketData.analysis.scenarios.risk || "-"}</p></div>
-                </div>
-              </div>
-            )}
-
-            {marketData.analysis.limitations && (
-              <div style={{ fontSize: "12px", color: darkMode ? "#94A3B8" : "#64748B", padding: "0 2px" }}>
-                Keterbatasan: {marketData.analysis.limitations}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* SUMBER — bukti, bukan tampilan utama */}
-        <details style={{ background: darkMode ? "#111827" : "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: "16px", padding: "16px 18px" }}>
-          <summary style={{ cursor: "pointer", fontWeight: "800" }}>
-            📚 Lihat sumber eksternal ({Array.isArray(marketData.sources) ? marketData.sources.length : 0})
-          </summary>
-          <div style={{ display: "grid", gap: "12px", marginTop: "14px" }}>
-            {Array.isArray(marketData.sources) && marketData.sources.length > 0 ? (
-              marketData.sources.map((item, index) => (
-                <div key={item.url || index} style={{ background: darkMode ? "#111827" : "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: "13px", padding: "16px" }}>
-                  <h4 style={{ margin: "0 0 7px" }}>{item.title || "Informasi Terkini"}</h4>
-                  {item.content && <p style={{ color: darkMode ? "#CBD5E1" : "#64748B", lineHeight: "1.65", margin: "0 0 10px" }}>{item.content}</p>}
-                  {item.url && <a href={item.url} target="_blank" rel="noreferrer" style={{ color: darkMode ? "#60A5FA" : "#2563EB", fontWeight: "700", textDecoration: "none" }}>Buka sumber ↗</a>}
-                </div>
-              ))
-            ) : (
-              <div style={{ color: darkMode ? "#CBD5E1" : "#64748B", paddingTop: "10px" }}>Belum ditemukan sumber yang cukup relevan.</div>
-            )}
-          </div>
-        </details>
-      </>
-    )}
-  </div>
-)}
-        {/* =========================
-            STRATEGI & TINDAKAN
-        ========================== */}
-
-
+            fontSize: 12,
+            fontWeight: 800,
+            letterSpacing: 1,
             color: "#16a34a",
           }}
         >
@@ -615,4 +399,4 @@
       </div>
     </section>
   );
-}
+                                 }
