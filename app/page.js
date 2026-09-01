@@ -5455,104 +5455,161 @@ padding: isMobile ? "16px 12px" : "32px",
   style={{
     background: darkMode ? "#4C0519" : "#FFF1F2",
     border: `1px solid ${darkMode ? "#FB7185" : "#FECDD3"}`,
-    borderRadius: "16px",
-    padding: "20px",
-    color: darkMode ? "#FFE4E6" : "#9F1239"
+
+
+<div
+  style={{
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+    gap: "14px"
   }}
 >
+  {/* SINYAL PERMINTAAN */}
   <div
     style={{
-      fontWeight: "800",
-      color: darkMode ? "#FB7185" : "#BE123C",
-      marginBottom: "10px"
+      background: darkMode ? "#172033" : "#FFFFFF",
+      border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}`,
+      borderRadius: "16px",
+      padding: "20px"
     }}
   >
-    ⚠ Risiko Utama
-  </div>
-
-  {Array.isArray(marketData.analysis.risks) &&
-  marketData.analysis.risks.length > 0 ? (
-    <ul
+    <div
       style={{
-        margin: 0,
-        paddingLeft: "20px",
-        lineHeight: "1.7",
-        color: darkMode ? "#FFE4E6" : "#9F1239"
+        fontWeight: "800",
+        marginBottom: "8px",
+        color: darkMode ? "#F8FAFC" : "#0F172A"
       }}
     >
-      {marketData.analysis.risks.map((item, index) => (
-        <li key={index}>{item}</li>
-      ))}
-    </ul>
-  ) : (
+      📊 Sinyal Permintaan
+    </div>
+
+    <p
+      style={{
+        margin: "0 0 6px",
+        fontWeight: "800",
+        color: darkMode ? "#F8FAFC" : "#0F172A"
+      }}
+    >
+      {marketData.analysis.demandSignal?.status || "Tidak pasti"}
+    </p>
+
     <p
       style={{
         margin: 0,
-        color: darkMode ? "#CBD5E1" : "#334155"
+        color: darkMode ? "#CBD5E1" : "#475569",
+        lineHeight: "1.65"
       }}
     >
-      Belum tersedia.
+      {marketData.analysis.demandSignal?.reason ||
+        "Belum tersedia."}
     </p>
-  )}
-</div>
+  </div>
 
-            <div style={{ background: darkMode ? "#0B1120" : "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: "18px", padding: "22px" }}>
-              <div style={{ fontWeight: "800", marginBottom: "8px" }}>🚀 Implikasi Strategis</div>
-              <p style={{ margin: 0, color: darkMode ? "#E2E8F0" : "#334155", lineHeight: "1.75" }}>
-                {marketData.analysis.strategicImplication || "Belum tersedia."}
-              </p>
-              {marketData.analysis.competitionInsight && (
-                <p style={{ margin: "14px 0 0", color: darkMode ? "#CBD5E1" : "#64748B", lineHeight: "1.7" }}>
-                  <strong>Persaingan:</strong> {marketData.analysis.competitionInsight}
-                </p>
-              )}
-            </div>
+  {/* PELUANG */}
+  <div
+    style={{
+      background: darkMode ? "#052E1B" : "#EFF6FF",
+      border: `1px solid ${
+        darkMode ? "#22C55E" : "#86EFAC"
+      }`,
+      borderRadius: "16px",
+      padding: "20px",
+      color: darkMode ? "#F0FDF4" : "#0F172A"
+    }}
+  >
+    <div
+      style={{
+        fontWeight: "800",
+        color: darkMode ? "#86EFAC" : "#15803D",
+        marginBottom: "10px"
+      }}
+    >
+      💡 Peluang
+    </div>
 
-            {marketData.analysis.scenarios && (
-              <div style={{ background: darkMode ? "#111827" : "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: "18px", padding: "22px" }}>
-                <div style={{ fontWeight: "800", marginBottom: "14px" }}>🧭 Skenario Bisnis</div>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "12px" }}>
-                  <div style={{ padding: "15px", borderRadius: "12px", background: darkMode ? "#064E3B" : "#EFF6FF", color: darkMode ? "#EFF6FF" : "#0F172A" }}><strong style={{ color: darkMode ? "#EFF6FF" : "#0F172A" }}>Optimistis</strong><p style={{ margin: "7px 0 0", lineHeight: "1.6", color: darkMode ? "#D1FAE5" : "#334155" }}>{marketData.analysis.scenarios.optimistic || "-"}</p></div>
-                  <div style={{ padding: "15px", borderRadius: "12px", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#EFF6FF" : "#0F172A" }}><strong style={{ color: darkMode ? "#EFF6FF" : "#0F172A" }}>Realistis</strong><p style={{ margin: "7px 0 0", lineHeight: "1.6", color: darkMode ? "#d1fae5" : "#334155" }}>{marketData.analysis.scenarios.realistic || "-"}</p></div>
-                  <div style={{ padding: "15px", borderRadius: "12px", background: darkMode ? "#78350F" : "#FFFFFFbeb", color: darkMode ? "#FFFFFFbeb" : "#0F172A" }}><strong style={{ color: darkMode ? "#FFFFFFbeb" : "#0F172A" }}>Risiko</strong><p style={{ margin: "7px 0 0", lineHeight: "1.6", color: darkMode ? "#fef3c7" : "#334155" }}>{marketData.analysis.scenarios.risk || "-"}</p></div>
-                </div>
-              </div>
-            )}
-
-            {marketData.analysis.limitations && (
-              <div style={{ fontSize: "12px", color: darkMode ? "#94A3B8" : "#64748B", padding: "0 2px" }}>
-                Keterbatasan: {marketData.analysis.limitations}
-              </div>
-            )}
-          </div>
+    {Array.isArray(
+      marketData.analysis.opportunities
+    ) &&
+    marketData.analysis.opportunities.length > 0 ? (
+      <ul
+        style={{
+          margin: 0,
+          paddingLeft: "20px",
+          lineHeight: "1.7",
+          color: darkMode ? "#F0FDF4" : "#334155"
+        }}
+      >
+        {marketData.analysis.opportunities.map(
+          (item, index) => (
+            <li key={index}>{item}</li>
+          )
         )}
-
-        {/* SUMBER — bukti, bukan tampilan utama */}
-        <details style={{ background: darkMode ? "#111827" : "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: "16px", padding: "16px 18px" }}>
-          <summary style={{ cursor: "pointer", fontWeight: "800" }}>
-            📚 Lihat sumber eksternal ({Array.isArray(marketData.sources) ? marketData.sources.length : 0})
-          </summary>
-          <div style={{ display: "grid", gap: "12px", marginTop: "14px" }}>
-            {Array.isArray(marketData.sources) && marketData.sources.length > 0 ? (
-              marketData.sources.map((item, index) => (
-                <div key={item.url || index} style={{ background: darkMode ? "#111827" : "#F8FAFC", border: "1px solid #E2E8F0", borderRadius: "13px", padding: "16px" }}>
-                  <h4 style={{ margin: "0 0 7px" }}>{item.title || "Informasi Terkini"}</h4>
-                  {item.content && <p style={{ color: darkMode ? "#CBD5E1" : "#64748B", lineHeight: "1.65", margin: "0 0 10px" }}>{item.content}</p>}
-                  {item.url && <a href={item.url} target="_blank" rel="noreferrer" style={{ color: darkMode ? "#60A5FA" : "#2563EB", fontWeight: "700", textDecoration: "none" }}>Buka sumber ↗</a>}
-                </div>
-              ))
-            ) : (
-              <div style={{ color: darkMode ? "#CBD5E1" : "#64748B", paddingTop: "10px" }}>Belum ditemukan sumber yang cukup relevan.</div>
-            )}
-          </div>
-        </details>
-      </>
+      </ul>
+    ) : (
+      <p
+        style={{
+          margin: 0,
+          color: darkMode ? "#CBD5E1" : "#334155"
+        }}
+      >
+        Belum tersedia.
+      </p>
     )}
   </div>
-)}
-        {/* =========================
-            STRATEGI & TINDAKAN
-        ========================== */}
+
+  {/* RISIKO */}
+  <div
+    style={{
+      background: darkMode ? "#4C0519" : "#FFF1F2",
+      border: `1px solid ${
+        darkMode ? "#FB7185" : "#FECDD3"
+      }`,
+      borderRadius: "16px",
+      padding: "20px",
+      color: darkMode ? "#FFF1F2" : "#881337"
+    }}
+  >
+    <div
+      style={{
+        fontWeight: "800",
+        color: darkMode ? "#FDA4AF" : "#BE123C",
+        marginBottom: "10px"
+      }}
+    >
+      ⚠ Risiko Utama
+    </div>
+
+    {Array.isArray(
+      marketData.analysis.risks
+    ) &&
+    marketData.analysis.risks.length > 0 ? (
+      <ul
+        style={{
+          margin: 0,
+          paddingLeft: "20px",
+          lineHeight: "1.7",
+          color: darkMode ? "#FFE4E6" : "#881337"
+        }}
+      >
+        {marketData.analysis.risks.map(
+          (item, index) => (
+            <li key={index}>{item}</li>
+          )
+        )}
+      </ul>
+    ) : (
+      <p
+        style={{
+          margin: 0,
+          color: darkMode ? "#CBD5E1" : "#334155"
+        }}
+      >
+        Belum tersedia.
+      </p>
+    )}
+  </div>
+</div>
+
 
 
         {/* =========================
