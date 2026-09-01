@@ -2339,7 +2339,7 @@ Balas JSON valid.
                 fontSize: "14px",
                 fontWeight: "700",
                 letterSpacing: "2px",
-                color: darkMode ? "#93c5fd" : "#2563eb"
+                color: darkMode ? "#93c5fd" : "#c9eeff"
               }}
             >
               Know More Grow More
@@ -2403,7 +2403,7 @@ Balas JSON valid.
               padding: "13px",
               border: "none",
               borderRadius: "10px",
-              background: "#2563eb",
+              background: "#c9eeff",
               color: "#fff",
               fontWeight: "700",
               cursor: authLoading ? "not-allowed" : "pointer"
@@ -2439,7 +2439,7 @@ Balas JSON valid.
               marginTop: "16px",
               border: "none",
               background: "transparent",
-              color: "#2563eb",
+              color: "#c9eeff",
               fontWeight: "600",
               cursor: "pointer",
               padding: 0
@@ -2600,7 +2600,7 @@ padding: isMobile ? "16px 12px" : "32px",
           gap: sidebarOpen ? "9px" : "0",
           textAlign: sidebarOpen ? "left" : "center",
           background: tab === key ? (key === "health" ? "#f0fdf4" : "#eff6ff") : "#ffffff",
-          color: tab === key ? (key === "health" ? "#15803d" : "#2563eb") : "#475569",
+          color: tab === key ? (key === "health" ? "#15803d" : "#c9eeff") : "#475569",
           fontWeight: tab === key ? "700" : "500",
           boxShadow: tab === key ? "0 3px 10px rgba(37, 99, 235, 0.08)" : "0 1px 2px rgba(15, 23, 42, 0.03)",
           fontSize: "13px",
@@ -2857,7 +2857,7 @@ padding: isMobile ? "16px 12px" : "32px",
             <div
               style={{
                 background: "#eff6ff",
-                color: "#2563eb",
+                color: "#c9eeff",
                 padding: "10px 16px",
                 borderRadius: "999px",
                 fontSize: "13px",
@@ -2982,7 +2982,7 @@ padding: isMobile ? "16px 12px" : "32px",
                   padding: "26px"
                 }}
               >
-                <div style={{ fontSize: "13px", fontWeight: "800", color: darkMode ? "#93c5fd" : "#2563eb", letterSpacing: "0.04em" }}>
+                <div style={{ fontSize: "13px", fontWeight: "800", color: darkMode ? "#93c5fd" : "#c9eeff", letterSpacing: "0.04em" }}>
                   PANDUAN INTERAKTIF
                 </div>
                 <h3 style={{ margin: "7px 0 8px", fontSize: "25px", color: darkMode ? "#f8fafc" : "#0f172a" }}>
@@ -3008,7 +3008,7 @@ padding: isMobile ? "16px 12px" : "32px",
                 }}
               >
                 <div>
-                  <div style={{ fontSize: "12px", fontWeight: "800", color: darkMode ? "#93c5fd" : "#2563eb", marginBottom: "5px" }}>
+                  <div style={{ fontSize: "12px", fontWeight: "800", color: darkMode ? "#93c5fd" : "#c9eeff", marginBottom: "5px" }}>
                     LANGKAH BERIKUTNYA
                   </div>
                   <div style={{ fontSize: "20px", fontWeight: "800", color: darkMode ? "#ffffff" : "#0f172a" }}>
@@ -3026,7 +3026,7 @@ padding: isMobile ? "16px 12px" : "32px",
                     border: "none",
                     borderRadius: "11px",
                     padding: "12px 18px",
-                    background: nextStep.canOpen ? "#2563eb" : "#94a3b8",
+                    background: nextStep.canOpen ? "#c9eeff" : "#94a3b8",
                     color: "#ffffff",
                     fontWeight: "800",
                     cursor: nextStep.canOpen ? "pointer" : "not-allowed",
@@ -3211,7 +3211,7 @@ padding: isMobile ? "16px 12px" : "32px",
                   }
                   style={{
                     border: "none",
-                    background: "#2563eb",
+                    background: "#c9eeff",
                     color: "#ffffff",
                     padding: "13px 22px",
                     borderRadius: "10px",
@@ -3959,7 +3959,7 @@ padding: isMobile ? "16px 12px" : "32px",
                     background:
                       busy
                         ? "#94a3b8"
-                        : "#2563eb",
+                        : "#c9eeff",
                     color: "#ffffff",
                     padding:
                       "14px 22px",
@@ -4040,7 +4040,7 @@ padding: isMobile ? "16px 12px" : "32px",
                     border: "none",
                     background: busy
                       ? "#94a3b8"
-                      : "#2563eb",
+                      : "#c9eeff",
                     color: "#ffffff",
                     padding: "14px 22px",
                     borderRadius: "10px",
@@ -4351,7 +4351,7 @@ padding: isMobile ? "16px 12px" : "32px",
                                     background:
                                       "#eff6ff",
                                     color:
-                                      "#2563eb",
+                                      "#c9eeff",
                                     display:
                                       "flex",
                                     alignItems:
@@ -4648,7 +4648,7 @@ padding: isMobile ? "16px 12px" : "32px",
                     border: "none",
                     background: busy
                       ? "#94a3b8"
-                      : "#2563eb",
+                      : "#c9eeff",
                     color: "#ffffff",
                     padding: "14px 22px",
                     borderRadius: "10px",
@@ -5007,7 +5007,7 @@ padding: isMobile ? "16px 12px" : "32px",
                                     fontSize:
                                       "13px",
                                     color:
-                                      "#2563eb"
+                                      "#c9eeff"
                                   }}
                                 >
                                   Potensi:{" "}
@@ -5083,7 +5083,7 @@ padding: isMobile ? "16px 12px" : "32px",
                                     background:
                                       "#eff6ff",
                                     color:
-                                      "#2563eb",
+                                      "#c9eeff",
                                     display:
                                       "flex",
                                     alignItems:
@@ -5226,7 +5226,7 @@ padding: isMobile ? "16px 12px" : "32px",
                       background:
                         busy
                           ? "#94a3b8"
-                          : "#2563eb",
+                          : "#c9eeff",
                       color: "#ffffff",
                       padding:
                         "12px 18px",
@@ -5281,7 +5281,7 @@ padding: isMobile ? "16px 12px" : "32px",
           onClick={runMarketInsight}
           style={{
             border: "none",
-            background: "#2563eb",
+            background: "#c9eeff",
             color: "#ffffff",
             padding: "14px 24px",
             borderRadius: "11px",
@@ -5354,7 +5354,7 @@ padding: isMobile ? "16px 12px" : "32px",
           }}
         >
           <div>
-            <div style={{ fontSize: "12px", fontWeight: "800", color: "#2563eb", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "5px" }}>
+            <div style={{ fontSize: "12px", fontWeight: "800", color: "#c9eeff", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "5px" }}>
               Business Intelligence
             </div>
             <h3 style={{ margin: 0, fontSize: "24px" }}>⚖ Perspektif Bisnis</h3>
@@ -5382,7 +5382,7 @@ padding: isMobile ? "16px 12px" : "32px",
         {marketData.analysis && (
           <div style={{ display: "grid", gap: "14px", marginBottom: "22px" }}>
             <div style={{ background: "#ffffff", border: "1px solid #dbeafe", borderRadius: "18px", padding: "22px", boxShadow: "0 8px 24px rgba(37, 99, 235, 0.06)" }}>
-              <div style={{ fontSize: "12px", fontWeight: "800", color: "#2563eb", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px" }}>🎯 Perspektif Utama</div>
+              <div style={{ fontSize: "12px", fontWeight: "800", color: "#c9eeff", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px" }}>🎯 Perspektif Utama</div>
               <p style={{ margin: 0, fontSize: "16px", lineHeight: "1.75", color: darkMode ? "#f8fafc" : "#0f172a" }}>
                 {marketData.analysis.businessPerspective || marketData.analysis.summary || "Belum tersedia."}
               </p>
@@ -5494,7 +5494,7 @@ padding: isMobile ? "16px 12px" : "32px",
                 <div key={item.url || index} style={{ background: darkMode ? "#111827" : "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "13px", padding: "16px" }}>
                   <h4 style={{ margin: "0 0 7px" }}>{item.title || "Informasi Terkini"}</h4>
                   {item.content && <p style={{ color: darkMode ? "#cbd5e1" : "#64748b", lineHeight: "1.65", margin: "0 0 10px" }}>{item.content}</p>}
-                  {item.url && <a href={item.url} target="_blank" rel="noreferrer" style={{ color: "#2563eb", fontWeight: "700", textDecoration: "none" }}>Buka sumber ↗</a>}
+                  {item.url && <a href={item.url} target="_blank" rel="noreferrer" style={{ color: "#c9eeff", fontWeight: "700", textDecoration: "none" }}>Buka sumber ↗</a>}
                 </div>
               ))
             ) : (
@@ -5604,7 +5604,7 @@ padding: isMobile ? "16px 12px" : "32px",
                     style={{
                       border:
                         financeView === value
-                          ? "1px solid #2563eb"
+                          ? "1px solid #c9eeff"
                           : "1px solid #e2e8f0",
                       background:
                         financeView === value
@@ -5612,7 +5612,7 @@ padding: isMobile ? "16px 12px" : "32px",
                           : "#ffffff",
                       color:
                         financeView === value
-                          ? "#2563eb"
+                          ? "#c9eeff"
                           : "#475569",
                       padding: "10px 14px",
                       borderRadius: "10px",
@@ -6407,7 +6407,7 @@ padding: isMobile ? "16px 12px" : "32px",
                     border: "none",
                     background: busy
                       ? "#94a3b8"
-                      : "#2563eb",
+                      : "#c9eeff",
                     color: "#ffffff",
                     padding: "14px 22px",
                     borderRadius: "10px",
@@ -6618,7 +6618,7 @@ padding: isMobile ? "16px 12px" : "32px",
                                     background:
                                       "#eff6ff",
                                     color:
-                                      "#2563eb",
+                                      "#c9eeff",
                                     display:
                                       "flex",
                                     alignItems:
@@ -6909,7 +6909,7 @@ padding: isMobile ? "16px 12px" : "32px",
                                   borderRadius:
                                     "50%",
                                   background:
-                                    "#2563eb",
+                                    "#c9eeff",
                                   color:
                                     "#ffffff",
                                   display:
@@ -7057,7 +7057,7 @@ padding: isMobile ? "16px 12px" : "32px",
                     style={{
                       border: "none",
                       background:
-                        "#2563eb",
+                        "#c9eeff",
                       color:
                         "#ffffff",
                       padding:
