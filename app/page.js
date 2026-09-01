@@ -5354,264 +5354,285 @@ padding: isMobile ? "16px 12px" : "32px",
         </div>
 
         {marketData.analysis && (
-          <div style={{ display: "grid", gap: "14px", marginBottom: "22px" }}>
-            <div style={{ background: darkMode ? "#111827" : "#FFFFFF", border: "1px solid #d1fae5", borderRadius: "18px", padding: "22px", boxShadow: "0 8px 24px rgba(37, 99, 235, 0.06)" }}>
-              <div style={{ fontSize: "12px", fontWeight: "800", color: darkMode ? "#60A5FA" : "#2563EB", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px" }}>🎯 Perspektif Utama</div>
-              <p style={{ margin: 0, fontSize: "16px", lineHeight: "1.75", color: darkMode ? "#F8FAFC" : "#0F172A" }}>
-                {marketData.analysis.businessPerspective || marketData.analysis.summary || "Belum tersedia."}
-              </p>
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "14px" }}>
-              <div style={{ background: darkMode ? "#111827" : "#FFFFFF", border: "1px solid #E2E8F0", borderRadius: "16px", padding: "20px" }}>
-                <div style={{ fontWeight: "800", marginBottom: "8px" }}>📈 Kondisi Pasar</div>
-                <p style={{ margin: 0, color: darkMode ? "#CBD5E1" : "#64748B", lineHeight: "1.65" }}>{marketData.analysis.marketCondition || "Belum tersedia."}</p>
-              </div>
-              <div
-  style={{
-    background: darkMode ? "#172033" : "#FFFFFF",
-    border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}`,
-    borderRadius: "16px",
-    padding: "20px"
-  }}
->
   <div
     style={{
-      fontWeight: "800",
-      marginBottom: "8px",
-      color: darkMode ? "#F8FAFC" : "#0F172A"
+      display: "grid",
+      gap: "14px",
+      marginBottom: "22px"
     }}
   >
-    📊 Sinyal Permintaan
-  </div>
-
-  <p
-    style={{
-      margin: "0 0 6px",
-      fontWeight: "800",
-      color: darkMode ? "#F8FAFC" : "#0F172A"
-    }}
-  >
-    {marketData.analysis.demandSignal?.status || "Tidak pasti"}
-  </p>
-
-  <p
-    style={{
-      margin: 0,
-      color: darkMode ? "#CBD5E1" : "#475569",
-      lineHeight: "1.65"
-    }}
-  >
-    {marketData.analysis.demandSignal?.reason || "Belum tersedia."}
-  </p>
-</div>
-
-<div
-  style={{
-    background: darkMode ? "#052E1B" : "#EFF6FF",
-    border: `1px solid ${darkMode ? "#22C55E" : "#86efac"}`,
-    borderRadius: "16px",
-    padding: "20px",
-    color: darkMode ? "#DCFCE7" : "#0F172A"
-  }}
->
-  <div
-    style={{
-      fontWeight: "800",
-      color: darkMode ? "#4ADE80" : "#15803D",
-      marginBottom: "10px"
-    }}
-  >
-    💡 Peluang
-  </div>
-
-  {Array.isArray(marketData.analysis.opportunities) &&
-  marketData.analysis.opportunities.length > 0 ? (
-    <ul
-      style={{
-        margin: 0,
-        paddingLeft: "20px",
-        lineHeight: "1.7",
-        color: darkMode ? "#DCFCE7" : "#334155"
-      }}
-    >
-      {marketData.analysis.opportunities.map((item, index) => (
-        <li key={index}>{item}</li>
-      ))}
-    </ul>
-  ) : (
-    <p
-      style={{
-        margin: 0,
-        color: darkMode ? "#CBD5E1" : "#334155"
-      }}
-    >
-      Belum tersedia.
-    </p>
-  )}
-</div>
-
-<div
-  style={{
-    background: darkMode ? "#4C0519" : "#FFF1F2",
-    border: `1px solid ${darkMode ? "#FB7185" : "#FECDD3"}`,
-
-
-<div
-  style={{
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
-    gap: "14px"
-  }}
->
-  {/* SINYAL PERMINTAAN */}
-  <div
-    style={{
-      background: darkMode ? "#172033" : "#FFFFFF",
-      border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}`,
-      borderRadius: "16px",
-      padding: "20px"
-    }}
-  >
+    {/* PERSPEKTIF UTAMA */}
     <div
       style={{
-        fontWeight: "800",
-        marginBottom: "8px",
-        color: darkMode ? "#F8FAFC" : "#0F172A"
+        background: darkMode ? "#111827" : "#FFFFFF",
+        border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}`,
+        borderRadius: "18px",
+        padding: "22px",
+        boxShadow: darkMode
+          ? "0 8px 24px rgba(0, 0, 0, 0.20)"
+          : "0 8px 24px rgba(37, 99, 235, 0.06)"
       }}
     >
-      📊 Sinyal Permintaan
-    </div>
-
-    <p
-      style={{
-        margin: "0 0 6px",
-        fontWeight: "800",
-        color: darkMode ? "#F8FAFC" : "#0F172A"
-      }}
-    >
-      {marketData.analysis.demandSignal?.status || "Tidak pasti"}
-    </p>
-
-    <p
-      style={{
-        margin: 0,
-        color: darkMode ? "#CBD5E1" : "#475569",
-        lineHeight: "1.65"
-      }}
-    >
-      {marketData.analysis.demandSignal?.reason ||
-        "Belum tersedia."}
-    </p>
-  </div>
-
-  {/* PELUANG */}
-  <div
-    style={{
-      background: darkMode ? "#052E1B" : "#EFF6FF",
-      border: `1px solid ${
-        darkMode ? "#22C55E" : "#86EFAC"
-      }`,
-      borderRadius: "16px",
-      padding: "20px",
-      color: darkMode ? "#F0FDF4" : "#0F172A"
-    }}
-  >
-    <div
-      style={{
-        fontWeight: "800",
-        color: darkMode ? "#86EFAC" : "#15803D",
-        marginBottom: "10px"
-      }}
-    >
-      💡 Peluang
-    </div>
-
-    {Array.isArray(
-      marketData.analysis.opportunities
-    ) &&
-    marketData.analysis.opportunities.length > 0 ? (
-      <ul
+      <div
         style={{
-          margin: 0,
-          paddingLeft: "20px",
-          lineHeight: "1.7",
-          color: darkMode ? "#F0FDF4" : "#334155"
+          fontSize: "12px",
+          fontWeight: "800",
+          color: darkMode ? "#93C5FD" : "#2563EB",
+          textTransform: "uppercase",
+          letterSpacing: "0.06em",
+          marginBottom: "8px"
         }}
       >
-        {marketData.analysis.opportunities.map(
-          (item, index) => (
-            <li key={index}>{item}</li>
-          )
-        )}
-      </ul>
-    ) : (
+        🎯 Perspektif Utama
+      </div>
+
       <p
         style={{
           margin: 0,
-          color: darkMode ? "#CBD5E1" : "#334155"
+          fontSize: "16px",
+          lineHeight: "1.75",
+          color: darkMode ? "#F8FAFC" : "#0F172A"
         }}
       >
-        Belum tersedia.
+        {marketData.analysis.businessPerspective ||
+          marketData.analysis.summary ||
+          "Belum tersedia."}
       </p>
-    )}
-  </div>
-
-  {/* RISIKO */}
-  <div
-    style={{
-      background: darkMode ? "#4C0519" : "#FFF1F2",
-      border: `1px solid ${
-        darkMode ? "#FB7185" : "#FECDD3"
-      }`,
-      borderRadius: "16px",
-      padding: "20px",
-      color: darkMode ? "#FFF1F2" : "#881337"
-    }}
-  >
-    <div
-      style={{
-        fontWeight: "800",
-        color: darkMode ? "#FDA4AF" : "#BE123C",
-        marginBottom: "10px"
-      }}
-    >
-      ⚠ Risiko Utama
     </div>
 
-    {Array.isArray(
-      marketData.analysis.risks
-    ) &&
-    marketData.analysis.risks.length > 0 ? (
-      <ul
+    {/* KONDISI PASAR + SINYAL PERMINTAAN */}
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns:
+          "repeat(auto-fit, minmax(240px, 1fr))",
+        gap: "14px"
+      }}
+    >
+      {/* KONDISI PASAR */}
+      <div
         style={{
-          margin: 0,
-          paddingLeft: "20px",
-          lineHeight: "1.7",
-          color: darkMode ? "#FFE4E6" : "#881337"
+          background: darkMode ? "#172033" : "#FFFFFF",
+          border: `1px solid ${
+            darkMode ? "#334155" : "#E2E8F0"
+          }`,
+          borderRadius: "16px",
+          padding: "20px"
         }}
       >
-        {marketData.analysis.risks.map(
-          (item, index) => (
-            <li key={index}>{item}</li>
-          )
+        <div
+          style={{
+            fontWeight: "800",
+            marginBottom: "8px",
+            color: darkMode ? "#F8FAFC" : "#0F172A"
+          }}
+        >
+          📈 Kondisi Pasar
+        </div>
+
+        <p
+          style={{
+            margin: 0,
+            color: darkMode ? "#CBD5E1" : "#475569",
+            lineHeight: "1.65"
+          }}
+        >
+          {marketData.analysis.marketCondition ||
+            "Belum tersedia."}
+        </p>
+      </div>
+
+      {/* SINYAL PERMINTAAN */}
+      <div
+        style={{
+          background: darkMode ? "#172033" : "#FFFFFF",
+          border: `1px solid ${
+            darkMode ? "#334155" : "#E2E8F0"
+          }`,
+          borderRadius: "16px",
+          padding: "20px"
+        }}
+      >
+        <div
+          style={{
+            fontWeight: "800",
+            marginBottom: "8px",
+            color: darkMode ? "#F8FAFC" : "#0F172A"
+          }}
+        >
+          📊 Sinyal Permintaan
+        </div>
+
+        <p
+          style={{
+            margin: "0 0 6px",
+            fontWeight: "800",
+            color: darkMode ? "#F8FAFC" : "#0F172A"
+          }}
+        >
+          {marketData.analysis.demandSignal?.status ||
+            "Tidak pasti"}
+        </p>
+
+        <p
+          style={{
+            margin: 0,
+            color: darkMode ? "#CBD5E1" : "#475569",
+            lineHeight: "1.65"
+          }}
+        >
+          {marketData.analysis.demandSignal?.reason ||
+            "Belum tersedia."}
+        </p>
+      </div>
+    </div>
+
+    {/* PELUANG + RISIKO */}
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns:
+          "repeat(auto-fit, minmax(240px, 1fr))",
+        gap: "14px"
+      }}
+    >
+      {/* PELUANG */}
+      <div
+        style={{
+          background: darkMode ? "#052E1B" : "#F0FDF4",
+          border: `1px solid ${
+            darkMode ? "#22C55E" : "#BBF7D0"
+          }`,
+          borderRadius: "16px",
+          padding: "20px"
+        }}
+      >
+        <div
+          style={{
+            fontWeight: "800",
+            color: darkMode ? "#86EFAC" : "#15803D",
+            marginBottom: "10px"
+          }}
+        >
+          💡 Peluang
+        </div>
+
+        {Array.isArray(
+          marketData.analysis.opportunities
+        ) &&
+        marketData.analysis.opportunities.length > 0 ? (
+          <ul
+            style={{
+              margin: 0,
+              paddingLeft: "20px",
+              lineHeight: "1.7",
+              color: darkMode ? "#DCFCE7" : "#166534"
+            }}
+          >
+            {marketData.analysis.opportunities.map(
+              (item, index) => (
+                <li key={index}>{item}</li>
+              )
+            )}
+          </ul>
+        ) : (
+          <p
+            style={{
+              margin: 0,
+              color: darkMode ? "#CBD5E1" : "#475569"
+            }}
+          >
+            Belum tersedia.
+          </p>
         )}
-      </ul>
-    ) : (
+      </div>
+
+      {/* RISIKO */}
+      <div
+        style={{
+          background: darkMode ? "#4C0519" : "#FFF1F2",
+          border: `1px solid ${
+            darkMode ? "#FB7185" : "#FECDD3"
+          }`,
+          borderRadius: "16px",
+          padding: "20px"
+        }}
+      >
+        <div
+          style={{
+            fontWeight: "800",
+            color: darkMode ? "#FDA4AF" : "#BE123C",
+            marginBottom: "10px"
+          }}
+        >
+          ⚠ Risiko Utama
+        </div>
+
+        {Array.isArray(
+          marketData.analysis.risks
+        ) &&
+        marketData.analysis.risks.length > 0 ? (
+          <ul
+            style={{
+              margin: 0,
+              paddingLeft: "20px",
+              lineHeight: "1.7",
+              color: darkMode ? "#FFE4E6" : "#9F1239"
+            }}
+          >
+            {marketData.analysis.risks.map(
+              (item, index) => (
+                <li key={index}>{item}</li>
+              )
+            )}
+          </ul>
+        ) : (
+          <p
+            style={{
+              margin: 0,
+              color: darkMode ? "#CBD5E1" : "#475569"
+            }}
+          >
+            Belum tersedia.
+          </p>
+        )}
+      </div>
+    </div>
+
+    {/* IMPLIKASI STRATEGIS */}
+    <div
+      style={{
+        background: darkMode ? "#0B1120" : "#F8FAFC",
+        border: `1px solid ${
+          darkMode ? "#334155" : "#E2E8F0"
+        }`,
+        borderRadius: "18px",
+        padding: "22px"
+      }}
+    >
+      <div
+        style={{
+          fontWeight: "800",
+          marginBottom: "8px",
+          color: darkMode ? "#F8FAFC" : "#0F172A"
+        }}
+      >
+        🚀 Implikasi Strategis
+      </div>
+
       <p
         style={{
           margin: 0,
-          color: darkMode ? "#CBD5E1" : "#334155"
+          color: darkMode ? "#CBD5E1" : "#334155",
+          lineHeight: "1.75"
         }}
       >
-        Belum tersedia.
+        {marketData.analysis.strategicImplication ||
+          "Belum tersedia."}
       </p>
-    )}
+    </div>
   </div>
-</div>
-
-
-
+)}
         {/* =========================
             LAPORAN KEUANGAN
         ========================== */}
