@@ -2618,7 +2618,7 @@ padding: isMobile ? "16px 12px" : "32px",
   {/* AREA BAWAH SIDEBAR */}
   <div
     style={{
-      marginTop: "auto",
+      marginTop: "14px",
       paddingTop: "10px",
       flexShrink: 0
     }}
