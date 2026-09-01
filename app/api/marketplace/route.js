@@ -28,20 +28,24 @@ function extractJson(value) {
     return value;
   }
 
-  const text = String(value).trim();
+  let text = String(value)
+    .replace(/```json/gi, "")
+    .replace(/```/g, "")
+    .trim();
 
   try {
     return JSON.parse(text);
   } catch (_) {}
 
-  const match = text.match(/\{[\s\S]*\}/);
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
 
-  if (!match) {
+  if (start === -1 || end === -1 || end <= start) {
     return null;
   }
 
   try {
-    return JSON.parse(match[0]);
+    return JSON.parse(text.slice(start, end + 1));
   } catch (_) {
     return null;
   }
@@ -158,47 +162,56 @@ function normalizeResults(results = [], query = "") {
 ========================================================= */
 
 async function analyzeWithAI(req, prompt, system) {
-  const origin =
-    req.headers.get("origin") ||
-    `https://${req.headers.get("host")}`;
+  // Use the current request URL so this works in localhost and production.
+  const aiUrl = new URL("/api/ai", req.url);
 
-  const response = await fetch(
-    `${origin}/api/ai`,
-    {
-      method: "POST",
+  const headers = {
+    "Content-Type": "application/json",
+  };
 
-      headers: {
-        "Content-Type": "application/json",
-        ...(req.headers.get("authorization")
-          ? { Authorization: req.headers.get("authorization") }
-          : {}),
-      },
-
-      body: JSON.stringify({
-        prompt,
-        system,
-      }),
-
-      cache: "no-store",
-    }
-  );
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(
-      data?.error ||
-        "AI gagal membuat analisis."
-    );
+  const authorization = req.headers.get("authorization");
+  if (authorization) {
+    headers.Authorization = authorization;
   }
 
-  return (
-    data?.text ||
-    data?.response ||
-    data?.result ||
-    data?.content ||
-    data
-  );
+  const response = await fetch(aiUrl, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      prompt,
+      system,
+    }),
+    cache: "no-store",
+  });
+
+  let data = null;
+  try {
+    data = await response.json();
+  } catch {
+    throw new Error(`AI mengembalikan respons yang tidak valid (${response.status}).`);
+  }
+
+  if (!response.ok) {
+    const detail =
+      data?.message ||
+      data?.error ||
+      (Array.isArray(data?.details) ? data.details.join(" | ") : "") ||
+      `AI gagal membuat analisis (${response.status}).`;
+
+    throw new Error(detail);
+  }
+
+  const result =
+    data?.text ??
+    data?.response ??
+    data?.result ??
+    data?.content;
+
+  if (!result) {
+    throw new Error("AI tidak mengembalikan konten analisis.");
+  }
+
+  return result;
 }
 
 /* =========================================================
@@ -370,15 +383,17 @@ export async function POST(req) {
       ================================================= */
 
       const sourceContext = uniqueSources
-        .slice(0, 12)
+        .slice(0, 10)
         .map((item, index) => {
-          return `
-SUMBER ${index + 1}
-Judul: ${item.title || ""}
-URL: ${item.url || ""}
-Tanggal: ${item.publishedDate || ""}
-Isi: ${item.content || ""}
-`;
+          const content = cleanText(item.content).slice(0, 900);
+
+          return [
+            `SUMBER ${index + 1}`,
+            `Judul: ${item.title || "-"}`,
+            `URL: ${item.url || "-"}`,
+            `Tanggal: ${item.publishedDate || "-"}`,
+            `Isi: ${content || "-"}`,
+          ].join("\n");
         })
         .join("\n\n");
 
@@ -387,61 +402,34 @@ Isi: ${item.content || ""}
       ================================================= */
 
       const analysisPrompt = `
-Anda adalah analis bisnis strategis.
+Anda adalah analis bisnis strategis untuk UMKM Indonesia.
 
-Tugas Anda bukan sekadar merangkum berita.
+Analisis usaha berdasarkan:
+1. informasi usaha,
+2. industri,
+3. lokasi,
+4. sumber eksternal yang diberikan.
 
-Buat Perspektif Bisnis berdasarkan gabungan:
-1. Informasi bisnis pengguna.
-2. Kondisi industri.
-3. Lokasi usaha.
-4. Sumber eksternal terbaru.
+Jangan sekadar merangkum sumber. Hubungkan temuan eksternal dengan kondisi usaha.
+Jangan mengarang angka, fakta, tren, atau kompetitor yang tidak didukung sumber.
+Jika bukti tidak cukup, tuliskan "Belum tersedia bukti yang cukup.".
 
 INFORMASI USAHA
+Nama/Jenis Usaha: ${business || "-"}
+Industri: ${industry || "-"}
+Lokasi: ${location || "-"}
 
-Jenis/Nama Usaha:
-${business || "-"}
+SUMBER EKSTERNAL
+${sourceContext || "Tidak ada sumber eksternal."}
 
-Industri:
-${industry || "-"}
+Kembalikan HANYA satu objek JSON valid, tanpa markdown dan tanpa teks sebelum/sesudah JSON.
 
-Lokasi:
-${location || "-"}
-
-DATA EKSTERNAL
-
-${sourceContext || "Tidak ada sumber eksternal yang cukup."}
-
-Lakukan analisis bisnis yang tajam dan realistis.
-
-Fokus pada:
-
-1. Kondisi pasar.
-2. Sinyal permintaan.
-3. Faktor eksternal yang memengaruhi usaha.
-4. Risiko utama.
-5. Peluang realistis.
-6. Persaingan jika terdapat bukti.
-7. Perspektif bisnis secara keseluruhan.
-8. Tiga skenario:
-   - optimistis
-   - realistis
-   - risiko
-9. Implikasi strategis bagi pemilik usaha.
-
-Jangan mengarang data.
-
-Jika bukti eksternal terbatas, jelaskan keterbatasannya.
-
-Jangan menyebut sumber yang tidak tersedia.
-
-Kembalikan HANYA JSON valid:
-
+Format wajib:
 {
   "summary": "",
   "marketCondition": "",
   "demandSignal": {
-    "status": "meningkat",
+    "status": "",
     "reason": ""
   },
   "businessPerspective": "",
@@ -455,7 +443,6 @@ Kembalikan HANYA JSON valid:
     "risk": ""
   },
   "strategicImplication": "",
-  "confidence": "sedang",
   "limitations": ""
 }
 `;
@@ -473,29 +460,50 @@ Kembalikan HANYA JSON valid:
         analysis =
           extractJson(aiResult);
 
-        if (!analysis) {
-          analysis = {
-            summary:
-              "Data eksternal berhasil dikumpulkan, tetapi hasil analisis AI tidak dapat diproses dalam format terstruktur.",
-            confidence: "rendah",
-            limitations:
-              "Respons AI tidak dapat diubah menjadi format analisis terstruktur.",
-          };
+        if (!analysis || typeof analysis !== "object") {
+          throw new Error("AI tidak mengembalikan JSON analisis yang valid.");
         }
+
+        analysis = {
+          summary: cleanText(analysis.summary),
+          marketCondition: cleanText(analysis.marketCondition),
+          demandSignal: {
+            status: cleanText(analysis.demandSignal?.status),
+            reason: cleanText(analysis.demandSignal?.reason),
+          },
+          businessPerspective: cleanText(analysis.businessPerspective),
+          externalFactors: Array.isArray(analysis.externalFactors)
+            ? analysis.externalFactors.map(cleanText).filter(Boolean).slice(0, 8)
+            : [],
+          risks: Array.isArray(analysis.risks)
+            ? analysis.risks.map(cleanText).filter(Boolean).slice(0, 8)
+            : [],
+          opportunities: Array.isArray(analysis.opportunities)
+            ? analysis.opportunities.map(cleanText).filter(Boolean).slice(0, 8)
+            : [],
+          competitionInsight: cleanText(analysis.competitionInsight),
+          scenarios: {
+            optimistic: cleanText(analysis.scenarios?.optimistic),
+            realistic: cleanText(analysis.scenarios?.realistic),
+            risk: cleanText(analysis.scenarios?.risk),
+          },
+          strategicImplication: cleanText(analysis.strategicImplication),
+          limitations: cleanText(analysis.limitations),
+        };
       } catch (error) {
         console.error(
           "MARKET ANALYSIS ERROR:",
           error
         );
 
-        analysis = {
-          summary:
+        return jsonError(
+          error?.message ||
             "Sumber eksternal berhasil dikumpulkan, tetapi analisis AI belum dapat dibuat.",
-          confidence: "rendah",
-          limitations:
-            error?.message ||
-            "Terjadi kendala saat memproses analisis AI.",
-        };
+          502,
+          {
+            "X-Market-Insight-Sources": String(uniqueSources.length),
+          }
+        );
       }
 
       return NextResponse.json({
