@@ -5122,38 +5122,40 @@ padding: isMobile ? "16px 12px" : "32px",
                     </div>
                   )}
 
+{/* LANGKAH BERIKUTNYA */}
+{diagnosis.nextStep && (
+  <div
+    style={{
+      background: darkMode ? "#172554" : "#EFF6FF",
+      border:
+        `1px solid ${darkMode ? "#3B82F6" : "#BFDBFE"}`,
+      borderRadius:
+        "16px",
+      padding: "20px",
+      marginBottom: "24px"
+    }}
+  >
+    <strong
+      style={{
+        color: darkMode ? "#93C5FD" : "#0F172A"
+      }}
+    >
+      💡 Langkah Berikutnya
+    </strong>
 
-                {/* LANGKAH BERIKUTNYA */}
-                {diagnosis.nextStep && (
-                  <div
-                    style={{
-                      background: "#EFF6FF",
-                      border:
-                        "1px solid #BFDBFE",
-                      borderRadius:
-                        "16px",
-                      padding: "20px",
-                      marginBottom: "24px"
-                    }}
-                  >
-                    <strong>
-                      💡 Langkah Berikutnya
-                    </strong>
-
-                    <p
-                      style={{
-                        margin:
-                          "8px 0 0",
-                        color:
-                          "#334155",
-                        lineHeight: "1.6"
-                      }}
-                    >
-                      {diagnosis.nextStep}
-                    </p>
-                  </div>
-                )}
-
+    <p
+      style={{
+        margin:
+          "8px 0 0",
+        color:
+          darkMode ? "#DBEAFE" : "#334155",
+        lineHeight: "1.6"
+      }}
+    >
+      {diagnosis.nextStep}
+    </p>
+  </div>
+)}
 
                 {/* ACTION */}
                 <div
