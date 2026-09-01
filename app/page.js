@@ -2339,7 +2339,7 @@ Balas JSON valid.
                 fontSize: "14px",
                 fontWeight: "700",
                 letterSpacing: "2px",
-                color: darkMode ? "#93c5fd" : "#2563eb"
+                color: darkMode ? "#6ee7b7" : "#047857"
               }}
             >
               Know More Grow More
@@ -2403,7 +2403,7 @@ Balas JSON valid.
               padding: "13px",
               border: "none",
               borderRadius: "10px",
-              background: "#2563eb",
+              background: "#047857",
               color: "#fff",
               fontWeight: "700",
               cursor: authLoading ? "not-allowed" : "pointer"
@@ -2439,7 +2439,7 @@ Balas JSON valid.
               marginTop: "16px",
               border: "none",
               background: "transparent",
-              color: "#2563eb",
+              color: "#047857",
               fontWeight: "600",
               cursor: "pointer",
               padding: 0
@@ -2463,8 +2463,8 @@ minWidth: 0,
 overflowX: "hidden",
 padding: isMobile ? "16px 12px" : "32px",
         minHeight: "100vh",
-        background: "#f8fafc",
-        color: "#0f172a",
+        background: darkMode ? "#0B1120" : "#F8FAFC",
+        color: darkMode ? "#F8FAFC" : "#0F172A",
         display: "flex",
         fontFamily: "Arial, sans-serif"
       }}
@@ -2476,7 +2476,7 @@ padding: isMobile ? "16px 12px" : "32px",
     width: isMobile ? (sidebarOpen ? "220px" : "64px") : (sidebarOpen ? "280px" : "72px"),
     minWidth: isMobile ? (sidebarOpen ? "220px" : "64px") : (sidebarOpen ? "280px" : "72px"),
     height: "100vh",
-    background: "#ffffff",
+    background: darkMode ? "#111827" : "#FFFFFF",
     borderRight: "1px solid #e2e8f0",
     padding: sidebarOpen
       ? (isMobile ? "14px 10px" : "18px 14px")
@@ -2590,7 +2590,7 @@ padding: isMobile ? "16px 12px" : "32px",
         style={{
           width: "100%",
           minHeight: "43px",
-          border: tab === key ? "1px solid #bfdbfe" : "1px solid #e8edf3",
+          border: tab === key ? "1px solid #a7f3d0" : "1px solid #e8edf3",
           padding: "10px 12px",
           borderRadius: "10px",
           cursor: "pointer",
@@ -2599,8 +2599,8 @@ padding: isMobile ? "16px 12px" : "32px",
           justifyContent: sidebarOpen ? "flex-start" : "center",
           gap: sidebarOpen ? "9px" : "0",
           textAlign: sidebarOpen ? "left" : "center",
-          background: tab === key ? (key === "health" ? "#f0fdf4" : "#eff6ff") : "#ffffff",
-          color: tab === key ? (key === "health" ? "#15803d" : "#2563eb") : "#475569",
+          background: tab === key ? (key === "health" ? "#ecfdf5" : "#ecfdf5") : "#ffffff",
+          color: tab === key ? (key === "health" ? "#047857" : "#047857") : "#475569",
           fontWeight: tab === key ? "700" : "500",
           boxShadow: tab === key ? "0 3px 10px rgba(37, 99, 235, 0.08)" : "0 1px 2px rgba(15, 23, 42, 0.03)",
           fontSize: "13px",
@@ -2643,9 +2643,9 @@ padding: isMobile ? "16px 12px" : "32px",
           style={{
             width: "100%",
             minHeight: "41px",
-            border: "1px solid #fecaca",
-            background: "#ffffff",
-            color: "#dc2626",
+            border: "1px solid #fda4af",
+            background: darkMode ? "#111827" : "#FFFFFF",
+            color: "#e11d48",
             padding: "9px 11px",
             borderRadius: "10px",
             cursor: "pointer",
@@ -2670,9 +2670,9 @@ padding: isMobile ? "16px 12px" : "32px",
           style={{
             width: "100%",
             minHeight: "41px",
-            border: "1px solid #fee2e2",
-            background: "#fef2f2",
-            color: "#991b1b",
+            border: "1px solid #fecdd3",
+            background: "#fff1f2",
+            color: "#9f1239",
             padding: "9px 11px",
             borderRadius: "10px",
             cursor: "pointer",
@@ -2702,7 +2702,7 @@ padding: isMobile ? "16px 12px" : "32px",
           width: "100%",
           minHeight: "41px",
           border: "1px solid #cbd5e1",
-          background: "#ffffff",
+          background: darkMode ? "#111827" : "#FFFFFF",
           color: "#334155",
           padding: "9px 11px",
           borderRadius: "10px",
@@ -2733,9 +2733,9 @@ padding: isMobile ? "16px 12px" : "32px",
         style={{
           width: "100%",
           minHeight: "41px",
-          border: "1px solid #fecaca",
-          background: "#ffffff",
-          color: "#dc2626",
+          border: "1px solid #fda4af",
+          background: darkMode ? "#111827" : "#FFFFFF",
+          color: "#e11d48",
           padding: "9px 11px",
           borderRadius: "10px",
           cursor: "pointer",
@@ -2813,18 +2813,18 @@ padding: isMobile ? "16px 12px" : "32px",
 
               {tab === "health" && (
                 <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
-                  <div style={{ padding: "22px", borderRadius: "18px", border: `1px solid ${darkMode ? "#334155" : "#dcfce7"}`, background: darkMode ? "#0f172a" : "#f0fdf4" }}>
+                  <div style={{ padding: "22px", borderRadius: "18px", border: `1px solid ${darkMode ? "#334155" : "#a7f3d0"}`, background: darkMode ? "#0f172a" : "#ecfdf5" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", gap: "14px", alignItems: "center", flexWrap: "wrap" }}>
-                      <div><div style={{ fontSize: "20px", fontWeight: "800", color: darkMode ? "#f8fafc" : "#14532d" }}>Live System Verification</div><div style={{ marginTop: "6px", color: darkMode ? "#cbd5e1" : "#166534", fontSize: "14px", lineHeight: 1.5 }}>Pemeriksaan dilakukan saat tombol dijalankan dan hasil diberi timestamp.</div></div>
-                      <button type="button" onClick={runLiveHealthCheck} disabled={healthLoading} style={{ border: "none", borderRadius: "10px", padding: "11px 16px", background: "#16a34a", color: "#fff", fontWeight: "800", cursor: healthLoading ? "wait" : "pointer" }}>{healthLoading ? "Memeriksa..." : "Run Live Health Check"}</button>
+                      <div><div style={{ fontSize: "20px", fontWeight: "800", color: darkMode ? "#f8fafc" : "#064e3b" }}>Live System Verification</div><div style={{ marginTop: "6px", color: darkMode ? "#cbd5e1" : "#065f46", fontSize: "14px", lineHeight: 1.5 }}>Pemeriksaan dilakukan saat tombol dijalankan dan hasil diberi timestamp.</div></div>
+                      <button type="button" onClick={runLiveHealthCheck} disabled={healthLoading} style={{ border: "none", borderRadius: "10px", padding: "11px 16px", background: "#059669", color: "#fff", fontWeight: "800", cursor: healthLoading ? "wait" : "pointer" }}>{healthLoading ? "Memeriksa..." : "Run Live Health Check"}</button>
                     </div>
                   </div>
-                  {healthError && <div style={{ padding: "14px 16px", borderRadius: "12px", border: "1px solid #fecaca", background: "#fef2f2", color: "#991b1b", fontSize: "14px" }}>{healthError}</div>}
+                  {healthError && <div style={{ padding: "14px 16px", borderRadius: "12px", border: "1px solid #fda4af", background: "#fff1f2", color: "#9f1239", fontSize: "14px" }}>{healthError}</div>}
                   {healthData && <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
                     <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, minmax(0, 1fr))", gap: "14px" }}>
-                      {(healthData.services || []).map((service) => <div key={service.name} style={{ padding: "18px", borderRadius: "14px", border: `1px solid ${darkMode ? "#334155" : "#e2e8f0"}`, background: darkMode ? "#111827" : "#fff" }}><div style={{ display: "flex", justifyContent: "space-between", gap: "12px" }}><strong>{service.name}</strong><span style={{ fontWeight: "800", color: service.status === "operational" ? "#15803d" : service.status === "configured" ? "#b45309" : "#b91c1c" }}>{service.status === "operational" ? "● OPERATIONAL" : service.status === "configured" ? "● CONFIGURED" : "● DOWN"}</span></div><div style={{ marginTop: "8px", color: darkMode ? "#cbd5e1" : "#64748b", fontSize: "13px", lineHeight: 1.5 }}>{service.detail}</div>{service.latencyMs != null && <div style={{ marginTop: "8px", fontSize: "12px", color: darkMode ? "#94a3b8" : "#64748b" }}>Latency: {service.latencyMs} ms</div>}</div>)}
+                      {(healthData.services || []).map((service) => <div key={service.name} style={{ padding: "18px", borderRadius: "14px", border: `1px solid ${darkMode ? "#334155" : "#e2e8f0"}`, background: darkMode ? "#111827" : "#fff" }}><div style={{ display: "flex", justifyContent: "space-between", gap: "12px" }}><strong>{service.name}</strong><span style={{ fontWeight: "800", color: service.status === "operational" ? "#047857" : service.status === "configured" ? "#b45309" : "#be123c" }}>{service.status === "operational" ? "● OPERATIONAL" : service.status === "configured" ? "● CONFIGURED" : "● DOWN"}</span></div><div style={{ marginTop: "8px", color: darkMode ? "#cbd5e1" : "#64748b", fontSize: "13px", lineHeight: 1.5 }}>{service.detail}</div>{service.latencyMs != null && <div style={{ marginTop: "8px", fontSize: "12px", color: darkMode ? "#94a3b8" : "#64748b" }}>Latency: {service.latencyMs} ms</div>}</div>)}
                     </div>
-                    {healthData.liveAiSmokeTest && <div style={{ padding: "18px", borderRadius: "14px", border: `1px solid ${darkMode ? "#334155" : "#e2e8f0"}`, background: darkMode ? "#111827" : "#fff" }}><div style={{ display: "flex", justifyContent: "space-between" }}><strong>Live AI Smoke Test</strong><span style={{ color: "#15803d", fontWeight: "800" }}>● OPERATIONAL</span></div><div style={{ marginTop: "8px", fontSize: "13px", color: darkMode ? "#cbd5e1" : "#64748b" }}>Provider: {healthData.liveAiSmokeTest.provider} · Latency: {healthData.liveAiSmokeTest.latencyMs} ms · Response: {healthData.liveAiSmokeTest.response || "—"}</div></div>}
+                    {healthData.liveAiSmokeTest && <div style={{ padding: "18px", borderRadius: "14px", border: `1px solid ${darkMode ? "#334155" : "#e2e8f0"}`, background: darkMode ? "#111827" : "#fff" }}><div style={{ display: "flex", justifyContent: "space-between" }}><strong>Live AI Smoke Test</strong><span style={{ color: "#047857", fontWeight: "800" }}>● OPERATIONAL</span></div><div style={{ marginTop: "8px", fontSize: "13px", color: darkMode ? "#cbd5e1" : "#64748b" }}>Provider: {healthData.liveAiSmokeTest.provider} · Latency: {healthData.liveAiSmokeTest.latencyMs} ms · Response: {healthData.liveAiSmokeTest.response || "—"}</div></div>}
                     <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", alignItems: "center", flexWrap: "wrap", padding: "16px", borderRadius: "14px", background: darkMode ? "#0f172a" : "#f8fafc" }}><div><strong>{healthData.summary?.operational ?? 0}/{healthData.summary?.total ?? 0} layanan operational</strong><div style={{ marginTop: "4px", fontSize: "12px", color: darkMode ? "#94a3b8" : "#64748b" }}>Checked: {healthData.checkedAt ? new Date(healthData.checkedAt).toLocaleString("id-ID") : "—"}</div></div><button type="button" onClick={runLiveAiSmokeTest} disabled={healthLoading} style={{ border: `1px solid ${darkMode ? "#475569" : "#cbd5e1"}`, borderRadius: "10px", padding: "10px 14px", background: darkMode ? "#111827" : "#fff", color: darkMode ? "#f8fafc" : "#0f172a", fontWeight: "700", cursor: healthLoading ? "wait" : "pointer" }}>{healthLoading ? "Menguji AI..." : "Run AI Smoke Test"}</button></div>
                   </div>}
                 </div>
@@ -2840,7 +2840,7 @@ padding: isMobile ? "16px 12px" : "32px",
             <p
               style={{
                 margin: "8px 0 0",
-                color: darkMode ? "#dbeafe" : "#64748b",
+                color: darkMode ? "#d1fae5" : "#64748b",
                 fontSize: "14px",
                 fontWeight: "500"
               }}
@@ -2856,8 +2856,8 @@ padding: isMobile ? "16px 12px" : "32px",
           {busy && (
             <div
               style={{
-                background: "#eff6ff",
-                color: "#2563eb",
+                background: "#ecfdf5",
+                color: "#047857",
                 padding: "10px 16px",
                 borderRadius: "999px",
                 fontSize: "13px",
@@ -2982,7 +2982,7 @@ padding: isMobile ? "16px 12px" : "32px",
                   padding: "26px"
                 }}
               >
-                <div style={{ fontSize: "13px", fontWeight: "800", color: darkMode ? "#93c5fd" : "#2563eb", letterSpacing: "0.04em" }}>
+                <div style={{ fontSize: "13px", fontWeight: "800", color: darkMode ? "#6ee7b7" : "#047857", letterSpacing: "0.04em" }}>
                   PANDUAN INTERAKTIF
                 </div>
                 <h3 style={{ margin: "7px 0 8px", fontSize: "25px", color: darkMode ? "#f8fafc" : "#0f172a" }}>
@@ -2996,8 +2996,8 @@ padding: isMobile ? "16px 12px" : "32px",
 
               <div
                 style={{
-                  background: darkMode ? "#172554" : "#eff6ff",
-                  border: `1px solid ${darkMode ? "#1e40af" : "#bfdbfe"}`,
+                  background: darkMode ? "#172033" : "#ecfdf5",
+                  border: `1px solid ${darkMode ? "#065f46" : "#a7f3d0"}`,
                   borderRadius: "18px",
                   padding: "22px",
                   display: "flex",
@@ -3008,13 +3008,13 @@ padding: isMobile ? "16px 12px" : "32px",
                 }}
               >
                 <div>
-                  <div style={{ fontSize: "12px", fontWeight: "800", color: darkMode ? "#93c5fd" : "#2563eb", marginBottom: "5px" }}>
+                  <div style={{ fontSize: "12px", fontWeight: "800", color: darkMode ? "#6ee7b7" : "#047857", marginBottom: "5px" }}>
                     LANGKAH BERIKUTNYA
                   </div>
                   <div style={{ fontSize: "20px", fontWeight: "800", color: darkMode ? "#ffffff" : "#0f172a" }}>
                     {nextStep.icon} {nextStep.title}
                   </div>
-                  <div style={{ marginTop: "6px", color: darkMode ? "#dbeafe" : "#475569", lineHeight: 1.55 }}>
+                  <div style={{ marginTop: "6px", color: darkMode ? "#d1fae5" : "#475569", lineHeight: 1.55 }}>
                     {nextStep.text}
                   </div>
                 </div>
@@ -3026,7 +3026,7 @@ padding: isMobile ? "16px 12px" : "32px",
                     border: "none",
                     borderRadius: "11px",
                     padding: "12px 18px",
-                    background: nextStep.canOpen ? "#2563eb" : "#94a3b8",
+                    background: nextStep.canOpen ? "#047857" : "#94a3b8",
                     color: "#ffffff",
                     fontWeight: "800",
                     cursor: nextStep.canOpen ? "pointer" : "not-allowed",
@@ -3060,11 +3060,11 @@ padding: isMobile ? "16px 12px" : "32px",
                         borderRadius: "12px",
                         border: `1px solid ${darkMode ? "#334155" : "#e2e8f0"}`,
                         background: step.done
-                          ? (darkMode ? "#052e16" : "#f0fdf4")
+                          ? (darkMode ? "#052e16" : "#ecfdf5")
                           : (darkMode ? "#111827" : "#f8fafc")
                       }}
                     >
-                      <div style={{ width: "28px", textAlign: "center", fontWeight: "800", color: step.done ? "#16a34a" : "#64748b" }}>
+                      <div style={{ width: "28px", textAlign: "center", fontWeight: "800", color: step.done ? "#059669" : "#64748b" }}>
                         {step.done ? "✓" : index + 1}
                       </div>
                       <div style={{ fontSize: "17px" }}>{step.icon}</div>
@@ -3166,7 +3166,7 @@ padding: isMobile ? "16px 12px" : "32px",
             {!business ? (
               <div
                 style={{
-                  background: "#ffffff",
+                  background: darkMode ? "#111827" : "#FFFFFF",
                   border: "1px solid #e2e8f0",
                   borderRadius: "20px",
                   padding: "40px",
@@ -3211,7 +3211,7 @@ padding: isMobile ? "16px 12px" : "32px",
                   }
                   style={{
                     border: "none",
-                    background: "#2563eb",
+                    background: "#047857",
                     color: "#ffffff",
                     padding: "13px 22px",
                     borderRadius: "10px",
@@ -3227,7 +3227,7 @@ padding: isMobile ? "16px 12px" : "32px",
                 {/* PROFIL USAHA */}
                 <div
                   style={{
-                    background: "#ffffff",
+                    background: darkMode ? "#111827" : "#FFFFFF",
                     border:
                       "1px solid #e2e8f0",
                     borderRadius: "18px",
@@ -3641,7 +3641,7 @@ padding: isMobile ? "16px 12px" : "32px",
           >
             <div
               style={{
-                background: "#ffffff",
+                background: darkMode ? "#111827" : "#FFFFFF",
                 border:
                   "1px solid #e2e8f0",
                 borderRadius: "20px",
@@ -3769,7 +3769,7 @@ padding: isMobile ? "16px 12px" : "32px",
                           background:
                             "transparent",
                           color:
-                            "#dc2626",
+                            "#e11d48",
                           cursor:
                             "pointer"
                         }}
@@ -3787,7 +3787,7 @@ padding: isMobile ? "16px 12px" : "32px",
                 style={{
                   marginTop: "24px",
                   padding: "20px",
-                  background: "#f8fafc",
+                  background: darkMode ? "#0B1120" : "#F8FAFC",
                   borderRadius: "14px"
                 }}
               >
@@ -3823,7 +3823,7 @@ padding: isMobile ? "16px 12px" : "32px",
                       style={{
                         border: "none",
                         background:
-                          "#dc2626",
+                          "#e11d48",
                         color: "#ffffff",
                         padding:
                           "11px 16px",
@@ -3893,11 +3893,11 @@ padding: isMobile ? "16px 12px" : "32px",
                       }
                       style={{
                         border:
-                          "1px solid #fecaca",
+                          "1px solid #fda4af",
                         background:
                           "#ffffff",
                         color:
-                          "#dc2626",
+                          "#e11d48",
                         padding:
                           "10px 14px",
                         borderRadius:
@@ -3959,7 +3959,7 @@ padding: isMobile ? "16px 12px" : "32px",
                     background:
                       busy
                         ? "#94a3b8"
-                        : "#2563eb",
+                        : "#047857",
                     color: "#ffffff",
                     padding:
                       "14px 22px",
@@ -3994,7 +3994,7 @@ padding: isMobile ? "16px 12px" : "32px",
             {!pulseData ? (
               <div
                 style={{
-                  background: "#ffffff",
+                  background: darkMode ? "#111827" : "#FFFFFF",
                   border: "1px solid #e2e8f0",
                   borderRadius: "20px",
                   padding: "40px",
@@ -4040,7 +4040,7 @@ padding: isMobile ? "16px 12px" : "32px",
                     border: "none",
                     background: busy
                       ? "#94a3b8"
-                      : "#2563eb",
+                      : "#047857",
                     color: "#ffffff",
                     padding: "14px 22px",
                     borderRadius: "10px",
@@ -4060,7 +4060,7 @@ padding: isMobile ? "16px 12px" : "32px",
                 {/* RINGKASAN PULSE */}
                 <div
                   style={{
-                    background: "#ffffff",
+                    background: darkMode ? "#111827" : "#FFFFFF",
                     border: "1px solid #e2e8f0",
                     borderRadius: "20px",
                     padding: "28px",
@@ -4128,7 +4128,7 @@ padding: isMobile ? "16px 12px" : "32px",
                   pulseData.positive.length > 0 && (
                     <div
                       style={{
-                        background: "#ffffff",
+                        background: darkMode ? "#111827" : "#FFFFFF",
                         border:
                           "1px solid #e2e8f0",
                         borderRadius:
@@ -4157,9 +4157,9 @@ padding: isMobile ? "16px 12px" : "32px",
                               key={index}
                               style={{
                                 background:
-                                  darkMode ? "#0B3B2E" : "#f0fdf4",
+                                  darkMode ? "#0B3B2E" : "#ecfdf5",
                                 border:
-                                  darkMode ? "1px solid #166534" : "1px solid #dcfce7",
+                                  darkMode ? "1px solid #065f46" : "1px solid #a7f3d0",
                                 padding:
                                   "16px",
                                 borderRadius:
@@ -4199,7 +4199,7 @@ padding: isMobile ? "16px 12px" : "32px",
                   pulseData.attention.length > 0 && (
                     <div
                       style={{
-                        background: "#ffffff",
+                        background: darkMode ? "#111827" : "#FFFFFF",
                         border:
                           "1px solid #e2e8f0",
                         borderRadius:
@@ -4228,9 +4228,9 @@ padding: isMobile ? "16px 12px" : "32px",
                               key={index}
                               style={{
                                 border:
-                                  "1px solid #fed7aa",
+                                  "1px solid #fde68a",
                                 background:
-                                  "#fff7ed",
+                                  "#fffbeb",
                                 padding:
                                   "16px",
                                 borderRadius:
@@ -4274,7 +4274,7 @@ padding: isMobile ? "16px 12px" : "32px",
                                   margin:
                                     "8px 0 0",
                                   color:
-                                    darkMode ? "#DBEAFE" : "#475569",
+                                    darkMode ? "#d1fae5" : "#475569",
                                   lineHeight:
                                     "1.6"
                                 }}
@@ -4297,7 +4297,7 @@ padding: isMobile ? "16px 12px" : "32px",
                   pulseData.priority.length > 0 && (
                     <div
                       style={{
-                        background: "#ffffff",
+                        background: darkMode ? "#111827" : "#FFFFFF",
                         border:
                           "1px solid #e2e8f0",
                         borderRadius:
@@ -4349,9 +4349,9 @@ padding: isMobile ? "16px 12px" : "32px",
                                     borderRadius:
                                       "50%",
                                     background:
-                                      "#eff6ff",
+                                      "#ecfdf5",
                                     color:
-                                      "#2563eb",
+                                      "#047857",
                                     display:
                                       "flex",
                                     alignItems:
@@ -4412,9 +4412,9 @@ padding: isMobile ? "16px 12px" : "32px",
                 {pulseData.nextStep && (
                   <div
                     style={{
-                      background: "#eff6ff",
+                      background: "#ecfdf5",
                       border:
-                        "1px solid #bfdbfe",
+                        "1px solid #a7f3d0",
                       borderRadius:
                         "16px",
                       padding: "20px",
@@ -4442,7 +4442,7 @@ padding: isMobile ? "16px 12px" : "32px",
                 {/* UPDATE USAHA */}
                 <div
                   style={{
-                    background: "#ffffff",
+                    background: darkMode ? "#111827" : "#FFFFFF",
                     border:
                       "1px solid #e2e8f0",
                     borderRadius: "18px",
@@ -4602,7 +4602,7 @@ padding: isMobile ? "16px 12px" : "32px",
             {!diagnosis ? (
               <div
                 style={{
-                  background: "#ffffff",
+                  background: darkMode ? "#111827" : "#FFFFFF",
                   border: "1px solid #e2e8f0",
                   borderRadius: "20px",
                   padding: "40px",
@@ -4648,7 +4648,7 @@ padding: isMobile ? "16px 12px" : "32px",
                     border: "none",
                     background: busy
                       ? "#94a3b8"
-                      : "#2563eb",
+                      : "#047857",
                     color: "#ffffff",
                     padding: "14px 22px",
                     borderRadius: "10px",
@@ -4668,7 +4668,7 @@ padding: isMobile ? "16px 12px" : "32px",
                 {/* RINGKASAN */}
                 <div
                   style={{
-                    background: "#ffffff",
+                    background: darkMode ? "#111827" : "#FFFFFF",
                     border: "1px solid #e2e8f0",
                     borderRadius: "20px",
                     padding: "28px",
@@ -4716,9 +4716,9 @@ padding: isMobile ? "16px 12px" : "32px",
                     <div
                       style={{
                         marginTop: "20px",
-                        background: darkMode ? "#422006" : "#fff7ed",
+                        background: darkMode ? "#422006" : "#fffbeb",
                         border:
-                          darkMode ? "1px solid #9A3412" : "1px solid #fed7aa",
+                          darkMode ? "1px solid #9A3412" : "1px solid #fde68a",
                         padding: "18px",
                         borderRadius: "12px"
                       }}
@@ -4749,7 +4749,7 @@ padding: isMobile ? "16px 12px" : "32px",
                   diagnosis.strengths.length > 0 && (
                     <div
                       style={{
-                        background: "#ffffff",
+                        background: darkMode ? "#111827" : "#FFFFFF",
                         border:
                           "1px solid #e2e8f0",
                         borderRadius:
@@ -4778,9 +4778,9 @@ padding: isMobile ? "16px 12px" : "32px",
                               key={index}
                               style={{
                                 background:
-                                  "#f0fdf4",
+                                  "#ecfdf5",
                                 border:
-                                  "1px solid #dcfce7",
+                                  "1px solid #a7f3d0",
                                 padding:
                                   "16px",
                                 borderRadius:
@@ -4820,7 +4820,7 @@ padding: isMobile ? "16px 12px" : "32px",
                   diagnosis.problems.length > 0 && (
                     <div
                       style={{
-                        background: "#ffffff",
+                        background: darkMode ? "#111827" : "#FFFFFF",
                         border:
                           "1px solid #e2e8f0",
                         borderRadius:
@@ -4849,9 +4849,9 @@ padding: isMobile ? "16px 12px" : "32px",
                               key={index}
                               style={{
                                 border:
-                                  darkMode ? "1px solid #7F1D1D" : "1px solid #fecaca",
+                                  darkMode ? "1px solid #7F1D1D" : "1px solid #fda4af",
                                 background:
-                                  darkMode ? "#3B1212" : "#fef2f2",
+                                  darkMode ? "#3B1212" : "#fff1f2",
                                 padding:
                                   "18px",
                                 borderRadius:
@@ -4942,7 +4942,7 @@ padding: isMobile ? "16px 12px" : "32px",
                   diagnosis.opportunities.length > 0 && (
                     <div
                       style={{
-                        background: "#ffffff",
+                        background: darkMode ? "#111827" : "#FFFFFF",
                         border:
                           "1px solid #e2e8f0",
                         borderRadius:
@@ -4971,9 +4971,9 @@ padding: isMobile ? "16px 12px" : "32px",
                               key={index}
                               style={{
                                 border:
-                                  darkMode ? "1px solid #1D4ED8" : "1px solid #bfdbfe",
+                                  darkMode ? "1px solid #065f46" : "1px solid #a7f3d0",
                                 background:
-                                  darkMode ? "#172554" : "#eff6ff",
+                                  darkMode ? "#172033" : "#ecfdf5",
                                 padding:
                                   "16px",
                                 borderRadius:
@@ -5007,7 +5007,7 @@ padding: isMobile ? "16px 12px" : "32px",
                                     fontSize:
                                       "13px",
                                     color:
-                                      "#2563eb"
+                                      "#047857"
                                   }}
                                 >
                                   Potensi:{" "}
@@ -5029,7 +5029,7 @@ padding: isMobile ? "16px 12px" : "32px",
                   diagnosis.recommendations.length > 0 && (
                     <div
                       style={{
-                        background: "#ffffff",
+                        background: darkMode ? "#111827" : "#FFFFFF",
                         border:
                           "1px solid #e2e8f0",
                         borderRadius:
@@ -5081,9 +5081,9 @@ padding: isMobile ? "16px 12px" : "32px",
                                     borderRadius:
                                       "50%",
                                     background:
-                                      "#eff6ff",
+                                      "#ecfdf5",
                                     color:
-                                      "#2563eb",
+                                      "#047857",
                                     display:
                                       "flex",
                                     alignItems:
@@ -5153,9 +5153,9 @@ padding: isMobile ? "16px 12px" : "32px",
                 {diagnosis.nextStep && (
                   <div
                     style={{
-                      background: "#eff6ff",
+                      background: "#ecfdf5",
                       border:
-                        "1px solid #bfdbfe",
+                        "1px solid #a7f3d0",
                       borderRadius:
                         "16px",
                       padding: "20px",
@@ -5226,7 +5226,7 @@ padding: isMobile ? "16px 12px" : "32px",
                       background:
                         busy
                           ? "#94a3b8"
-                          : "#2563eb",
+                          : "#047857",
                       color: "#ffffff",
                       padding:
                         "12px 18px",
@@ -5256,7 +5256,7 @@ padding: isMobile ? "16px 12px" : "32px",
     {!marketData && !marketLoading && !marketError && (
       <div
         style={{
-          background: "#ffffff",
+          background: darkMode ? "#111827" : "#FFFFFF",
           border: "1px solid #e2e8f0",
           borderRadius: "22px",
           padding: "44px 36px",
@@ -5281,7 +5281,7 @@ padding: isMobile ? "16px 12px" : "32px",
           onClick={runMarketInsight}
           style={{
             border: "none",
-            background: "#2563eb",
+            background: "#047857",
             color: "#ffffff",
             padding: "14px 24px",
             borderRadius: "11px",
@@ -5306,8 +5306,8 @@ padding: isMobile ? "16px 12px" : "32px",
     {marketLoading && (
       <div
         style={{
-          background: "#eff6ff",
-          border: "1px solid #bfdbfe",
+          background: "#ecfdf5",
+          border: "1px solid #a7f3d0",
           borderRadius: "22px",
           padding: "44px",
           textAlign: "center"
@@ -5324,17 +5324,17 @@ padding: isMobile ? "16px 12px" : "32px",
     {!marketLoading && marketError && (
       <div
         style={{
-          background: "#fef2f2",
-          border: "1px solid #fecaca",
+          background: "#fff1f2",
+          border: "1px solid #fda4af",
           borderRadius: "20px",
           padding: "28px"
         }}
       >
-        <h3 style={{ marginTop: 0, color: "#991b1b" }}>Perspektif Bisnis belum dapat diperbarui</h3>
-        <p style={{ color: "#991b1b", lineHeight: "1.6" }}>{marketError}</p>
+        <h3 style={{ marginTop: 0, color: "#9f1239" }}>Perspektif Bisnis belum dapat diperbarui</h3>
+        <p style={{ color: "#9f1239", lineHeight: "1.6" }}>{marketError}</p>
         <button
           onClick={runMarketInsight}
-          style={{ border: "none", background: "#991b1b", color: "#ffffff", padding: "11px 18px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}
+          style={{ border: "none", background: "#9f1239", color: "#ffffff", padding: "11px 18px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}
         >
           Coba Lagi
         </button>
@@ -5354,7 +5354,7 @@ padding: isMobile ? "16px 12px" : "32px",
           }}
         >
           <div>
-            <div style={{ fontSize: "12px", fontWeight: "800", color: "#2563eb", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "5px" }}>
+            <div style={{ fontSize: "12px", fontWeight: "800", color: "#047857", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "5px" }}>
               Business Intelligence
             </div>
             <h3 style={{ margin: 0, fontSize: "24px" }}>⚖ Perspektif Bisnis</h3>
@@ -5367,7 +5367,7 @@ padding: isMobile ? "16px 12px" : "32px",
             disabled={marketLoading}
             style={{
               border: "1px solid #cbd5e1",
-              background: "#ffffff",
+              background: darkMode ? "#111827" : "#FFFFFF",
               color: "#334155",
               padding: "10px 16px",
               borderRadius: "10px",
@@ -5381,15 +5381,15 @@ padding: isMobile ? "16px 12px" : "32px",
 
         {marketData.analysis && (
           <div style={{ display: "grid", gap: "14px", marginBottom: "22px" }}>
-            <div style={{ background: "#ffffff", border: "1px solid #dbeafe", borderRadius: "18px", padding: "22px", boxShadow: "0 8px 24px rgba(37, 99, 235, 0.06)" }}>
-              <div style={{ fontSize: "12px", fontWeight: "800", color: "#2563eb", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px" }}>🎯 Perspektif Utama</div>
+            <div style={{ background: darkMode ? "#111827" : "#FFFFFF", border: "1px solid #d1fae5", borderRadius: "18px", padding: "22px", boxShadow: "0 8px 24px rgba(37, 99, 235, 0.06)" }}>
+              <div style={{ fontSize: "12px", fontWeight: "800", color: "#047857", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px" }}>🎯 Perspektif Utama</div>
               <p style={{ margin: 0, fontSize: "16px", lineHeight: "1.75", color: darkMode ? "#f8fafc" : "#0f172a" }}>
                 {marketData.analysis.businessPerspective || marketData.analysis.summary || "Belum tersedia."}
               </p>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "14px" }}>
-              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "20px" }}>
+              <div style={{ background: darkMode ? "#111827" : "#FFFFFF", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "20px" }}>
                 <div style={{ fontWeight: "800", marginBottom: "8px" }}>📈 Kondisi Pasar</div>
                 <p style={{ margin: 0, color: darkMode ? "#cbd5e1" : "#64748b", lineHeight: "1.65" }}>{marketData.analysis.marketCondition || "Belum tersedia."}</p>
               </div>
@@ -5434,16 +5434,16 @@ padding: isMobile ? "16px 12px" : "32px",
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "14px" }}>
-              <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "16px", padding: "20px" }}>
-                <div style={{ fontWeight: "800", color: "#15803d", marginBottom: "10px" }}>💡 Peluang</div>
+              <div style={{ background: "#ecfdf5", border: "1px solid #86efac", borderRadius: "16px", padding: "20px" }}>
+                <div style={{ fontWeight: "800", color: "#047857", marginBottom: "10px" }}>💡 Peluang</div>
                 {Array.isArray(marketData.analysis.opportunities) && marketData.analysis.opportunities.length > 0 ? (
                   <ul style={{ margin: 0, paddingLeft: "20px", lineHeight: "1.7" }}>
                     {marketData.analysis.opportunities.map((item, index) => <li key={index}>{item}</li>)}
                   </ul>
                 ) : <p style={{ margin: 0 }}>Belum tersedia.</p>}
               </div>
-              <div style={{ background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: "16px", padding: "20px" }}>
-                <div style={{ fontWeight: "800", color: "#c2410c", marginBottom: "10px" }}>⚠ Risiko Utama</div>
+              <div style={{ background: "#fffbeb", border: "1px solid #fde68a", borderRadius: "16px", padding: "20px" }}>
+                <div style={{ fontWeight: "800", color: "#b45309", marginBottom: "10px" }}>⚠ Risiko Utama</div>
                 {Array.isArray(marketData.analysis.risks) && marketData.analysis.risks.length > 0 ? (
                   <ul style={{ margin: 0, paddingLeft: "20px", lineHeight: "1.7" }}>
                     {marketData.analysis.risks.map((item, index) => <li key={index}>{item}</li>)}
@@ -5452,7 +5452,7 @@ padding: isMobile ? "16px 12px" : "32px",
               </div>
             </div>
 
-            <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "18px", padding: "22px" }}>
+            <div style={{ background: darkMode ? "#0B1120" : "#F8FAFC", border: "1px solid #e2e8f0", borderRadius: "18px", padding: "22px" }}>
               <div style={{ fontWeight: "800", marginBottom: "8px" }}>🚀 Implikasi Strategis</div>
               <p style={{ margin: 0, color: darkMode ? "#e2e8f0" : "#334155", lineHeight: "1.75" }}>
                 {marketData.analysis.strategicImplication || "Belum tersedia."}
@@ -5465,12 +5465,12 @@ padding: isMobile ? "16px 12px" : "32px",
             </div>
 
             {marketData.analysis.scenarios && (
-              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "18px", padding: "22px" }}>
+              <div style={{ background: darkMode ? "#111827" : "#FFFFFF", border: "1px solid #e2e8f0", borderRadius: "18px", padding: "22px" }}>
                 <div style={{ fontWeight: "800", marginBottom: "14px" }}>🧭 Skenario Bisnis</div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "12px" }}>
-                  <div style={{ padding: "15px", borderRadius: "12px", background: darkMode ? "#064E3B" : "#f0fdf4", color: darkMode ? "#F0FDF4" : "#0F172A" }}><strong style={{ color: darkMode ? "#F0FDF4" : "#0F172A" }}>Optimistis</strong><p style={{ margin: "7px 0 0", lineHeight: "1.6", color: darkMode ? "#D1FAE5" : "#334155" }}>{marketData.analysis.scenarios.optimistic || "-"}</p></div>
-                  <div style={{ padding: "15px", borderRadius: "12px", background: darkMode ? "#1E3A8A" : "#eff6ff", color: darkMode ? "#EFF6FF" : "#0F172A" }}><strong style={{ color: darkMode ? "#EFF6FF" : "#0F172A" }}>Realistis</strong><p style={{ margin: "7px 0 0", lineHeight: "1.6", color: darkMode ? "#DBEAFE" : "#334155" }}>{marketData.analysis.scenarios.realistic || "-"}</p></div>
-                  <div style={{ padding: "15px", borderRadius: "12px", background: darkMode ? "#78350F" : "#fff7ed", color: darkMode ? "#FFF7ED" : "#0F172A" }}><strong style={{ color: darkMode ? "#FFF7ED" : "#0F172A" }}>Risiko</strong><p style={{ margin: "7px 0 0", lineHeight: "1.6", color: darkMode ? "#FFEDD5" : "#334155" }}>{marketData.analysis.scenarios.risk || "-"}</p></div>
+                  <div style={{ padding: "15px", borderRadius: "12px", background: darkMode ? "#064E3B" : "#ecfdf5", color: darkMode ? "#ecfdf5" : "#0F172A" }}><strong style={{ color: darkMode ? "#ecfdf5" : "#0F172A" }}>Optimistis</strong><p style={{ margin: "7px 0 0", lineHeight: "1.6", color: darkMode ? "#D1FAE5" : "#334155" }}>{marketData.analysis.scenarios.optimistic || "-"}</p></div>
+                  <div style={{ padding: "15px", borderRadius: "12px", background: darkMode ? "#12372f" : "#ecfdf5", color: darkMode ? "#ecfdf5" : "#0F172A" }}><strong style={{ color: darkMode ? "#ecfdf5" : "#0F172A" }}>Realistis</strong><p style={{ margin: "7px 0 0", lineHeight: "1.6", color: darkMode ? "#d1fae5" : "#334155" }}>{marketData.analysis.scenarios.realistic || "-"}</p></div>
+                  <div style={{ padding: "15px", borderRadius: "12px", background: darkMode ? "#78350F" : "#fffbeb", color: darkMode ? "#fffbeb" : "#0F172A" }}><strong style={{ color: darkMode ? "#fffbeb" : "#0F172A" }}>Risiko</strong><p style={{ margin: "7px 0 0", lineHeight: "1.6", color: darkMode ? "#fef3c7" : "#334155" }}>{marketData.analysis.scenarios.risk || "-"}</p></div>
                 </div>
               </div>
             )}
@@ -5484,7 +5484,7 @@ padding: isMobile ? "16px 12px" : "32px",
         )}
 
         {/* SUMBER — bukti, bukan tampilan utama */}
-        <details style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "16px 18px" }}>
+        <details style={{ background: darkMode ? "#111827" : "#FFFFFF", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "16px 18px" }}>
           <summary style={{ cursor: "pointer", fontWeight: "800" }}>
             📚 Lihat sumber eksternal ({Array.isArray(marketData.sources) ? marketData.sources.length : 0})
           </summary>
@@ -5494,7 +5494,7 @@ padding: isMobile ? "16px 12px" : "32px",
                 <div key={item.url || index} style={{ background: darkMode ? "#111827" : "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "13px", padding: "16px" }}>
                   <h4 style={{ margin: "0 0 7px" }}>{item.title || "Informasi Terkini"}</h4>
                   {item.content && <p style={{ color: darkMode ? "#cbd5e1" : "#64748b", lineHeight: "1.65", margin: "0 0 10px" }}>{item.content}</p>}
-                  {item.url && <a href={item.url} target="_blank" rel="noreferrer" style={{ color: "#2563eb", fontWeight: "700", textDecoration: "none" }}>Buka sumber ↗</a>}
+                  {item.url && <a href={item.url} target="_blank" rel="noreferrer" style={{ color: "#047857", fontWeight: "700", textDecoration: "none" }}>Buka sumber ↗</a>}
                 </div>
               ))
             ) : (
@@ -5519,7 +5519,7 @@ padding: isMobile ? "16px 12px" : "32px",
           <div>
             <div
               style={{
-                background: "#ffffff",
+                background: darkMode ? "#111827" : "#FFFFFF",
                 border: "1px solid #e2e8f0",
                 borderRadius: "18px",
                 padding: "20px",
@@ -5575,8 +5575,8 @@ padding: isMobile ? "16px 12px" : "32px",
                       border: "1px solid #cbd5e1",
                       borderRadius: "10px",
                       padding: "10px 12px",
-                      background: "#ffffff",
-                      color: "#0f172a"
+                      background: darkMode ? "#111827" : "#FFFFFF",
+                      color: darkMode ? "#F8FAFC" : "#0F172A"
                     }}
                   />
                 </label>
@@ -5604,15 +5604,15 @@ padding: isMobile ? "16px 12px" : "32px",
                     style={{
                       border:
                         financeView === value
-                          ? "1px solid #2563eb"
+                          ? "1px solid #047857"
                           : "1px solid #e2e8f0",
                       background:
                         financeView === value
-                          ? "#eff6ff"
+                          ? "#ecfdf5"
                           : "#ffffff",
                       color:
                         financeView === value
-                          ? "#2563eb"
+                          ? "#047857"
                           : "#475569",
                       padding: "10px 14px",
                       borderRadius: "10px",
@@ -5631,9 +5631,9 @@ padding: isMobile ? "16px 12px" : "32px",
             {financeMessage && (
               <div
                 style={{
-                  background: "#f0fdf4",
-                  border: "1px solid #bbf7d0",
-                  color: "#166534",
+                  background: "#ecfdf5",
+                  border: "1px solid #86efac",
+                  color: "#065f46",
                   borderRadius: "12px",
                   padding: "12px 14px",
                   marginBottom: "18px",
@@ -5684,7 +5684,7 @@ padding: isMobile ? "16px 12px" : "32px",
                     <article
                       key={label}
                       style={{
-                        background: "#ffffff",
+                        background: darkMode ? "#111827" : "#FFFFFF",
                         border: "1px solid #e2e8f0",
                         borderRadius: "16px",
                         padding: "20px"
@@ -5716,8 +5716,8 @@ padding: isMobile ? "16px 12px" : "32px",
                             change === null
                               ? "#64748b"
                               : change >= 0
-                              ? "#16a34a"
-                              : "#dc2626",
+                              ? "#059669"
+                              : "#e11d48",
                           fontSize: "13px",
                           marginTop: "6px"
                         }}
@@ -5733,7 +5733,7 @@ padding: isMobile ? "16px 12px" : "32px",
                 <section
                   style={{
                     marginTop: "18px",
-                    background: "#ffffff",
+                    background: darkMode ? "#111827" : "#FFFFFF",
                     border: "1px solid #e2e8f0",
                     borderRadius: "18px",
                     padding: "22px"
@@ -5761,7 +5761,7 @@ padding: isMobile ? "16px 12px" : "32px",
                 <section
                   id="finance-transaction-form"
                   style={{
-                    background: "#ffffff",
+                    background: darkMode ? "#111827" : "#FFFFFF",
                     border: "1px solid #e2e8f0",
                     borderRadius: "18px",
                     padding: "22px",
@@ -5848,7 +5848,7 @@ padding: isMobile ? "16px 12px" : "32px",
                           padding: "12px",
                           border: "1px solid #cbd5e1",
                           borderRadius: "10px",
-                          background: "#ffffff"
+                          background: darkMode ? "#111827" : "#FFFFFF"
                         }}
                       >
                         {financeTypes.map((item) => (
@@ -5879,7 +5879,7 @@ padding: isMobile ? "16px 12px" : "32px",
                           padding: "12px",
                           border: "1px solid #cbd5e1",
                           borderRadius: "10px",
-                          background: "#ffffff"
+                          background: darkMode ? "#111827" : "#FFFFFF"
                         }}
                       >
                         {financeAccounts.map((item) => (
@@ -5948,7 +5948,7 @@ padding: isMobile ? "16px 12px" : "32px",
                               width: "auto",
                               padding: "10px 14px",
                               border: "1px solid #cbd5e1",
-                              background: "#ffffff",
+                              background: darkMode ? "#111827" : "#FFFFFF",
                               borderRadius: "10px",
                               cursor: "pointer",
                               whiteSpace: "nowrap"
@@ -5964,7 +5964,7 @@ padding: isMobile ? "16px 12px" : "32px",
 
                 <section
                   style={{
-                    background: "#ffffff",
+                    background: darkMode ? "#111827" : "#FFFFFF",
                     border: "1px solid #e2e8f0",
                     borderRadius: "18px",
                     padding: "22px"
@@ -6086,8 +6086,8 @@ padding: isMobile ? "16px 12px" : "32px",
                                       editFinanceTransaction(item)
                                     }
                                     style={{
-                                      color: "#1d4ed8",
-                                      background: "#eff6ff",
+                                      color: "#065f46",
+                                      background: "#ecfdf5",
                                       padding: "8px 10px",
                                       borderRadius: "8px",
                                       fontSize: "12px"
@@ -6104,7 +6104,7 @@ padding: isMobile ? "16px 12px" : "32px",
                                       )
                                     }
                                     style={{
-                                      color: "#dc2626",
+                                      color: "#e11d48",
                                       background: "#fff1f2",
                                       padding: "8px 10px",
                                       borderRadius: "8px",
@@ -6128,7 +6128,7 @@ padding: isMobile ? "16px 12px" : "32px",
             {financeView === "profit" && (
               <section
                 style={{
-                  background: "#ffffff",
+                  background: darkMode ? "#111827" : "#FFFFFF",
                   border: "1px solid #e2e8f0",
                   borderRadius: "18px",
                   padding: "22px"
@@ -6171,7 +6171,7 @@ padding: isMobile ? "16px 12px" : "32px",
             {financeView === "cashflow" && (
               <section
                 style={{
-                  background: "#ffffff",
+                  background: darkMode ? "#111827" : "#FFFFFF",
                   border: "1px solid #e2e8f0",
                   borderRadius: "18px",
                   padding: "22px"
@@ -6209,7 +6209,7 @@ padding: isMobile ? "16px 12px" : "32px",
             {financeView === "balance" && (
               <section
                 style={{
-                  background: "#ffffff",
+                  background: darkMode ? "#111827" : "#FFFFFF",
                   border: "1px solid #e2e8f0",
                   borderRadius: "18px",
                   padding: "22px"
@@ -6323,8 +6323,8 @@ padding: isMobile ? "16px 12px" : "32px",
                           financeCurrentTotals.totalEquity
                         )
                       ) < 1
-                        ? "#f0fdf4"
-                        : "#fff7ed",
+                        ? "#ecfdf5"
+                        : "#fffbeb",
                     color:
                       Math.abs(
                         financeCurrentTotals.totalAssets -
@@ -6333,7 +6333,7 @@ padding: isMobile ? "16px 12px" : "32px",
                           financeCurrentTotals.totalEquity
                         )
                       ) < 1
-                        ? "#166534"
+                        ? "#065f46"
                         : "#9a3412",
                     fontSize: "13px"
                   }}
@@ -6362,7 +6362,7 @@ padding: isMobile ? "16px 12px" : "32px",
             {!autopilotData ? (
               <div
                 style={{
-                  background: "#ffffff",
+                  background: darkMode ? "#111827" : "#FFFFFF",
                   border: "1px solid #e2e8f0",
                   borderRadius: "20px",
                   padding: "40px",
@@ -6407,7 +6407,7 @@ padding: isMobile ? "16px 12px" : "32px",
                     border: "none",
                     background: busy
                       ? "#94a3b8"
-                      : "#2563eb",
+                      : "#047857",
                     color: "#ffffff",
                     padding: "14px 22px",
                     borderRadius: "10px",
@@ -6427,7 +6427,7 @@ padding: isMobile ? "16px 12px" : "32px",
                 {/* RINGKASAN STRATEGI */}
                 <div
                   style={{
-                    background: "#ffffff",
+                    background: darkMode ? "#111827" : "#FFFFFF",
                     border: "1px solid #e2e8f0",
                     borderRadius: "20px",
                     padding: "28px",
@@ -6562,7 +6562,7 @@ padding: isMobile ? "16px 12px" : "32px",
                   autopilotData.plan7.length > 0 && (
                     <div
                       style={{
-                        background: "#ffffff",
+                        background: darkMode ? "#111827" : "#FFFFFF",
                         border:
                           "1px solid #e2e8f0",
                         borderRadius:
@@ -6616,9 +6616,9 @@ padding: isMobile ? "16px 12px" : "32px",
                                     borderRadius:
                                       "10px",
                                     background:
-                                      "#eff6ff",
+                                      "#ecfdf5",
                                     color:
-                                      "#2563eb",
+                                      "#047857",
                                     display:
                                       "flex",
                                     alignItems:
@@ -6693,7 +6693,7 @@ padding: isMobile ? "16px 12px" : "32px",
                   autopilotData.plan14.length > 0 && (
                     <div
                       style={{
-                        background: "#ffffff",
+                        background: darkMode ? "#111827" : "#FFFFFF",
                         border:
                           "1px solid #e2e8f0",
                         borderRadius:
@@ -6777,7 +6777,7 @@ padding: isMobile ? "16px 12px" : "32px",
                   autopilotData.plan30.length > 0 && (
                     <div
                       style={{
-                        background: "#ffffff",
+                        background: darkMode ? "#111827" : "#FFFFFF",
                         border:
                           "1px solid #e2e8f0",
                         borderRadius:
@@ -6861,7 +6861,7 @@ padding: isMobile ? "16px 12px" : "32px",
                   autopilotData.plan.length > 0 && (
                     <div
                       style={{
-                        background: "#ffffff",
+                        background: darkMode ? "#111827" : "#FFFFFF",
                         border:
                           "1px solid #e2e8f0",
                         borderRadius:
@@ -6909,7 +6909,7 @@ padding: isMobile ? "16px 12px" : "32px",
                                   borderRadius:
                                     "50%",
                                   background:
-                                    "#2563eb",
+                                    "#047857",
                                   color:
                                     "#ffffff",
                                   display:
@@ -6959,9 +6959,9 @@ padding: isMobile ? "16px 12px" : "32px",
                 {autopilotData.warning && (
                   <div
                     style={{
-                      background: "#fff7ed",
+                      background: "#fffbeb",
                       border:
-                        "1px solid #fed7aa",
+                        "1px solid #fde68a",
                       borderRadius:
                         "16px",
                       padding: "20px",
@@ -6989,9 +6989,9 @@ padding: isMobile ? "16px 12px" : "32px",
                 {autopilotData.nextStep && (
                   <div
                     style={{
-                      background: "#eff6ff",
+                      background: "#ecfdf5",
                       border:
-                        "1px solid #bfdbfe",
+                        "1px solid #a7f3d0",
                       borderRadius:
                         "16px",
                       padding: "20px",
@@ -7057,7 +7057,7 @@ padding: isMobile ? "16px 12px" : "32px",
                     style={{
                       border: "none",
                       background:
-                        "#2563eb",
+                        "#047857",
                       color:
                         "#ffffff",
                       padding:
@@ -7111,52 +7111,52 @@ padding: isMobile ? "16px 12px" : "32px",
         }
 
         /* Semantic cards: keep their meaning, but make them readable in dark mode. */
-        .zenai-dark [style*="#f0fdf4"],
+        .zenai-dark [style*="#ecfdf5"],
         .zenai-dark [style*="rgb(240, 253, 244)"] {
           background: #0B3B2E !important;
           color: #D1FAE5 !important;
-          border-color: #166534 !important;
+          border-color: #065f46 !important;
         }
 
-        .zenai-dark [style*="#fef2f2"],
+        .zenai-dark [style*="#fff1f2"],
         .zenai-dark [style*="rgb(254, 242, 242)"] {
           background: #3B1212 !important;
-          color: #FECACA !important;
+          color: #fda4af !important;
           border-color: #7F1D1D !important;
         }
 
-        .zenai-dark [style*="#fff7ed"],
+        .zenai-dark [style*="#fffbeb"],
         .zenai-dark [style*="rgb(255, 247, 237)"] {
           background: #422006 !important;
-          color: #FFEDD5 !important;
+          color: #fef3c7 !important;
           border-color: #9A3412 !important;
         }
 
-        .zenai-dark [style*="#bbf7d0"],
+        .zenai-dark [style*="#86efac"],
         .zenai-dark [style*="rgb(187, 247, 208)"],
-        .zenai-dark [style*="#dcfce7"],
+        .zenai-dark [style*="#a7f3d0"],
         .zenai-dark [style*="rgb(220, 252, 231)"],
-        .zenai-dark [style*="#fecaca"],
+        .zenai-dark [style*="#fda4af"],
         .zenai-dark [style*="rgb(254, 202, 202)"],
-        .zenai-dark [style*="#fed7aa"],
+        .zenai-dark [style*="#fde68a"],
         .zenai-dark [style*="rgb(254, 215, 170)"] {
           border-color: #475569 !important;
         }
 
         /* Explicit readable text inside semantic cards. */
-        .zenai-dark [style*="#f0fdf4"] p,
+        .zenai-dark [style*="#ecfdf5"] p,
         .zenai-dark [style*="rgb(240, 253, 244)"] p {
           color: #D1FAE5 !important;
         }
 
-        .zenai-dark [style*="#fef2f2"] p,
+        .zenai-dark [style*="#fff1f2"] p,
         .zenai-dark [style*="rgb(254, 242, 242)"] p {
-          color: #FECACA !important;
+          color: #fda4af !important;
         }
 
-        .zenai-dark [style*="#fff7ed"] p,
+        .zenai-dark [style*="#fffbeb"] p,
         .zenai-dark [style*="rgb(255, 247, 237)"] p {
-          color: #FFEDD5 !important;
+          color: #fef3c7 !important;
         }
 
         /* Dark content canvas — prevents white strips around page sections. */
@@ -7181,9 +7181,9 @@ padding: isMobile ? "16px 12px" : "32px",
           background: #172033 !important;
         }
 
-        .zenai-dark [style*="#eff6ff"],
+        .zenai-dark [style*="#ecfdf5"],
         .zenai-dark [style*="rgb(239, 246, 255)"] {
-          background: #172554 !important;
+          background: #172033 !important;
         }
 
         .zenai-dark [style*="#0f172a"],
