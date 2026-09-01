@@ -5396,7 +5396,7 @@ padding: isMobile ? "16px 12px" : "32px",
               <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "20px" }}>
                 <div style={{ fontWeight: "800", marginBottom: "8px" }}>📊 Sinyal Permintaan</div>
                 <p style={{ margin: "0 0 6px", fontWeight: "800" }}>{marketData.analysis.demandSignal?.status || "Tidak pasti"}</p>
-                <p style={{ margin: 0, color: darkMode ? "#cbd5e1" : "#64748b", lineHeight: "1.65" }}>{marketData.analysis.demandSignal?.reason || "Belum tersedia."}</p>
+                <p style={{ margin: 0, color: darkMode ? "#cbd5e1" : "#E2E8F0", lineHeight: "1.65" }}>{marketData.analysis.demandSignal?.reason || "Belum tersedia."}</p>
               </div>
             </div>
 
