@@ -2590,9 +2590,7 @@ padding: isMobile ? "16px 12px" : "32px",
         style={{
           width: "100%",
           minHeight: "43px",
-          border: tab === key
-            ? `1px solid ${darkMode ? "#047857" : "#A7F3D0"}`
-            : `1px solid ${darkMode ? "#334155" : "#e8edf3"}`,
+          border: tab === key ? "1px solid #bfdbfe" : "1px solid #e8edf3",
           padding: "10px 12px",
           borderRadius: "10px",
           cursor: "pointer",
@@ -2601,16 +2599,10 @@ padding: isMobile ? "16px 12px" : "32px",
           justifyContent: sidebarOpen ? "flex-start" : "center",
           gap: sidebarOpen ? "9px" : "0",
           textAlign: sidebarOpen ? "left" : "center",
-          background: tab === key
-            ? (darkMode ? "#12372F" : "#ECFDF5")
-            : (darkMode ? "#111827" : "#ffffff"),
-          color: tab === key
-            ? (darkMode ? "#34D399" : "#047857")
-            : (darkMode ? "#E5E7EB" : "#475569"),
+          background: tab === key ? (key === "health" ? "#f0fdf4" : "#eff6ff") : "#ffffff",
+          color: tab === key ? (key === "health" ? "#15803d" : "#2563eb") : "#475569",
           fontWeight: tab === key ? "700" : "500",
-          boxShadow: tab === key
-            ? (darkMode ? "0 3px 12px rgba(16, 185, 129, 0.12)" : "0 3px 10px rgba(16, 185, 129, 0.08)")
-            : "0 1px 2px rgba(15, 23, 42, 0.03)",
+          boxShadow: tab === key ? "0 3px 10px rgba(37, 99, 235, 0.08)" : "0 1px 2px rgba(15, 23, 42, 0.03)",
           fontSize: "13px",
           whiteSpace: "nowrap",
           overflow: "hidden",
@@ -2651,9 +2643,9 @@ padding: isMobile ? "16px 12px" : "32px",
           style={{
             width: "100%",
             minHeight: "41px",
-            border: `1px solid ${darkMode ? "#7F1D1D" : "#fecaca"}`,
-            background: darkMode ? "#2A1111" : "#ffffff",
-            color: darkMode ? "#FCA5A5" : "#dc2626",
+            border: "1px solid #fecaca",
+            background: "#ffffff",
+            color: "#dc2626",
             padding: "9px 11px",
             borderRadius: "10px",
             cursor: "pointer",
@@ -2678,9 +2670,9 @@ padding: isMobile ? "16px 12px" : "32px",
           style={{
             width: "100%",
             minHeight: "41px",
-            border: `1px solid ${darkMode ? "#7F1D1D" : "#fee2e2"}`,
-            background: darkMode ? "#3B1212" : "#fef2f2",
-            color: darkMode ? "#FCA5A5" : "#991b1b",
+            border: "1px solid #fee2e2",
+            background: "#fef2f2",
+            color: "#991b1b",
             padding: "9px 11px",
             borderRadius: "10px",
             cursor: "pointer",
@@ -2709,9 +2701,9 @@ padding: isMobile ? "16px 12px" : "32px",
         style={{
           width: "100%",
           minHeight: "41px",
-          border: `1px solid ${darkMode ? "#334155" : "#cbd5e1"}`,
-          background: darkMode ? "#111827" : "#ffffff",
-          color: darkMode ? "#E5E7EB" : "#334155",
+          border: "1px solid #cbd5e1",
+          background: "#ffffff",
+          color: "#334155",
           padding: "9px 11px",
           borderRadius: "10px",
           cursor: "pointer",
@@ -4282,7 +4274,7 @@ padding: isMobile ? "16px 12px" : "32px",
                                   margin:
                                     "8px 0 0",
                                   color:
-                                    darkMode ? "#FECACA" : "#475569",
+                                    darkMode ? "#DBEAFE" : "#475569",
                                   lineHeight:
                                     "1.6"
                                 }}
@@ -4724,9 +4716,9 @@ padding: isMobile ? "16px 12px" : "32px",
                     <div
                       style={{
                         marginTop: "20px",
-                        background: "#fff7ed",
+                        background: darkMode ? "#422006" : "#fff7ed",
                         border:
-                          "1px solid #fed7aa",
+                          darkMode ? "1px solid #9A3412" : "1px solid #fed7aa",
                         padding: "18px",
                         borderRadius: "12px"
                       }}
@@ -4805,7 +4797,7 @@ padding: isMobile ? "16px 12px" : "32px",
                                   margin:
                                     "8px 0 0",
                                   color:
-                                    darkMode ? "#DBEAFE" : "#475569",
+                                    "#475569",
                                   lineHeight:
                                     "1.6"
                                 }}
@@ -5289,7 +5281,7 @@ padding: isMobile ? "16px 12px" : "32px",
           onClick={runMarketInsight}
           style={{
             border: "none",
-            background: darkMode ? "#059669" : "#2563eb",
+            background: "#2563eb",
             color: "#ffffff",
             padding: "14px 24px",
             borderRadius: "11px",
@@ -5314,8 +5306,8 @@ padding: isMobile ? "16px 12px" : "32px",
     {marketLoading && (
       <div
         style={{
-          background: darkMode ? "#172554" : "#eff6ff",
-          border: `1px solid ${darkMode ? "#1D4ED8" : "#bfdbfe"}`,
+          background: "#eff6ff",
+          border: "1px solid #bfdbfe",
           borderRadius: "22px",
           padding: "44px",
           textAlign: "center"
@@ -5332,14 +5324,14 @@ padding: isMobile ? "16px 12px" : "32px",
     {!marketLoading && marketError && (
       <div
         style={{
-          background: darkMode ? "#3B1212" : "#fef2f2",
-          border: `1px solid ${darkMode ? "#7F1D1D" : "#fecaca"}`,
+          background: "#fef2f2",
+          border: "1px solid #fecaca",
           borderRadius: "20px",
           padding: "28px"
         }}
       >
-        <h3 style={{ marginTop: 0, color: darkMode ? "#FCA5A5" : "#991b1b" }}>Perspektif Bisnis belum dapat diperbarui</h3>
-        <p style={{ color: darkMode ? "#FECACA" : "#991b1b", lineHeight: "1.6" }}>{marketError}</p>
+        <h3 style={{ marginTop: 0, color: "#991b1b" }}>Perspektif Bisnis belum dapat diperbarui</h3>
+        <p style={{ color: "#991b1b", lineHeight: "1.6" }}>{marketError}</p>
         <button
           onClick={runMarketInsight}
           style={{ border: "none", background: "#991b1b", color: "#ffffff", padding: "11px 18px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}
@@ -5362,7 +5354,7 @@ padding: isMobile ? "16px 12px" : "32px",
           }}
         >
           <div>
-            <div style={{ fontSize: "12px", fontWeight: "800", color: darkMode ? "#60A5FA" : "#2563eb", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "5px" }}>
+            <div style={{ fontSize: "12px", fontWeight: "800", color: "#2563eb", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "5px" }}>
               Business Intelligence
             </div>
             <h3 style={{ margin: 0, fontSize: "24px" }}>⚖ Perspektif Bisnis</h3>
@@ -5375,8 +5367,8 @@ padding: isMobile ? "16px 12px" : "32px",
             disabled={marketLoading}
             style={{
               border: "1px solid #cbd5e1",
-              background: darkMode ? "#1F2937" : "#ffffff",
-              color: darkMode ? "#F8FAFC" : "#334155",
+              background: "#ffffff",
+              color: "#334155",
               padding: "10px 16px",
               borderRadius: "10px",
               cursor: marketLoading ? "not-allowed" : "pointer",
@@ -5389,7 +5381,7 @@ padding: isMobile ? "16px 12px" : "32px",
 
         {marketData.analysis && (
           <div style={{ display: "grid", gap: "14px", marginBottom: "22px" }}>
-            <div style={{ background: darkMode ? "#111827" : "#ffffff", border: `1px solid ${darkMode ? "#334155" : "#dbeafe"}`, borderRadius: "18px", padding: "22px", boxShadow: "0 8px 24px rgba(37, 99, 235, 0.06)" }}>
+            <div style={{ background: "#ffffff", border: "1px solid #dbeafe", borderRadius: "18px", padding: "22px", boxShadow: "0 8px 24px rgba(37, 99, 235, 0.06)" }}>
               <div style={{ fontSize: "12px", fontWeight: "800", color: "#2563eb", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "8px" }}>🎯 Perspektif Utama</div>
               <p style={{ margin: 0, fontSize: "16px", lineHeight: "1.75", color: darkMode ? "#f8fafc" : "#0f172a" }}>
                 {marketData.analysis.businessPerspective || marketData.analysis.summary || "Belum tersedia."}
@@ -5397,11 +5389,11 @@ padding: isMobile ? "16px 12px" : "32px",
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "14px" }}>
-              <div style={{ background: darkMode ? "#172033" : "#ffffff", border: `1px solid ${darkMode ? "#334155" : "#e2e8f0"}`, borderRadius: "16px", padding: "20px" }}>
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "20px" }}>
                 <div style={{ fontWeight: "800", marginBottom: "8px" }}>📈 Kondisi Pasar</div>
                 <p style={{ margin: 0, color: darkMode ? "#cbd5e1" : "#64748b", lineHeight: "1.65" }}>{marketData.analysis.marketCondition || "Belum tersedia."}</p>
               </div>
-              <div style={{ background: darkMode ? "#172033" : "#ffffff", border: `1px solid ${darkMode ? "#334155" : "#e2e8f0"}`, borderRadius: "16px", padding: "20px" }}>
+              <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "20px" }}>
                 <div style={{ fontWeight: "800", marginBottom: "8px" }}>📊 Sinyal Permintaan</div>
                 <p style={{ margin: "0 0 6px", fontWeight: "800" }}>{marketData.analysis.demandSignal?.status || "Tidak pasti"}</p>
                 <p style={{ margin: 0, color: darkMode ? "#cbd5e1" : "#64748b", lineHeight: "1.65" }}>{marketData.analysis.demandSignal?.reason || "Belum tersedia."}</p>
@@ -5409,7 +5401,7 @@ padding: isMobile ? "16px 12px" : "32px",
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "14px" }}>
-              <div style={{ background: darkMode ? "#0B3B2E" : "#f0fdf4", border: `1px solid ${darkMode ? "#166534" : "#bbf7d0"}`, borderRadius: "16px", padding: "20px" }}>
+              <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "16px", padding: "20px" }}>
                 <div style={{ fontWeight: "800", color: "#15803d", marginBottom: "10px" }}>💡 Peluang</div>
                 {Array.isArray(marketData.analysis.opportunities) && marketData.analysis.opportunities.length > 0 ? (
                   <ul style={{ margin: 0, paddingLeft: "20px", lineHeight: "1.7" }}>
@@ -5417,7 +5409,7 @@ padding: isMobile ? "16px 12px" : "32px",
                   </ul>
                 ) : <p style={{ margin: 0 }}>Belum tersedia.</p>}
               </div>
-              <div style={{ background: darkMode ? "#422006" : "#fff7ed", border: `1px solid ${darkMode ? "#9A3412" : "#fed7aa"}`, borderRadius: "16px", padding: "20px" }}>
+              <div style={{ background: "#fff7ed", border: "1px solid #fed7aa", borderRadius: "16px", padding: "20px" }}>
                 <div style={{ fontWeight: "800", color: "#c2410c", marginBottom: "10px" }}>⚠ Risiko Utama</div>
                 {Array.isArray(marketData.analysis.risks) && marketData.analysis.risks.length > 0 ? (
                   <ul style={{ margin: 0, paddingLeft: "20px", lineHeight: "1.7" }}>
@@ -5427,7 +5419,7 @@ padding: isMobile ? "16px 12px" : "32px",
               </div>
             </div>
 
-            <div style={{ background: darkMode ? "#172033" : "#f8fafc", border: `1px solid ${darkMode ? "#334155" : "#e2e8f0"}`, borderRadius: "18px", padding: "22px" }}>
+            <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "18px", padding: "22px" }}>
               <div style={{ fontWeight: "800", marginBottom: "8px" }}>🚀 Implikasi Strategis</div>
               <p style={{ margin: 0, color: darkMode ? "#e2e8f0" : "#334155", lineHeight: "1.75" }}>
                 {marketData.analysis.strategicImplication || "Belum tersedia."}
@@ -5443,9 +5435,9 @@ padding: isMobile ? "16px 12px" : "32px",
               <div style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "18px", padding: "22px" }}>
                 <div style={{ fontWeight: "800", marginBottom: "14px" }}>🧭 Skenario Bisnis</div>
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "12px" }}>
-                  <div style={{ padding: "15px", borderRadius: "12px", background: darkMode ? "#0B3B2E" : "#f0fdf4", color: darkMode ? "#D1FAE5" : "#0F172A" }}><strong>Optimistis</strong><p style={{ margin: "7px 0 0", lineHeight: "1.6" }}>{marketData.analysis.scenarios.optimistic || "-"}</p></div>
-                  <div style={{ padding: "15px", borderRadius: "12px", background: darkMode ? "#172554" : "#eff6ff", color: darkMode ? "#DBEAFE" : "#0F172A" }}><strong>Realistis</strong><p style={{ margin: "7px 0 0", lineHeight: "1.6" }}>{marketData.analysis.scenarios.realistic || "-"}</p></div>
-                  <div style={{ padding: "15px", borderRadius: "12px", background: darkMode ? "#422006" : "#fff7ed", color: darkMode ? "#FFEDD5" : "#0F172A" }}><strong>Risiko</strong><p style={{ margin: "7px 0 0", lineHeight: "1.6" }}>{marketData.analysis.scenarios.risk || "-"}</p></div>
+                  <div style={{ padding: "15px", borderRadius: "12px", background: "#f0fdf4" }}><strong>Optimistis</strong><p style={{ margin: "7px 0 0", lineHeight: "1.6" }}>{marketData.analysis.scenarios.optimistic || "-"}</p></div>
+                  <div style={{ padding: "15px", borderRadius: "12px", background: "#eff6ff" }}><strong>Realistis</strong><p style={{ margin: "7px 0 0", lineHeight: "1.6" }}>{marketData.analysis.scenarios.realistic || "-"}</p></div>
+                  <div style={{ padding: "15px", borderRadius: "12px", background: "#fff7ed" }}><strong>Risiko</strong><p style={{ margin: "7px 0 0", lineHeight: "1.6" }}>{marketData.analysis.scenarios.risk || "-"}</p></div>
                 </div>
               </div>
             )}
@@ -5459,7 +5451,7 @@ padding: isMobile ? "16px 12px" : "32px",
         )}
 
         {/* SUMBER — bukti, bukan tampilan utama */}
-        <details style={{ background: darkMode ? "#172033" : "#ffffff", border: `1px solid ${darkMode ? "#334155" : "#e2e8f0"}`, borderRadius: "16px", padding: "16px 18px" }}>
+        <details style={{ background: "#ffffff", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "16px 18px" }}>
           <summary style={{ cursor: "pointer", fontWeight: "800" }}>
             📚 Lihat sumber eksternal ({Array.isArray(marketData.sources) ? marketData.sources.length : 0})
           </summary>
@@ -5579,16 +5571,16 @@ padding: isMobile ? "16px 12px" : "32px",
                     style={{
                       border:
                         financeView === value
-                          ? `1px solid ${darkMode ? "#047857" : "#A7F3D0"}`
-                          : `1px solid ${darkMode ? "#334155" : "#e2e8f0"}`,
+                          ? "1px solid #2563eb"
+                          : "1px solid #e2e8f0",
                       background:
                         financeView === value
-                          ? (darkMode ? "#12372F" : "#ECFDF5")
-                          : (darkMode ? "#111827" : "#ffffff"),
+                          ? "#eff6ff"
+                          : "#ffffff",
                       color:
                         financeView === value
-                          ? (darkMode ? "#34D399" : "#047857")
-                          : (darkMode ? "#E5E7EB" : "#475569"),
+                          ? "#2563eb"
+                          : "#475569",
                       padding: "10px 14px",
                       borderRadius: "10px",
                       fontWeight:
@@ -7083,6 +7075,60 @@ padding: isMobile ? "16px 12px" : "32px",
 
         .zenai-dark .zenai-page-header p {
           color: #cbd5e1 !important;
+        }
+
+        /* Semantic cards: keep their meaning, but make them readable in dark mode. */
+        .zenai-dark [style*="#f0fdf4"],
+        .zenai-dark [style*="rgb(240, 253, 244)"] {
+          background: #0B3B2E !important;
+          color: #D1FAE5 !important;
+          border-color: #166534 !important;
+        }
+
+        .zenai-dark [style*="#fef2f2"],
+        .zenai-dark [style*="rgb(254, 242, 242)"] {
+          background: #3B1212 !important;
+          color: #FECACA !important;
+          border-color: #7F1D1D !important;
+        }
+
+        .zenai-dark [style*="#fff7ed"],
+        .zenai-dark [style*="rgb(255, 247, 237)"] {
+          background: #422006 !important;
+          color: #FFEDD5 !important;
+          border-color: #9A3412 !important;
+        }
+
+        .zenai-dark [style*="#bbf7d0"],
+        .zenai-dark [style*="rgb(187, 247, 208)"],
+        .zenai-dark [style*="#dcfce7"],
+        .zenai-dark [style*="rgb(220, 252, 231)"],
+        .zenai-dark [style*="#fecaca"],
+        .zenai-dark [style*="rgb(254, 202, 202)"],
+        .zenai-dark [style*="#fed7aa"],
+        .zenai-dark [style*="rgb(254, 215, 170)"] {
+          border-color: #475569 !important;
+        }
+
+        /* Explicit readable text inside semantic cards. */
+        .zenai-dark [style*="#f0fdf4"] p,
+        .zenai-dark [style*="rgb(240, 253, 244)"] p {
+          color: #D1FAE5 !important;
+        }
+
+        .zenai-dark [style*="#fef2f2"] p,
+        .zenai-dark [style*="rgb(254, 242, 242)"] p {
+          color: #FECACA !important;
+        }
+
+        .zenai-dark [style*="#fff7ed"] p,
+        .zenai-dark [style*="rgb(255, 247, 237)"] p {
+          color: #FFEDD5 !important;
+        }
+
+        /* Dark content canvas — prevents white strips around page sections. */
+        .zenai-dark .zenai-content {
+          background: #0b1120 !important;
         }
 
         .zenai-dark [style*="#ffffff"],
