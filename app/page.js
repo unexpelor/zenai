@@ -7081,183 +7081,58 @@ padding: isMobile ? "16px 12px" : "32px",
             </section>
 
       <style>{`
-        .zenai-dark {
-          background: #0b1120 !important;
-          color: #f8fafc !important;
-          color-scheme: dark;
-        }
+.zenai-dark { background:#0B1120 !important; color:#F8FAFC !important; color-scheme:dark; }
+.zenai-dark .zenai-content { background:#0B1120 !important; color:#F8FAFC !important; }
+.zenai-dark .zenai-sidebar { background:#111827 !important; border-color:#334155 !important; }
+.zenai-dark h1,.zenai-dark h2,.zenai-dark h3,.zenai-dark h4,.zenai-dark h5,.zenai-dark h6 { color:#F8FAFC !important; }
+.zenai-dark strong { color:#F8FAFC !important; }
+.zenai-dark p,.zenai-dark span,.zenai-dark label { color:#CBD5E1; }
+.zenai-dark input,.zenai-dark textarea,.zenai-dark select { background:#0F172A !important; color:#F8FAFC !important; border-color:#475569 !important; color-scheme:dark; }
+.zenai-dark input::placeholder,.zenai-dark textarea::placeholder { color:#94A3B8 !important; }
+.zenai-dark option { background:#0F172A; color:#F8FAFC; }
 
-        .zenai-dark .zenai-content {
-          color: #f8fafc !important;
-        }
+/* Neutral surfaces */
+.zenai-dark [style*="#ffffff"],.zenai-dark [style*="#FFFFFF"] { background:#111827 !important; color:#F8FAFC !important; }
+.zenai-dark [style*="#f8fafc"],.zenai-dark [style*="#F8FAFC"] { background:#0F172A !important; }
+.zenai-dark [style*="#f1f5f9"],.zenai-dark [style*="#F1F5F9"] { background:#172033 !important; }
 
-        .zenai-dark .zenai-sidebar {
-          background: #111827 !important;
-          border-color: #334155 !important;
-        }
+/* Semantic surfaces: these rules come AFTER neutral rules so they cannot be overwritten. */
+.zenai-dark [style*="#ecfdf5"],.zenai-dark [style*="#ECFDF5"] { background:#0B3B2E !important; color:#D1FAE5 !important; border-color:#166534 !important; }
+.zenai-dark [style*="#ecfdf5"] p,.zenai-dark [style*="#ecfdf5"] span,.zenai-dark [style*="#ecfdf5"] label { color:#D1FAE5 !important; }
+.zenai-dark [style*="#fff1f2"],.zenai-dark [style*="#FFF1F2"] { background:#3B121D !important; color:#FFE4E6 !important; border-color:#9F1239 !important; }
+.zenai-dark [style*="#fff1f2"] p,.zenai-dark [style*="#fff1f2"] span,.zenai-dark [style*="#fff1f2"] label { color:#FECDD3 !important; }
+.zenai-dark [style*="#fffbeb"],.zenai-dark [style*="#FFFBEB"] { background:#422006 !important; color:#FEF3C7 !important; border-color:#B45309 !important; }
+.zenai-dark [style*="#fffbeb"] p,.zenai-dark [style*="#fffbeb"] span,.zenai-dark [style*="#fffbeb"] label { color:#FDE68A !important; }
 
-        .zenai-dark h1,
-        .zenai-dark h2,
-        .zenai-dark h3,
-        .zenai-dark h4,
-        .zenai-dark h5,
-        .zenai-dark h6,
-        .zenai-dark strong {
-          color: #f8fafc !important;
-        }
+/* Other common semantic light surfaces */
+.zenai-dark [style*="#fef2f2"],.zenai-dark [style*="#FEF2F2"] { background:#3B121D !important; color:#FFE4E6 !important; border-color:#9F1239 !important; }
+.zenai-dark [style*="#eff6ff"],.zenai-dark [style*="#EFF6FF"] { background:#172554 !important; color:#DBEAFE !important; border-color:#1D4ED8 !important; }
+.zenai-dark [style*="#f0fdf4"],.zenai-dark [style*="#F0FDF4"] { background:#0B3B2E !important; color:#D1FAE5 !important; border-color:#166534 !important; }
+.zenai-dark [style*="#fff7ed"],.zenai-dark [style*="#FFF7ED"] { background:#422006 !important; color:#FEF3C7 !important; border-color:#B45309 !important; }
+.zenai-dark [style*="#f0f9ff"],.zenai-dark [style*="#F0F9FF"] { background:#083344 !important; color:#CFFAFE !important; border-color:#0E7490 !important; }
 
-        .zenai-dark .zenai-page-header p {
-          color: #cbd5e1 !important;
-        }
+/* Semantic text colors */
+.zenai-dark [style*="#047857"],.zenai-dark [style*="#065f46"],.zenai-dark [style*="#064e3b"] { color:#34D399 !important; }
+.zenai-dark [style*="#e11d48"],.zenai-dark [style*="#be123c"],.zenai-dark [style*="#9f1239"] { color:#FB7185 !important; }
+.zenai-dark [style*="#d97706"],.zenai-dark [style*="#b45309"],.zenai-dark [style*="#a16207"] { color:#FBBF24 !important; }
+.zenai-dark [style*="#0891b2"],.zenai-dark [style*="#0e7490"] { color:#22D3EE !important; }
 
-        /* Semantic cards: keep their meaning, but make them readable in dark mode. */
-        .zenai-dark [style*="#ecfdf5"],
-        .zenai-dark [style*="rgb(240, 253, 244)"] {
-          background: #0B3B2E !important;
-          color: #D1FAE5 !important;
-          border-color: #065f46 !important;
-        }
+/* Borders */
+.zenai-dark [style*="#e2e8f0"],.zenai-dark [style*="#e8edf3"],.zenai-dark [style*="#cbd5e1"] { border-color:#334155 !important; }
 
-        .zenai-dark [style*="#fff1f2"],
-        .zenai-dark [style*="rgb(254, 242, 242)"] {
-          background: #3B1212 !important;
-          color: #fda4af !important;
-          border-color: #7F1D1D !important;
-        }
+/* Active sidebar: emerald, never royal blue */
+.zenai-dark .zenai-sidebar button { }
 
-        .zenai-dark [style*="#fffbeb"],
-        .zenai-dark [style*="rgb(255, 247, 237)"] {
-          background: #422006 !important;
-          color: #fef3c7 !important;
-          border-color: #9A3412 !important;
-        }
+/* Buttons remain readable */
+.zenai-dark button { color:#E5E7EB; }
+.zenai-dark button[style*="#047857"],.zenai-dark button[style*="#059669"] { color:#FFFFFF !important; }
 
-        .zenai-dark [style*="#86efac"],
-        .zenai-dark [style*="rgb(187, 247, 208)"],
-        .zenai-dark [style*="#a7f3d0"],
-        .zenai-dark [style*="rgb(220, 252, 231)"],
-        .zenai-dark [style*="#fda4af"],
-        .zenai-dark [style*="rgb(254, 202, 202)"],
-        .zenai-dark [style*="#fde68a"],
-        .zenai-dark [style*="rgb(254, 215, 170)"] {
-          border-color: #475569 !important;
-        }
-
-        /* Explicit readable text inside semantic cards. */
-        .zenai-dark [style*="#ecfdf5"] p,
-        .zenai-dark [style*="rgb(240, 253, 244)"] p {
-          color: #D1FAE5 !important;
-        }
-
-        .zenai-dark [style*="#fff1f2"] p,
-        .zenai-dark [style*="rgb(254, 242, 242)"] p {
-          color: #fda4af !important;
-        }
-
-        .zenai-dark [style*="#fffbeb"] p,
-        .zenai-dark [style*="rgb(255, 247, 237)"] p {
-          color: #fef3c7 !important;
-        }
-
-        /* Dark content canvas — prevents white strips around page sections. */
-        .zenai-dark .zenai-content {
-          background: #0b1120 !important;
-        }
-
-        .zenai-dark [style*="#ffffff"],
-        .zenai-dark [style*="#fff"],
-        .zenai-dark [style*="rgb(255, 255, 255)"] {
-          background: #111827 !important;
-          color: #f8fafc !important;
-        }
-
-        .zenai-dark [style*="#f8fafc"],
-        .zenai-dark [style*="rgb(248, 250, 252)"] {
-          background: #0b1120 !important;
-        }
-
-        .zenai-dark [style*="#f1f5f9"],
-        .zenai-dark [style*="rgb(241, 245, 249)"] {
-          background: #172033 !important;
-        }
-
-        .zenai-dark [style*="#ecfdf5"],
-        .zenai-dark [style*="rgb(239, 246, 255)"] {
-          background: #172033 !important;
-        }
-
-        .zenai-dark [style*="#0f172a"],
-        .zenai-dark [style*="rgb(15, 23, 42)"] {
-          color: #f8fafc !important;
-        }
-
-        .zenai-dark [style*="#334155"],
-        .zenai-dark [style*="rgb(51, 65, 85)"] {
-          color: #f1f5f9 !important;
-        }
-
-        .zenai-dark [style*="#475569"],
-        .zenai-dark [style*="rgb(71, 85, 105)"] {
-          color: #e2e8f0 !important;
-        }
-
-        .zenai-dark [style*="#64748b"],
-        .zenai-dark [style*="rgb(100, 116, 139)"] {
-          color: #cbd5e1 !important;
-        }
-
-        .zenai-dark [style*="#94a3b8"],
-        .zenai-dark [style*="rgb(148, 163, 184)"] {
-          color: #cbd5e1 !important;
-        }
-
-        .zenai-dark [style*="#e2e8f0"],
-        .zenai-dark [style*="rgb(226, 232, 240)"],
-        .zenai-dark [style*="#e8edf3"],
-        .zenai-dark [style*="#cbd5e1"],
-        .zenai-dark [style*="rgb(203, 213, 225)"] {
-          border-color: #334155 !important;
-        }
-
-        .zenai-dark input,
-        .zenai-dark textarea,
-        .zenai-dark select {
-          background: #0f172a !important;
-          color: #f8fafc !important;
-          border-color: #475569 !important;
-          color-scheme: dark;
-        }
-
-        .zenai-dark input::placeholder,
-        .zenai-dark textarea::placeholder {
-          color: #94a3b8 !important;
-        }
-
-        .zenai-dark option {
-          background: #0f172a;
-          color: #f8fafc;
-        }
-
-        @media (max-width: 768px) {
-          .zenai-app {
-            width: 100vw !important;
-            max-width: 100vw !important;
-            overflow-x: hidden !important;
-          }
-
-          .zenai-sidebar {
-            flex-shrink: 0 !important;
-            overflow: hidden !important;
-          }
-
-          .zenai-content {
-            min-width: 0 !important;
-            overflow-x: hidden !important;
-            margin-left: 0 !important;
-            width: 100% !important;
-          }
-        }
-      `}</style>
+@media (max-width:768px) {
+  .zenai-app { width:100vw !important; max-width:100vw !important; overflow-x:hidden !important; }
+  .zenai-sidebar { flex-shrink:0 !important; overflow:hidden !important; }
+  .zenai-content { min-width:0 !important; overflow-x:hidden !important; margin-left:0 !important; width:100% !important; }
+}
+`}</style>
 
     </main>
   );
