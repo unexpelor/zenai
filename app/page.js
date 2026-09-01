@@ -5127,28 +5127,28 @@ padding: isMobile ? "16px 12px" : "32px",
   <div
     style={{
       background: darkMode ? "#172554" : "#EFF6FF",
-      border:
-        `1px solid ${darkMode ? "#3B82F6" : "#BFDBFE"}`,
-      borderRadius:
-        "16px",
+      border: `1px solid ${
+        darkMode ? "#3B82F6" : "#BFDBFE"
+      }`,
+      borderRadius: "16px",
       padding: "20px",
       marginBottom: "24px"
     }}
   >
     <strong
-  style={{
-    color: darkMode ? "#93C5FD" : "#2563EB"
-  }}
->
-  💡 Langkah Berikutnya
-</strong>
+      style={{
+        display: "block",
+        color: darkMode ? "#93C5FD" : "#2563EB",
+        fontWeight: "800"
+      }}
+    >
+      💡 Langkah Berikutnya
+    </strong>
 
     <p
       style={{
-        margin:
-          "8px 0 0",
-        color:
-          darkMode ? "#DBEAFE" : "#334155",
+        margin: "8px 0 0",
+        color: darkMode ? "#DBEAFE" : "#334155",
         lineHeight: "1.6"
       }}
     >
