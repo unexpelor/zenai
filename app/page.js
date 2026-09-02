@@ -7268,10 +7268,16 @@ darkMode={darkMode}
 
   .zenai-content {
     min-width: 0 !important;
-    overflow-x: auto !important;
+    overflow-x: hidden !important;
     overflow-y: visible !important;
-    margin-left: 0 !important;
-    width: 100% !important;
+    margin-left: 64px !important;
+    width: calc(100% - 64px) !important;
+    box-sizing: border-box !important;
+  }
+
+  .zenai-sidebar.open ~ .zenai-content {
+    margin-left: 220px !important;
+    width: calc(100% - 220px) !important;
   }
 }
 `}</style>
