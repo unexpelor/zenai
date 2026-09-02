@@ -7130,9 +7130,11 @@ darkMode={darkMode}
                       marginBottom: "20px"
                     }}
                   >
-                    <strong>
-                      ⚠️ Hal yang Perlu Diwaspadai
-                    </strong>
+                    <strong style={{
+  color: darkMode ? "#FCD34D" : "#92400E"
+}}>
+  ⚠️ Hal yang Perlu Diwaspadai
+</strong>
 
                     <p
                       style={{
