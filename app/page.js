@@ -7083,9 +7083,8 @@ darkMode={darkMode}
                 {autopilotData.warning && (
                   <div
                     style={{
-                      background: "#FFFBEB",
-                      border:
-                        "1px solid #FDE68A",
+                      background: darkMode ? "#422006" : "#FFFBEB",
+border: darkMode ? "1px solid #B45309" : "1px solid #FDE68A",
                       borderRadius:
                         "16px",
                       padding: "20px",
