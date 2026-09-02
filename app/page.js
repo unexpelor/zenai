@@ -7118,18 +7118,16 @@ darkMode={darkMode}
 
 
                 {/* PERINGATAN */}
-                {autopilotData.warning && (
-                  <div
-                    style={{
-                      style={{
-  background: darkMode ? "#422006" : "#FFFBEB",
-  border: darkMode ? "1px solid #B45309" : "1px solid #FDE68A",
-                      borderRadius:
-                        "16px",
-                      padding: "20px",
-                      marginBottom: "20px"
-                    }}
-                  >
+{{autopilotData.warning && (
+  <div
+    style={{
+      background: darkMode ? "#422006" : "#FFFBEB",
+      border: darkMode ? "1px solid #B45309" : "1px solid #FDE68A",
+      borderRadius: "16px",
+      padding: "20px",
+      marginBottom: "24px"
+    }}
+  >
                     <strong style={{
   color: darkMode ? "#FCD34D" : "#92400E"
 }}>
