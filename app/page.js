@@ -7153,9 +7153,9 @@ darkMode={darkMode}
 {autopilotData.nextStep && (
   <div
     style={{
-      background: darkMode ? "#172033" : "#EFF6FF",
+      background: darkMode ? "#172554" : "#EFF6FF",
       border: `1px solid ${
-        darkMode ? "#60A5FA" : "#BFDBFE"
+        darkMode ? "#3B82F6" : "#BFDBFE"
       }`,
       borderRadius: "16px",
       padding: "20px",
@@ -7164,7 +7164,9 @@ darkMode={darkMode}
   >
     <strong
       style={{
-        color: darkMode ? "#F8FAFC" : "#0F172A"
+        color: darkMode ? "#DBEAFE" : "#0F172A",
+        display: "block",
+        marginBottom: "8px"
       }}
     >
       💡 Langkah Berikutnya
@@ -7172,8 +7174,8 @@ darkMode={darkMode}
 
     <p
       style={{
-        margin: "8px 0 0",
-        color: darkMode ? "#CBD5E1" : "#334155",
+        margin: 0,
+        color: darkMode ? "#E2E8F0" : "#334155",
         lineHeight: "1.6"
       }}
     >
