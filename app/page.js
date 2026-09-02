@@ -7118,7 +7118,7 @@ darkMode={darkMode}
 
 
                 {/* PERINGATAN */}
-{{autopilotData.warning && (
+{autopilotData.warning && (
   <div
     style={{
       background: darkMode ? "#422006" : "#FFFBEB",
