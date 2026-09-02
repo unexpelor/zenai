@@ -7150,9 +7150,9 @@ darkMode={darkMode}
                 {/* LANGKAH SELANJUTNYA */}
 {autopilotData.nextStep && (
   <div
-  style={{
-    background: darkMode ? "#422006" : "#FFFBEB",
-    border: darkMode ? "1px solid #B45309" : "1px solid #FDE68A",
+    style={{
+      background: darkMode ? "#422006" : "#FFFBEB",
+      border: darkMode ? "1px solid #B45309" : "1px solid #FDE68A",
       borderRadius: "16px",
       padding: "20px",
       marginBottom: "24px"
@@ -7160,7 +7160,7 @@ darkMode={darkMode}
   >
     <strong
       style={{
-        color: darkMode ? "#DBEAFE" : "#0F172A",
+        color: darkMode ? "#FDE68A" : "#0F172A",
         display: "block",
         marginBottom: "8px"
       }}
@@ -7171,7 +7171,7 @@ darkMode={darkMode}
     <p
       style={{
         margin: 0,
-        color: darkMode ? "#E2E8F0" : "#334155",
+        color: darkMode ? "#FEF3C7" : "#334155",
         lineHeight: "1.6"
       }}
     >
