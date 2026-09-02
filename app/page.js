@@ -2671,7 +2671,7 @@ padding: isMobile ? "16px 12px" : "32px",
             width: "100%",
             minHeight: "41px",
             border: "1px solid #fecdd3",
-            background: "#FFFFFF1f2",
+            background: "#FFF1F2",
             color: "#9f1239",
             padding: "9px 11px",
             borderRadius: "10px",
@@ -2826,7 +2826,7 @@ padding: isMobile ? "16px 12px" : "32px",
                       <button type="button" onClick={runLiveHealthCheck} disabled={healthLoading} style={{ border: "none", borderRadius: "10px", padding: "11px 16px", background: darkMode ? "#2563EB" : "#2563EB", color: "#FFFFFF", fontWeight: "800", cursor: healthLoading ? "wait" : "pointer" }}>{healthLoading ? "Memeriksa..." : "Run Live Health Check"}</button>
                     </div>
                   </div>
-                  {healthError && <div style={{ padding: "14px 16px", borderRadius: "12px", border: "1px solid #fda4af", background: "#FFFFFF1f2", color: "#9f1239", fontSize: "14px" }}>{healthError}</div>}
+                  {healthError && <div style={{ padding: "14px 16px", borderRadius: "12px", border: "1px solid #fda4af", background: "#FFF1F2", color: "#9f1239", fontSize: "14px" }}>{healthError}</div>}
                   {healthData && <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
                     <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, minmax(0, 1fr))", gap: "14px" }}>
                       {(healthData.services || []).map((service) => <div key={service.name} style={{ padding: "18px", borderRadius: "14px", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}`, background: darkMode ? "#111827" : "#FFFFFF" }}><div style={{ display: "flex", justifyContent: "space-between", gap: "12px" }}><strong>{service.name}</strong><span style={{ fontWeight: "800", color: service.status === "operational" ? "#2563EB" : service.status === "configured" ? "#b45309" : "#be123c" }}>{service.status === "operational" ? "● OPERATIONAL" : service.status === "configured" ? "● CONFIGURED" : "● DOWN"}</span></div><div style={{ marginTop: "8px", color: darkMode ? "#CBD5E1" : "#64748B", fontSize: "13px", lineHeight: 1.5 }}>{service.detail}</div>{service.latencyMs != null && <div style={{ marginTop: "8px", fontSize: "12px", color: darkMode ? "#94A3B8" : "#64748B" }}>Latency: {service.latencyMs} ms</div>}</div>)}
@@ -4707,7 +4707,7 @@ padding: isMobile ? "16px 12px" : "32px",
                     <div
                       style={{
                         marginTop: "20px",
-                        background: darkMode ? "#422006" : "#FFFFFFbeb",
+                        background: darkMode ? "#422006" : "#FFFBEB",
                         border:
                           darkMode ? "1px solid #9A3412" : "1px solid #FDE68A",
                         padding: "18px",
@@ -5305,7 +5305,7 @@ padding: isMobile ? "16px 12px" : "32px",
     {!marketLoading && marketError && (
       <div
         style={{
-          background: "#FFFFFF1f2",
+          background: "#FFF1F2",
           border: "1px solid #fda4af",
           borderRadius: "20px",
           padding: "28px"
@@ -6239,7 +6239,7 @@ padding: isMobile ? "16px 12px" : "32px",
                                     }
                                     style={{
                                       color: "#e11d48",
-                                      background: "#FFFFFF1f2",
+                                      background: "#FFF1F2",
                                       padding: "8px 10px",
                                       borderRadius: "8px",
                                       fontSize: "12px"
@@ -7083,7 +7083,7 @@ darkMode={darkMode}
                 {autopilotData.warning && (
                   <div
                     style={{
-                      background: "#FFFFFFbeb",
+                      background: "#FFFBEB",
                       border:
                         "1px solid #FDE68A",
                       borderRadius:
