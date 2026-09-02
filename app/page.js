@@ -4841,7 +4841,7 @@ padding: isMobile ? "16px 12px" : "32px",
                                 border:
                                   darkMode ? "1px solid #881337" : "1px solid #fda4af",
                                 background:
-                                  darkMode ? "#3B1212" : "#FFFFFF1f2",
+                                  darkMode ? "#3B1212" : "#FFF1F2",
                                 padding:
                                   "18px",
                                 borderRadius:
