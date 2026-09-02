@@ -7152,11 +7152,9 @@ darkMode={darkMode}
                 {/* LANGKAH SELANJUTNYA */}
 {autopilotData.nextStep && (
   <div
-    style={{
-      background: darkMode ? "#172554" : "#EFF6FF",
-      border: `1px solid ${
-        darkMode ? "#3B82F6" : "#BFDBFE"
-      }`,
+  style={{
+    background: darkMode ? "#422006" : "#FFFBEB",
+    border: darkMode ? "1px solid #B45309" : "1px solid #FDE68A",
       borderRadius: "16px",
       padding: "20px",
       marginBottom: "24px"
