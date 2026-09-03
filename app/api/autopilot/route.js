@@ -1,4 +1,36 @@
 import { jsonError, rateLimit, requireApiUser } from "../../../lib/api-security";
+function validateAutopilotResult(result, duration) {
+  if (!result || typeof result !== "object" || Array.isArray(result)) return null;
+  if (!result.mission || typeof result.mission !== "object" || Array.isArray(result.mission)) return null;
+  if (!Array.isArray(result.actions) || result.actions.length === 0 || result.actions.length > duration) return null;
+
+  const actions = result.actions.map((action, index) => {
+    if (!action || typeof action !== "object" || Array.isArray(action)) return null;
+    const title = String(action.title || "").trim();
+    const description = String(action.description || "").trim();
+    const output = String(action.output || "").trim();
+    if (!title || !description || !output) return null;
+    return {
+      id: Number.isFinite(Number(action.id)) ? Number(action.id) : index + 1,
+      title,
+      type: String(action.type || "ACTION").trim().toUpperCase(),
+      description,
+      output,
+    };
+  });
+  if (actions.some((item) => !item)) return null;
+
+  return {
+    mission: {
+      title: String(result.mission.title || "Strategi Bisnis").trim(),
+      target: String(result.mission.target || "Meningkatkan pertumbuhan bisnis").trim(),
+      duration: `${duration} hari`,
+      priority: String(result.mission.priority || "HIGH").trim().toUpperCase(),
+    },
+    actions,
+  };
+}
+
 export async function POST(req) {
   const auth = await requireApiUser(req);
   if (!auth.ok) return jsonError(auth.message, auth.status);
@@ -181,41 +213,28 @@ Karakter terakhir harus }
       )
       .trim();
 
-    // Jika AI menggunakan tag reasoning lain
-    raw = raw
-      .replace(
-        /<thinking>[\s\S]*?<\/thinking>/gi,
-        ""
-      )
-      .trim();
-
-    // =========================
-    // CARI JSON
+    // Jika AI// =========================
+    // VALIDASI HASIL
     // =========================
 
-    const start = raw.indexOf("{");
-    const end = raw.lastIndexOf("}");
-
-    if (
-      start === -1 ||
-      end === -1 ||
-      end <= start
-    ) {
-      console.error(
-        "AI TIDAK MENGHASILKAN JSON:",
-        raw
-      );
-
+    const validated = validateAutopilotResult(result, duration);
+    if (!validated) {
       return Response.json(
         {
-          message:
-            "AI tidak menghasilkan JSON lengkap.",
-
-          hint:
-            "Model kemungkinan menghasilkan proses berpikir atau output terpotong sebelum JSON selesai.",
+          success: false,
+          message: "Format strategi Autopilot dari AI tidak sesuai schema.",
         },
-        {
-          status: 500,
+        { status: 502 }
+      );
+    }
+
+    return Response.json({
+      success: true,
+      result: validated,
+      provider: data.provider || "AI",
+    });
+
+       status: 500,
         }
       );
     }
