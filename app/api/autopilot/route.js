@@ -140,6 +140,7 @@ Karakter pertama harus {
 Karakter terakhir harus }
 `,
         }),
+        signal: AbortSignal.timeout(30000),
       }
     );
 
@@ -162,107 +163,46 @@ Karakter terakhir harus }
 
     if (!response.ok) {
       console.error("AI ROUTER ERROR:", data);
-
       return Response.json(
         {
-          message:
-            data.message ||
-            data.error ||
-            "AI gagal",
-
+          message: data.message || data.error || "AI gagal",
           details: [],
         },
-        {
-          status: response.status || 500,
-        }
+        { status: response.status || 500 }
       );
     }
 
     let raw = String(data.text || "").trim();
 
     if (!raw) {
-      return Response.json(
-        {
-          message:
-            "AI tidak mengembalikan respons.",
-        },
-        {
-          status: 500,
-        }
-      );
+      return jsonError("AI tidak mengembalikan respons.", 502);
     }
 
-    // =========================
-    // BERSIHKAN MARKDOWN
-    // =========================
-
+    // Bersihkan markdown/code fence dan blok <think> jika provider menyertakannya.
     raw = raw
+      .replace(/<think>[\s\S]*?<\/think>/gi, "")
       .replace(/```json/gi, "")
       .replace(/```JSON/gi, "")
       .replace(/```/g, "")
       .trim();
 
-    // =========================
-    // HAPUS THINKING BLOCK
-    // =========================
-
-    raw = raw
-      .replace(
-        /<think>[\s\S]*?<\/think>/gi,
-        ""
-      )
-      .trim();
-
-    // Jika AI menggunakan tag reasoning lain
-    raw = raw
-      .replace(
-        /<thinking>[\s\S]*?<\/thinking>/gi,
-        ""
-      )
-      .trim();
-
-    // =========================
-    // CARI JSON
-    // =========================
-
+    // Ambil objek JSON pertama sampai kurung kurawal penutup terakhir.
     const start = raw.indexOf("{");
     const end = raw.lastIndexOf("}");
 
-    if (start === -1 || end === -1 || end <= start) {
-      console.error("AI TIDAK MENGHASILKAN JSON:", raw);
-      return Response.json(
-        {
-          message: "AI tidak menghasilkan JSON lengkap.",
-          hint: "Model kemungkinan menghasilkan output terpotong sebelum JSON selesai.",
-        },
-        { status: 500 }
-      );
+    if (start === -1 || end <= start) {
+      return jsonError("Respons AI tidak berisi JSON yang valid.", 502);
     }
 
     const jsonText = raw.substring(start, end + 1).trim();
 
-    // =========================
-    // PARSE JSON
-    // =========================
-
     let result;
-
     try {
       result = JSON.parse(jsonText);
     } catch (error) {
-      console.error("JSON PARSE ERROR:", error.message);
-      return Response.json(
-        {
-          message: "JSON AI tidak valid.",
-          error: "Format respons AI tidak valid.",
-        },
-        { status: 500 }
-      );
+      console.error("AUTOPILOT JSON PARSE ERROR:", error?.message || error);
+      return jsonError("Format respons AI tidak valid.", 502);
     }
-
-    // =========================
-    // VALIDASI HASIL
-    // =========================
 
     const validated = validateAutopilotResult(result, duration);
     if (!validated) {
@@ -282,72 +222,12 @@ Karakter terakhir harus }
     });
 
   } catch (error) {
-      console.error(
-        "JSON PARSE ERROR:",
-        error.message
-      );
-
-      return Response.json(
-        {
-          message:
-            "JSON AI tidak valid.",
-
-          error: "Format respons AI tidak valid."
-        },
-        {
-          status: 500,
-        }
-      );
-    }
-
-    // =========================
-    // VALIDASI HASIL
-    // =========================
-
-    if (
-      !result ||
-      typeof result !== "object"
-    ) {
-      return Response.json(
-        {
-          message:
-            "Format respons AI tidak valid.",
-        },
-        {
-          status: 500,
-        }
-      );
-    }
-
-    if (!result.mission) {
-      result.mission = {
-        title: "Strategi Bisnis",
-        target: "Meningkatkan pertumbuhan bisnis",
-        duration: `${duration} hari`,
-        priority: "HIGH",
-      };
-    }
-
-    if (!Array.isArray(result.actions)) {
-      result.actions = [];
-    }
-
-    return Response.json({
-      result,
-      provider:
-        data.provider || "AI",
-    });
-
-  } catch (error) {
-    console.error(
-      "AUTOPILOT FATAL ERROR:",
-      error
-    );
+    console.error("AUTOPILOT FATAL ERROR:", error);
 
     return Response.json(
       {
         success: false,
-        message: "Terjadi kesalahan pada Autopilot."
+        message: "Terjadi kesalahan pada Autopilot.",
       },
       { status: 500 }
     );
