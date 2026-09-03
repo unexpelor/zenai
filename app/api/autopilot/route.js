@@ -213,7 +213,54 @@ Karakter terakhir harus }
       )
       .trim();
 
-    // Jika AI// =========================
+    // Jika AI menggunakan tag reasoning lain
+    raw = raw
+      .replace(
+        /<thinking>[\s\S]*?<\/thinking>/gi,
+        ""
+      )
+      .trim();
+
+    // =========================
+    // CARI JSON
+    // =========================
+
+    const start = raw.indexOf("{");
+    const end = raw.lastIndexOf("}");
+
+    if (start === -1 || end === -1 || end <= start) {
+      console.error("AI TIDAK MENGHASILKAN JSON:", raw);
+      return Response.json(
+        {
+          message: "AI tidak menghasilkan JSON lengkap.",
+          hint: "Model kemungkinan menghasilkan output terpotong sebelum JSON selesai.",
+        },
+        { status: 500 }
+      );
+    }
+
+    const jsonText = raw.substring(start, end + 1).trim();
+
+    // =========================
+    // PARSE JSON
+    // =========================
+
+    let result;
+
+    try {
+      result = JSON.parse(jsonText);
+    } catch (error) {
+      console.error("JSON PARSE ERROR:", error.message);
+      return Response.json(
+        {
+          message: "JSON AI tidak valid.",
+          error: "Format respons AI tidak valid.",
+        },
+        { status: 500 }
+      );
+    }
+
+    // =========================
     // VALIDASI HASIL
     // =========================
 
@@ -234,28 +281,7 @@ Karakter terakhir harus }
       provider: data.provider || "AI",
     });
 
-       status: 500,
-        }
-      );
-    }
-
-    const jsonText = raw
-      .substring(
-        start,
-        end + 1
-      )
-      .trim();
-
-    // =========================
-    // PARSE JSON
-    // =========================
-
-    let result;
-
-    try {
-      result = JSON.parse(jsonText);
-
-    } catch (error) {
+  } catch (error) {
       console.error(
         "JSON PARSE ERROR:",
         error.message
