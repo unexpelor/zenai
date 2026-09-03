@@ -267,20 +267,24 @@ async function gemini(
       "application/json";
   }
 
-  const result =
-    await model.generateContent({
-      contents: [
-        {
-          role: "user",
-          parts,
-        },
-      ],
+  const generationPromise = model.generateContent({
+    contents: [
+      {
+        role: "user",
+        parts,
+      },
+    ],
+    generationConfig,
+  });
 
-      generationConfig,
-    });
+  const result = await Promise.race([
+    generationPromise,
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Gemini request timeout")), 30000)
+    ),
+  ]);
 
-  const text =
-    result.response.text();
+  const text = result.response.text();
 
   if (!text) {
     throw new Error(
@@ -505,3 +509,4 @@ export async function POST(request) {
     );
   }
         }
+        
