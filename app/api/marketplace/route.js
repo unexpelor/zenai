@@ -82,6 +82,7 @@ async function searchTavily(query, topic = "general") {
     }),
 
     cache: "no-store",
+    signal: AbortSignal.timeout(7000),
   });
 
   const data = await response.json();
@@ -182,6 +183,7 @@ async function analyzeWithAI(req, prompt, system) {
       system,
     }),
     cache: "no-store",
+    signal: AbortSignal.timeout(30000),
   });
 
   let data = null;
@@ -229,6 +231,7 @@ export async function POST(req) {
     let body;
     try { body = await req.json(); } catch { return jsonError("Format permintaan tidak valid.", 400); }
     if (!body || typeof body !== "object" || Array.isArray(body)) return jsonError("Data permintaan tidak valid.", 400);
+    if (JSON.stringify(body).length > 80_000) return jsonError("Data permintaan terlalu besar.", 413);
 
     /* =====================================================
        MODE 1
