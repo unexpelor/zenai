@@ -567,3 +567,54 @@ audio {
     grid-template-columns: 1fr;
   }
 }
+
+/* Dark-mode consistency for legacy global styles and remaining inline light tokens. */
+html[data-theme="dark"],
+body[data-theme="dark"] {
+  background: #0b1120;
+  color: #f8fafc;
+}
+
+html[data-theme="dark"] header,
+html[data-theme="dark"] section {
+  background-color: #111827;
+  color: #f8fafc;
+}
+
+html[data-theme="dark"] input,
+html[data-theme="dark"] textarea,
+html[data-theme="dark"] select {
+  background-color: #111827;
+  color: #f8fafc;
+  border-color: #475569;
+}
+
+html[data-theme="dark"] [style*="background: rgb(255, 255, 255)"],
+html[data-theme="dark"] [style*="background: #FFFFFF"],
+html[data-theme="dark"] [style*="background:#FFFFFF"] {
+  background-color: #111827 !important;
+}
+
+html[data-theme="dark"] [style*="background: rgb(239, 246, 255)"],
+html[data-theme="dark"] [style*="background: #EFF6FF"],
+html[data-theme="dark"] [style*="background:#EFF6FF"] {
+  background-color: #172033 !important;
+}
+
+html[data-theme="dark"] [style*="background: rgb(255, 241, 242)"],
+html[data-theme="dark"] [style*="background: #FFF1F2"],
+html[data-theme="dark"] [style*="background:#FFF1F2"] {
+  background-color: #3b121d !important;
+}
+
+html[data-theme="dark"] [style*="border: 1px solid rgb(226, 232, 240)"],
+html[data-theme="dark"] [style*="border: 1px solid #E2E8F0"],
+html[data-theme="dark"] [style*="border:1px solid #E2E8F0"] {
+  border-color: #334155 !important;
+}
+
+html[data-theme="dark"] [style*="border: 1px solid rgb(203, 213, 225)"],
+html[data-theme="dark"] [style*="border: 1px solid #CBD5E1"],
+html[data-theme="dark"] [style*="border:1px solid #CBD5E1"] {
+  border-color: #475569 !important;
+}
