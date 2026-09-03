@@ -2841,7 +2841,7 @@ padding: isMobile ? "16px 12px" : "32px",
                 ⚙️ Pengaturan ZenAI
               </div>
               <div style={{ marginTop: "6px", color: darkMode ? "#CBD5E1" : "#64748B", fontSize: "14px", lineHeight: 1.5 }}>
-                Semua pengaturan sistem, tampilan, dan reset data sekarang dikumpulkan di sini.
+                Kelola pengaturan dan preferensi ZenAI di sini.
               </div>
             </div>
 
