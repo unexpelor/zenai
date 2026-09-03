@@ -8,7 +8,7 @@ Dokumen ini mencatat hasil pengujian final ZenAI untuk kebutuhan submission dan 
 | T02 | Auth | Login valid | Masuk ke aplikasi | PASS | Screenshot |
 | T03 | Auth | Token invalid | API menolak request | PASS | Screenshot/Log |
 | T04 | Capture | Input teks usaha | Konteks usaha diproses | PASS | Screenshot |
-| T05 | Capture | Input gambar | Gemini memproses input | PASS | Screenshot |
+| T05 | Capture | Input gambar | Gemini memproses input | PASS | Bukti ada di folder `screenshots/` |
 | T06 | Capture | Input audio | Gemini memproses input | PASS | Screenshot |
 | T07 | Pulse | Generate Business Pulse | Ringkasan tampil | PASS | Screenshot |
 | T08 | Diagnosis | Generate diagnosis | Diagnosis tampil terstruktur | PASS | Screenshot |
