@@ -2307,6 +2307,168 @@ Aturan:
   const analysisHistory =
     getAnalysisHistory();
 
+  // =========================
+  // EXPORT LAPORAN KE PDF
+  // Menggunakan print engine browser agar tanpa dependency tambahan.
+  // Logo ZenAI ditampilkan pada header setiap dokumen.
+  // =========================
+  const escapePdfHtml = (value) => {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  };
+
+  const formatPdfValue = (value) => {
+    if (value === null || value === undefined || value === "") return "—";
+    if (Array.isArray(value)) {
+      if (!value.length) return "—";
+      return `<ul>${value.map((item) => `<li>${formatPdfValue(item)}</li>`).join("")}</ul>`;
+    }
+    if (typeof value === "object") {
+      return `<div class="pdf-object">${Object.entries(value)
+        .map(([key, item]) => `<div class="pdf-row"><div class="pdf-key">${escapePdfHtml(key)}</div><div>${formatPdfValue(item)}</div></div>`)
+        .join("")}</div>`;
+    }
+    return escapePdfHtml(value).replace(/\n/g, "<br />");
+  };
+
+  const exportReportPdf = (title, sections = []) => {
+    if (typeof window === "undefined") return;
+
+    const reportWindow = window.open("", "_blank", "width=980,height=900");
+    if (!reportWindow) {
+      alert("Popup diblokir browser. Izinkan popup untuk ZenAI lalu coba lagi.");
+      return;
+    }
+
+    const businessName = business?.name || business?.businessName || "Usaha Anda";
+    const generatedAt = new Intl.DateTimeFormat("id-ID", {
+      dateStyle: "long",
+      timeStyle: "short"
+    }).format(new Date());
+
+    const sectionHtml = sections
+      .filter((section) => section && section.value !== null && section.value !== undefined)
+      .map((section) => `
+        <section class="pdf-section">
+          <h2>${escapePdfHtml(section.title)}</h2>
+          ${formatPdfValue(section.value)}
+        </section>
+      `)
+      .join("");
+
+    reportWindow.document.open();
+    reportWindow.document.write(`<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<title>${escapePdfHtml(title)} — ZENAI</title>
+<style>
+  @page { size: A4; margin: 16mm 15mm 18mm; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Arial, Helvetica, sans-serif; color: #172033; background: #fff; font-size: 11px; line-height: 1.55; }
+  .pdf-header { display:flex; align-items:center; gap:14px; padding-bottom:14px; border-bottom:2px solid #2563eb; margin-bottom:22px; }
+  .pdf-logo { width:58px; height:58px; object-fit:contain; }
+  .brand { margin:0; font-size:18px; font-weight:800; letter-spacing:.04em; }
+  .subtitle { margin:2px 0 0; font-size:10px; color:#64748b; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+  .report-title { margin:0 0 4px; font-size:22px; color:#0f172a; }
+  .business { margin:0; color:#475569; font-size:11px; }
+  .meta { margin-top:5px; color:#64748b; font-size:9px; }
+  .pdf-section { page-break-inside: avoid; margin:0 0 18px; }
+  .pdf-section h2 { margin:0 0 8px; padding:7px 10px; background:#eff6ff; border-left:4px solid #2563eb; color:#1e3a8a; font-size:13px; }
+  .pdf-object { border:1px solid #e2e8f0; border-radius:8px; overflow:hidden; }
+  .pdf-row { display:grid; grid-template-columns: 180px 1fr; gap:12px; padding:7px 9px; border-bottom:1px solid #e2e8f0; }
+  .pdf-row:last-child { border-bottom:0; }
+  .pdf-key { font-weight:700; color:#475569; }
+  ul { margin:5px 0 5px 20px; padding:0; }
+  li { margin-bottom:4px; }
+  .pdf-footer { margin-top:24px; padding-top:10px; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:9px; text-align:center; }
+  .print-actions { position:sticky; top:0; padding:10px 0; background:#fff; text-align:right; }
+  .print-actions button { border:0; background:#2563eb; color:#fff; padding:9px 14px; border-radius:8px; font-weight:700; cursor:pointer; }
+  @media print { .print-actions { display:none; } }
+</style>
+</head>
+<body>
+<div class="print-actions"><button onclick="window.print()">Cetak / Simpan PDF</button></div>
+<header class="pdf-header">
+  <img class="pdf-logo" src="${window.location.origin}/zenai-logo.png" alt="Logo ZenAI" onerror="this.style.display='none'" />
+  <div>
+    <div class="brand">ZENAI</div>
+    <div class="subtitle">AI Business Assistant</div>
+  </div>
+</header>
+<h1 class="report-title">${escapePdfHtml(title)}</h1>
+<p class="business">${escapePdfHtml(businessName)}</p>
+<p class="meta">Dibuat ${escapePdfHtml(generatedAt)}</p>
+${sectionHtml}
+<div class="pdf-footer">ZENAI — AI BUSINESS ASSISTANT · Pahami. Putuskan. Tumbuh.</div>
+<script>
+  const img = document.querySelector('.pdf-logo');
+  if (img) img.addEventListener('load', () => {}, { once: true });
+</script>
+</body>
+</html>`);
+    reportWindow.document.close();
+  };
+
+  const exportPulsePdf = () => exportReportPdf("Kondisi Usaha", [
+    { title: "Business Pulse", value: pulseData }
+  ]);
+
+  const exportDiagnosisPdf = () => exportReportPdf("Diagnosis Usaha", [
+    { title: "Diagnosis", value: diagnosis }
+  ]);
+
+  const exportMarketPdf = () => exportReportPdf("Perspektif Bisnis", [
+    { title: "Market Insight", value: marketData }
+  ]);
+
+  const exportAutopilotPdf = () => exportReportPdf("Strategi & Tindakan", [
+    { title: "Business Autopilot", value: autopilotData },
+    { title: "Growth Actions", value: growthActions }
+  ]);
+
+  const exportFinancePdf = () => exportReportPdf(`Laporan Keuangan — ${financePeriod}`, [
+    { title: "Ringkasan", value: financeCurrentTotals },
+    {
+      title: "Laba Rugi",
+      value: {
+        Pendapatan: financeCurrentTotals.income,
+        "Harga Pokok Penjualan": financeCurrentTotals.hpp,
+        "Laba Kotor": financeCurrentTotals.grossProfit,
+        Beban: financeCurrentTotals.expense,
+        "Laba Bersih": financeCurrentTotals.netProfit
+      }
+    },
+    {
+      title: "Arus Kas",
+      value: {
+        "Kas Masuk": financeCurrentTotals.cashIn,
+        "Kas Keluar": financeCurrentTotals.cashOut,
+        "Perubahan Kas": financeCurrentTotals.cashChange,
+        "Kas & Bank": financeCurrentTotals.cashTotal
+      }
+    },
+    {
+      title: "Posisi Keuangan",
+      value: {
+        "Kas & Bank": financeCurrentTotals.cashTotal,
+        Piutang: financeCurrentTotals.receivable,
+        Persediaan: financeCurrentTotals.inventory,
+        "Total Aset": financeCurrentTotals.totalAssets,
+        Utang: financeCurrentTotals.debt,
+        Modal: financeCurrentTotals.capital,
+        "Laba Ditahan / Kumulatif": financeCurrentTotals.cumulativeNetProfit,
+        "Prive": financeCurrentTotals.withdrawal,
+        "Total Ekuitas": financeCurrentTotals.totalEquity
+      }
+    },
+    { title: "Transaksi", value: financeTransactions }
+  ]);
+
   // Supabase auth screens are rendered only after all hooks have run.
   // This keeps React hook order stable and avoids rendering JSX inside useEffect.
   if (supabase && !authReady) {
@@ -4069,6 +4231,11 @@ padding: isMobile ? "16px 12px" : "32px",
               maxWidth: "1000px"
             }}
           >
+            {pulseData && (
+              <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "14px" }}>
+                <button type="button" onClick={exportPulsePdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}>📄 Export PDF</button>
+              </div>
+            )}
             {!pulseData ? (
               <div
                 style={{
@@ -4673,6 +4840,11 @@ padding: isMobile ? "16px 12px" : "32px",
               maxWidth: "1000px"
             }}
           >
+            {diagnosis && (
+              <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "14px" }}>
+                <button type="button" onClick={exportDiagnosisPdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}>📄 Export PDF</button>
+              </div>
+            )}
             {!diagnosis ? (
               <div
                 style={{
@@ -5317,6 +5489,11 @@ padding: isMobile ? "16px 12px" : "32px",
 
 {tab === "market" && (
   <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
+    {marketData && (
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "14px" }}>
+        <button type="button" onClick={exportMarketPdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}>📄 Export PDF</button>
+      </div>
+    )}
     {!marketData && !marketLoading && !marketError && (
       <div
         style={{
@@ -5734,6 +5911,9 @@ padding: isMobile ? "16px 12px" : "32px",
 
         {tab === "finance" && (
           <div>
+            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "14px" }}>
+              <button type="button" onClick={exportFinancePdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}>📄 Export PDF</button>
+            </div>
             <div
               style={{
                 background: darkMode ? "#111827" : "#FFFFFF",
@@ -6576,6 +6756,11 @@ padding: isMobile ? "16px 12px" : "32px",
               maxWidth: "1000px"
             }}
           >
+            {autopilotData && (
+              <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "14px" }}>
+                <button type="button" onClick={exportAutopilotPdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}>📄 Export PDF</button>
+              </div>
+            )}
             {!autopilotData ? (
               <div
                 style={{
