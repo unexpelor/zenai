@@ -2449,9 +2449,6 @@ Aturan:
       "optimistic": "Optimistis", "realistic": "Realistis",
       "risk": "Risiko", "strategic implication": "Implikasi Strategis",
       "limitations": "Keterbatasan",
-      "plan7": "Rencana 7 Hari",
-      "plan14": "Rencana 14 Hari",
-      "plan30": "Rencana 30 Hari",
       "market insight": "Wawasan Pasar",
       "market condition": "Kondisi Pasar",
       "demand signal": "Sinyal Permintaan",
@@ -2462,7 +2459,10 @@ Aturan:
       "scenarios": "Skenario",
       "optimistic": "Optimistis",
       "realistic": "Realistis",
-      "risk": "Risiko"
+      "risk": "Risiko",
+      "plan7": "Rencana 7 Hari",
+      "plan14": "Rencana 14 Hari",
+      "plan30": "Rencana 30 Hari"
     };
     return dynamic[lower] || normalized || raw;
   };
@@ -2495,9 +2495,6 @@ Aturan:
       [/\bExternalFactors\b/gi, "Faktor Eksternal"],
       [/\bCompetitionInsight\b/gi, "Wawasan Persaingan"],
       [/\bStrategicImplication\b/gi, "Implikasi Strategis"],
-      [/\bplan7\b/gi, "Rencana 7 Hari"],
-      [/\bplan14\b/gi, "Rencana 14 Hari"],
-      [/\bplan30\b/gi, "Rencana 30 Hari"],
     ];
     return replacements.reduce((result, [pattern, replacement]) => result.replace(pattern, replacement), String(value));
   };
