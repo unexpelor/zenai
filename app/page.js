@@ -1785,7 +1785,7 @@ Balas dengan JSON valid menggunakan struktur:
 
   "priority": "",
 
-  "Rencana 7 Hari": [
+  "plan7": [
     {
       "day": "",
       "title": "",
@@ -1794,7 +1794,7 @@ Balas dengan JSON valid menggunakan struktur:
     }
   ],
 
-  "Rencana 14 Hari": [
+  "plan14": [
     {
       "phase": "",
       "title": "",
@@ -1802,7 +1802,7 @@ Balas dengan JSON valid menggunakan struktur:
     }
   ],
 
-  "Rencana 30 Hari": [
+  "plan30": [
     {
       "phase": "",
       "title": "",
@@ -1810,7 +1810,7 @@ Balas dengan JSON valid menggunakan struktur:
     }
   ],
 
-  "RENCANA": [
+  "plan": [
     {
       "step": "",
       "action": "",
@@ -1818,7 +1818,7 @@ Balas dengan JSON valid menggunakan struktur:
     }
   ],
 
-  "peringatan": "",
+  "warning": "",
 
   "nextStep": ""
 }
@@ -2492,6 +2492,9 @@ Aturan:
       [/\bExternalFactors\b/gi, "Faktor Eksternal"],
       [/\bCompetitionInsight\b/gi, "Wawasan Persaingan"],
       [/\bStrategicImplication\b/gi, "Implikasi Strategis"],
+      [/\bplan7\b/gi, "Rencana 7 Hari"],
+      [/\bplan14\b/gi, "Rencana 14 Hari"],
+      [/\bplan30\b/gi, "Rencana 30 Hari"],
     ];
     return replacements.reduce((result, [pattern, replacement]) => result.replace(pattern, replacement), String(value));
   };
