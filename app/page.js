@@ -2460,6 +2460,7 @@ Aturan:
       "optimistic": "Optimistis",
       "realistic": "Realistis",
       "risk": "Risiko",
+      "plan": "Ringkasan Rencana",
       "plan7": "Rencana 7 Hari",
       "plan14": "Rencana 14 Hari",
       "plan30": "Rencana 30 Hari"
