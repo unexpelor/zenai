@@ -1864,23 +1864,23 @@ Aturan:
       const result = {
         summary: apiResult.mission.target,
         priority: apiResult.mission.priority,
-        plan30: apiResult.actions.map((item) => ({
+        Rencana 30 Hari: apiResult.actions.map((item) => ({
           phase: `Hari ${item.id}`,
           title: item.title,
           action: item.description
         })),
-        plan7: apiResult.actions.slice(0, 7).map((item) => ({
+        Rencana 7 Hari: apiResult.actions.slice(0, 7).map((item) => ({
           day: item.id,
           title: item.title,
           action: item.description,
           purpose: item.output
         })),
-        plan14: apiResult.actions.slice(0, 14).map((item) => ({
+        Rencana 14 Hari: apiResult.actions.slice(0, 14).map((item) => ({
           phase: `Hari ${item.id}`,
           title: item.title,
           action: item.description
         })),
-        plan: apiResult.actions.map((item) => ({
+        Rencana: apiResult.actions.map((item) => ({
           step: item.id,
           action: item.description,
           purpose: item.output
