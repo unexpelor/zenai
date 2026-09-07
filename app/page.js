@@ -2308,9 +2308,8 @@ Aturan:
     getAnalysisHistory();
 
   // =========================
-  // EXPORT LAPORAN KE PDF
-  // Menggunakan print engine browser agar tanpa dependency tambahan.
-  // Logo ZenAI ditampilkan pada header setiap dokumen.
+  // EXPORT REPORTS TO PDF
+  // Browser print engine: no additional dependency required.
   // =========================
   const escapePdfHtml = (value) => {
     return String(value ?? "")
@@ -2321,16 +2320,43 @@ Aturan:
       .replace(/'/g, "&#039;");
   };
 
+  const pdfLabel = (label) => {
+    const labels = {
+      "Business Pulse": "Kondisi Usaha", "Diagnosis": "Diagnosis", "Market Insight": "Wawasan Pasar",
+      "Business Autopilot": "Business Autopilot", "Growth Actions": "Tindakan Pertumbuhan",
+      "Tanggal": "Tanggal", "Keterangan": "Keterangan", "Jenis": "Jenis", "Jumlah": "Jumlah",
+      "Pendapatan": "Pendapatan", "Harga Pokok Penjualan": "Harga Pokok Penjualan", "Laba Kotor": "Laba Kotor",
+      "Beban Operasional": "Beban Operasional", "Laba Bersih": "Laba Bersih", "Kas Masuk": "Kas Masuk",
+      "Kas Keluar": "Kas Keluar", "Perubahan Kas Bersih": "Perubahan Kas Bersih", "Saldo Kas dan Bank": "Saldo Kas dan Bank",
+      "ASET": "ASET", "Kas dan Bank": "Kas dan Bank", "Piutang Usaha": "Piutang Usaha",
+      "Persediaan": "Persediaan", "Total Aset": "Total Aset", "LIABILITAS DAN EKUITAS": "LIABILITAS DAN EKUITAS",
+      "Liabilitas": "Liabilitas", "Modal": "Modal", "Laba Ditahan": "Laba Ditahan",
+      "Prive": "Prive", "Total Ekuitas": "Total Ekuitas", "Total Liabilitas dan Ekuitas": "Total Liabilitas dan Ekuitas",
+      "Tidak ada transaksi yang tercatat pada periode ini.": "Tidak ada transaksi yang tercatat pada periode ini."
+    };
+    return labels[String(label)] || String(label)
+      .replace(/Business Condition Report/gi, "Laporan Kondisi Usaha")
+      .replace(/Business Diagnosis Report/gi, "Laporan Diagnosis Usaha")
+      .replace(/Business Perspective Report/gi, "Laporan Perspektif Bisnis")
+      .replace(/Strategy & Action Plan/gi, "Rencana Strategi dan Tindakan")
+      .replace(/Financial Statements/gi, "Laporan Keuangan");
+  };
+
   const formatPdfValue = (value) => {
     if (value === null || value === undefined || value === "") return "—";
     if (Array.isArray(value)) {
       if (!value.length) return "—";
-      return `<ul>${value.map((item) => `<li>${formatPdfValue(item)}</li>`).join("")}</ul>`;
+      return `<table class="pdf-table"><tbody>${value.map((item) => {
+        if (item && typeof item === "object" && !Array.isArray(item)) {
+          return `<tr>${Object.values(item).map((cell) => `<td>${formatPdfValue(cell)}</td>`).join("")}</tr>`;
+        }
+        return `<tr><td>${formatPdfValue(item)}</td></tr>`;
+      }).join("")}</tbody></table>`;
     }
     if (typeof value === "object") {
-      return `<div class="pdf-object">${Object.entries(value)
-        .map(([key, item]) => `<div class="pdf-row"><div class="pdf-key">${escapePdfHtml(key)}</div><div>${formatPdfValue(item)}</div></div>`)
-        .join("")}</div>`;
+      return `<table class="pdf-table"><tbody>${Object.entries(value)
+        .map(([key, item]) => `<tr><th>${escapePdfHtml(pdfLabel(key))}</th><td>${formatPdfValue(item)}</td></tr>`)
+        .join("")}</tbody></table>`;
     }
     return escapePdfHtml(value).replace(/\n/g, "<br />");
   };
@@ -2340,7 +2366,7 @@ Aturan:
 
     const reportWindow = window.open("", "_blank", "width=980,height=900");
     if (!reportWindow) {
-      alert("Popup diblokir browser. Izinkan popup untuk ZenAI lalu coba lagi.");
+      alert("Browser popup is blocked. Please allow popups for ZenAI and try again.");
       return;
     }
 
@@ -2369,105 +2395,120 @@ Aturan:
 <style>
   @page { size: A4; margin: 16mm 15mm 18mm; }
   * { box-sizing: border-box; }
-  body { margin: 0; font-family: Arial, Helvetica, sans-serif; color: #172033; background: #fff; font-size: 11px; line-height: 1.55; }
-  .pdf-header { display:flex; align-items:center; gap:14px; padding-bottom:14px; border-bottom:2px solid #2563eb; margin-bottom:22px; }
+  body { margin: 0; font-family: Arial, Helvetica, sans-serif; color: #172033; background: #fff; font-size: 10.5px; line-height: 1.45; }
+  .pdf-header { display:flex; align-items:center; gap:14px; padding-bottom:14px; border-bottom:2px solid #2563eb; margin-bottom:20px; }
   .pdf-logo { width:58px; height:58px; object-fit:contain; }
   .brand { margin:0; font-size:18px; font-weight:800; letter-spacing:.04em; }
   .subtitle { margin:2px 0 0; font-size:10px; color:#64748b; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
-  .report-title { margin:0 0 4px; font-size:22px; color:#0f172a; }
-  .business { margin:0; color:#475569; font-size:11px; }
+  .report-title { margin:0 0 4px; font-size:20px; color:#0f172a; }
+  .business { margin:0; color:#475569; font-size:11px; font-weight:600; }
   .meta { margin-top:5px; color:#64748b; font-size:9px; }
   .pdf-section { page-break-inside: avoid; margin:0 0 18px; }
-  .pdf-section h2 { margin:0 0 8px; padding:7px 10px; background:#eff6ff; border-left:4px solid #2563eb; color:#1e3a8a; font-size:13px; }
-  .pdf-object { border:1px solid #e2e8f0; border-radius:8px; overflow:hidden; }
-  .pdf-row { display:grid; grid-template-columns: 180px 1fr; gap:12px; padding:7px 9px; border-bottom:1px solid #e2e8f0; }
-  .pdf-row:last-child { border-bottom:0; }
-  .pdf-key { font-weight:700; color:#475569; }
+  .pdf-section h2 { margin:0 0 8px; padding:7px 10px; background:#f8fafc; border-left:4px solid #2563eb; color:#1e3a8a; font-size:12px; }
+  .pdf-table { width:100%; border-collapse:collapse; margin-top:4px; }
+  .pdf-table th, .pdf-table td { border:1px solid #cbd5e1; padding:7px 9px; vertical-align:top; }
+  .pdf-table th { width:42%; text-align:left; background:#f8fafc; font-weight:700; color:#334155; }
+  .pdf-table td { text-align:right; }
+  .pdf-table td .pdf-table { margin-top:0; }
+  .pdf-table td .pdf-table th, .pdf-table td .pdf-table td { text-align:left; }
   ul { margin:5px 0 5px 20px; padding:0; }
   li { margin-bottom:4px; }
-  .pdf-footer { margin-top:24px; padding-top:10px; border-top:1px solid #e2e8f0; color:#94a3b8; font-size:9px; text-align:center; }
+  .pdf-footer { margin-top:24px; padding-top:10px; border-top:1px solid #cbd5e1; color:#64748b; font-size:8.5px; text-align:center; }
   .print-actions { position:sticky; top:0; padding:10px 0; background:#fff; text-align:right; }
   .print-actions button { border:0; background:#2563eb; color:#fff; padding:9px 14px; border-radius:8px; font-weight:700; cursor:pointer; }
   @media print { .print-actions { display:none; } }
 </style>
 </head>
 <body>
-<div class="print-actions"><button onclick="window.print()">Cetak / Simpan PDF</button></div>
+<div class="print-actions"><button onclick="window.print()">Cetak / Simpan sebagai PDF</button></div>
 <header class="pdf-header">
-  <img class="pdf-logo" src="${window.location.origin}/zenai-logo.png" alt="Logo ZenAI" onerror="this.style.display='none'" />
+  <img class="pdf-logo" src="${window.location.origin}/zenai-logo.png" alt="ZenAI Logo" onerror="this.style.display='none'" />
   <div>
     <div class="brand">ZENAI</div>
     <div class="subtitle">AI Business Assistant</div>
   </div>
 </header>
 <h1 class="report-title">${escapePdfHtml(title)}</h1>
-<p class="business">${escapePdfHtml(businessName)}</p>
-<p class="meta">Dibuat ${escapePdfHtml(generatedAt)}</p>
+<p class="business">Usaha: ${escapePdfHtml(businessName)}</p>
+<p class="meta">Dibuat: ${escapePdfHtml(generatedAt)}</p>
 ${sectionHtml}
 <div class="pdf-footer">ZENAI — AI BUSINESS ASSISTANT · Pahami. Putuskan. Tumbuh.</div>
-<script>
-  const img = document.querySelector('.pdf-logo');
-  if (img) img.addEventListener('load', () => {}, { once: true });
-</script>
 </body>
 </html>`);
     reportWindow.document.close();
   };
 
-  const exportPulsePdf = () => exportReportPdf("Kondisi Usaha", [
+  const exportPulsePdf = () => exportReportPdf("Laporan Kondisi Usaha", [
     { title: "Business Pulse", value: pulseData }
   ]);
 
-  const exportDiagnosisPdf = () => exportReportPdf("Diagnosis Usaha", [
+  const exportDiagnosisPdf = () => exportReportPdf("Laporan Diagnosis Usaha", [
     { title: "Diagnosis", value: diagnosis }
   ]);
 
-  const exportMarketPdf = () => exportReportPdf("Perspektif Bisnis", [
+  const exportMarketPdf = () => exportReportPdf("Laporan Perspektif Bisnis", [
     { title: "Market Insight", value: marketData }
   ]);
 
-  const exportAutopilotPdf = () => exportReportPdf("Strategi & Tindakan", [
+  const exportAutopilotPdf = () => exportReportPdf("Rencana Strategi dan Tindakan", [
     { title: "Business Autopilot", value: autopilotData },
     { title: "Growth Actions", value: growthActions }
   ]);
 
-  const exportFinancePdf = () => exportReportPdf(`Laporan Keuangan — ${financePeriod}`, [
-    { title: "Ringkasan", value: financeCurrentTotals },
-    {
-      title: "Laba Rugi",
-      value: {
-        Pendapatan: financeCurrentTotals.income,
-        "Harga Pokok Penjualan": financeCurrentTotals.hpp,
-        "Laba Kotor": financeCurrentTotals.grossProfit,
-        Beban: financeCurrentTotals.expense,
-        "Laba Bersih": financeCurrentTotals.netProfit
+  const exportFinancePdf = () => {
+    const current = financeCurrentTotals;
+    const transactions = financeTransactions
+      .filter((item) => item.date?.slice(0, 7) === financePeriod)
+      .map((item) => ({
+        Date: item.date,
+        Description: item.description,
+        Type: financeTypes.find((type) => type.value === item.type)?.label || item.type,
+        Amount: formatRupiah(item.amount)
+      }));
+
+    return exportReportPdf(`Laporan Keuangan — ${financePeriodLabel(financePeriod)}`, [
+      {
+        title: "Laporan Laba Rugi",
+        value: {
+          "Pendapatan": formatRupiah(current.income),
+          "Harga Pokok Penjualan": formatRupiah(current.hpp),
+          "Laba Kotor": formatRupiah(current.grossProfit),
+          "Beban Operasional": formatRupiah(current.expense),
+          "Laba Bersih": formatRupiah(current.netProfit)
+        }
+      },
+      {
+        title: "Laporan Arus Kas",
+        value: {
+          "Kas Masuk": formatRupiah(current.cashIn),
+          "Kas Keluar": formatRupiah(current.cashOut),
+          "Perubahan Kas Bersih": formatRupiah(current.cashChange),
+          "Saldo Kas dan Bank": formatRupiah(current.cashTotal)
+        }
+      },
+      {
+        title: "Laporan Posisi Keuangan",
+        value: {
+          "ASET": "",
+          "Kas dan Bank": formatRupiah(current.cashTotal),
+          "Piutang Usaha": formatRupiah(current.receivable),
+          "Persediaan": formatRupiah(current.inventory),
+          "Total Aset": formatRupiah(current.totalAssets),
+          "LIABILITAS DAN EKUITAS": "",
+          "Liabilitas": formatRupiah(current.debt),
+          "Modal": formatRupiah(current.capital),
+          "Laba Ditahan": formatRupiah(current.cumulativeNetProfit),
+          "Prive": formatRupiah(current.withdrawal),
+          "Total Ekuitas": formatRupiah(current.totalEquity),
+          "Total Liabilitas dan Ekuitas": formatRupiah(current.debt + current.totalEquity)
+        }
+      },
+      {
+        title: "Rincian Transaksi",
+        value: transactions.length ? transactions : "No transactions recorded for this period."
       }
-    },
-    {
-      title: "Arus Kas",
-      value: {
-        "Kas Masuk": financeCurrentTotals.cashIn,
-        "Kas Keluar": financeCurrentTotals.cashOut,
-        "Perubahan Kas": financeCurrentTotals.cashChange,
-        "Kas & Bank": financeCurrentTotals.cashTotal
-      }
-    },
-    {
-      title: "Posisi Keuangan",
-      value: {
-        "Kas & Bank": financeCurrentTotals.cashTotal,
-        Piutang: financeCurrentTotals.receivable,
-        Persediaan: financeCurrentTotals.inventory,
-        "Total Aset": financeCurrentTotals.totalAssets,
-        Utang: financeCurrentTotals.debt,
-        Modal: financeCurrentTotals.capital,
-        "Laba Ditahan / Kumulatif": financeCurrentTotals.cumulativeNetProfit,
-        "Prive": financeCurrentTotals.withdrawal,
-        "Total Ekuitas": financeCurrentTotals.totalEquity
-      }
-    },
-    { title: "Transaksi", value: financeTransactions }
-  ]);
+    ]);
+  };
 
   // Supabase auth screens are rendered only after all hooks have run.
   // This keeps React hook order stable and avoids rendering JSX inside useEffect.
@@ -5939,7 +5980,7 @@ padding: isMobile ? "16px 12px" : "32px",
                       fontSize: "20px"
                     }}
                   >
-                    Keuangan Usaha
+                    Laporan Keuangan
                   </h3>
 
                   <p
@@ -5948,7 +5989,7 @@ padding: isMobile ? "16px 12px" : "32px",
                       color: darkMode ? "#CBD5E1" : "#64748B"
                     }}
                   >
-                    Catat transaksi sederhana, ZenAI menyiapkan laporan.
+                    Catat transaksi dan lihat laporan keuangan berdasarkan periode.
                   </p>
                 </div>
 
@@ -5961,7 +6002,7 @@ padding: isMobile ? "16px 12px" : "32px",
                     fontWeight: "600"
                   }}
                 >
-                  Periode
+                  Periode Laporan
                   <input
                     type="month"
                     value={financePeriod}
@@ -5988,11 +6029,11 @@ padding: isMobile ? "16px 12px" : "32px",
                 }}
               >
                 {[
-                  ["summary", "Ringkasan"],
-                  ["transactions", "Input Transaksi"],
-                  ["profit", "Laba Rugi"],
-                  ["cashflow", "Arus Kas"],
-                  ["balance", "Posisi Keuangan"]
+                  ["summary", "Ikhtisar Keuangan"],
+                  ["transactions", "Transaksi"],
+                  ["profit", "Laporan Laba Rugi"],
+                  ["cashflow", "Laporan Arus Kas"],
+                  ["balance", "Laporan Posisi Keuangan"]
                 ].map(([value, label]) => (
                   <button
                     key={value}
@@ -6532,14 +6573,14 @@ padding: isMobile ? "16px 12px" : "32px",
                 }}
               >
                 <h3 style={{ marginTop: 0 }}>
-                  Laba Rugi — {financePeriodLabel(financePeriod)}
+                  Laporan Laba Rugi — {financePeriodLabel(financePeriod)}
                 </h3>
 
                 {[
                   ["Pendapatan", financeCurrentTotals.income, true],
                   ["HPP", financeCurrentTotals.hpp, false],
                   ["Laba Kotor", financeCurrentTotals.grossProfit, true],
-                  ["Biaya Usaha", financeCurrentTotals.expense, false],
+                  ["Beban Operasional", financeCurrentTotals.expense, false],
                   ["Laba Bersih", financeCurrentTotals.netProfit, true]
                 ].map(([label, value, emphasis]) => (
                   <div
@@ -6575,12 +6616,12 @@ padding: isMobile ? "16px 12px" : "32px",
                 }}
               >
                 <h3 style={{ marginTop: 0 }}>
-                  Arus Kas — {financePeriodLabel(financePeriod)}
+                  Laporan Arus Kas — {financePeriodLabel(financePeriod)}
                 </h3>
 
                 {[
-                  ["Uang Masuk", financeCurrentTotals.cashIn, true],
-                  ["Uang Keluar", financeCurrentTotals.cashOut, false],
+                  ["Kas Masuk", financeCurrentTotals.cashIn, true],
+                  ["Kas Keluar", financeCurrentTotals.cashOut, false],
                   ["Perubahan Kas", financeCurrentTotals.cashChange, true],
                   ["Kas & Bank", financeCurrentTotals.cashTotal, true]
                 ].map(([label, value, emphasis]) => (
@@ -6613,7 +6654,7 @@ padding: isMobile ? "16px 12px" : "32px",
                 }}
               >
                 <h3 style={{ marginTop: 0 }}>
-                  Posisi Keuangan — {financePeriodLabel(financePeriod)}
+                  Laporan Posisi Keuangan — {financePeriodLabel(financePeriod)}
                 </h3>
 
                 <div
@@ -6667,7 +6708,7 @@ padding: isMobile ? "16px 12px" : "32px",
                     <h4>Utang & Modal</h4>
 
                     {[
-                      ["Utang", financeCurrentTotals.debt],
+                      ["Liabilitas", financeCurrentTotals.debt],
                       [
                         "Modal + Laba",
                         financeCurrentTotals.totalEquity
