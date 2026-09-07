@@ -2322,24 +2322,138 @@ Aturan:
 
   const pdfLabel = (label) => {
     const labels = {
-      "Business Pulse": "Kondisi Usaha", "Diagnosis": "Diagnosis", "Market Insight": "Wawasan Pasar",
-      "Business Autopilot": "Business Autopilot", "Growth Actions": "Tindakan Pertumbuhan",
-      "Tanggal": "Tanggal", "Keterangan": "Keterangan", "Jenis": "Jenis", "Jumlah": "Jumlah",
-      "Pendapatan": "Pendapatan", "Harga Pokok Penjualan": "Harga Pokok Penjualan", "Laba Kotor": "Laba Kotor",
-      "Beban Operasional": "Beban Operasional", "Laba Bersih": "Laba Bersih", "Kas Masuk": "Kas Masuk",
-      "Kas Keluar": "Kas Keluar", "Perubahan Kas Bersih": "Perubahan Kas Bersih", "Saldo Kas dan Bank": "Saldo Kas dan Bank",
-      "ASET": "ASET", "Kas dan Bank": "Kas dan Bank", "Piutang Usaha": "Piutang Usaha",
-      "Persediaan": "Persediaan", "Total Aset": "Total Aset", "LIABILITAS DAN EKUITAS": "LIABILITAS DAN EKUITAS",
-      "Liabilitas": "Liabilitas", "Modal": "Modal", "Laba Ditahan": "Laba Ditahan",
-      "Prive": "Prive", "Total Ekuitas": "Total Ekuitas", "Total Liabilitas dan Ekuitas": "Total Liabilitas dan Ekuitas",
-      "Tidak ada transaksi yang tercatat pada periode ini.": "Tidak ada transaksi yang tercatat pada periode ini."
+      // Judul/fitur
+      "Business Pulse": "Kondisi Usaha",
+      "Business Diagnosis": "Diagnosis Usaha",
+      "Diagnosis": "Diagnosis Usaha",
+      "Market Insight": "Wawasan Pasar",
+      "Business Autopilot": "Strategi & Tindakan",
+      "Growth Actions": "Tindakan Pertumbuhan",
+      "Business Updates": "Pembaruan Usaha",
+      "Financial Statements": "Laporan Keuangan",
+      "Summary": "Ikhtisar",
+      "Score": "Skor",
+      "Status": "Status",
+      "Summary": "Ringkasan",
+      "Main Problem": "Masalah Utama",
+      "Positive": "Hal Positif",
+      "Attention": "Perlu Perhatian",
+      "Priority": "Prioritas",
+      "Next Step": "Langkah Berikutnya",
+      "Strengths": "Kekuatan",
+      "Problems": "Masalah",
+      "Opportunities": "Peluang",
+      "Recommendations": "Rekomendasi",
+      "Action": "Tindakan",
+      "Reason": "Alasan",
+      "Impact": "Dampak",
+      "Potential": "Potensi",
+      "Description": "Deskripsi",
+      "Title": "Judul",
+      "Date": "Tanggal",
+      "Description": "Keterangan",
+      "Type": "Jenis",
+      "Amount": "Jumlah",
+      "Reason": "Alasan",
+      "Market Condition": "Kondisi Pasar",
+      "Demand Signal": "Sinyal Permintaan",
+      "Business Perspective": "Perspektif Bisnis",
+      "External Factors": "Faktor Eksternal",
+      "Risks": "Risiko",
+      "Competition Insight": "Wawasan Persaingan",
+      "Scenarios": "Skenario",
+      "Optimistic": "Optimistis",
+      "Realistic": "Realistis",
+      "Risk": "Risiko",
+      "Strategic Implication": "Implikasi Strategis",
+      "Limitations": "Keterbatasan",
+      "DemandSignal": "Sinyal Permintaan",
+      "MarketCondition": "Kondisi Pasar",
+      "BusinessPerspective": "Perspektif Bisnis",
+      "ExternalFactors": "Faktor Eksternal",
+      "CompetitionInsight": "Wawasan Persaingan",
+      "StrategicImplication": "Implikasi Strategis",
+      "MainProblem": "Masalah Utama",
+      "NextStep": "Langkah Berikutnya",
+      "CumulativeNetProfit": "Laba Bersih Kumulatif",
+      "cashIn": "Kas Masuk",
+      "cashOut": "Kas Keluar",
+      "cashChange": "Perubahan Kas Bersih",
+      "cashTotal": "Saldo Kas dan Bank",
+      "income": "Pendapatan",
+      "hpp": "Harga Pokok Penjualan",
+      "grossProfit": "Laba Kotor",
+      "expense": "Beban Operasional",
+      "netProfit": "Laba Bersih",
+      "receivable": "Piutang Usaha",
+      "inventory": "Persediaan",
+      "totalAssets": "Total Aset",
+      "debt": "Liabilitas",
+      "capital": "Modal",
+      "cumulativeNetProfit": "Laba Ditahan",
+      "withdrawal": "Prive",
+      "totalEquity": "Total Ekuitas",
+      "ASET": "ASET",
+      "LIABILITAS DAN EKUITAS": "LIABILITAS DAN EKUITAS",
+      "Pendapatan": "Pendapatan",
+      "Harga Pokok Penjualan": "Harga Pokok Penjualan",
+      "Laba Kotor": "Laba Kotor",
+      "Beban Operasional": "Beban Operasional",
+      "Laba Bersih": "Laba Bersih",
+      "Kas Masuk": "Kas Masuk",
+      "Kas Keluar": "Kas Keluar",
+      "Perubahan Kas Bersih": "Perubahan Kas Bersih",
+      "Saldo Kas dan Bank": "Saldo Kas dan Bank",
+      "Kas dan Bank": "Kas dan Bank",
+      "Piutang Usaha": "Piutang Usaha",
+      "Persediaan": "Persediaan",
+      "Total Aset": "Total Aset",
+      "Liabilitas": "Liabilitas",
+      "Modal": "Modal",
+      "Laba Ditahan": "Laba Ditahan",
+      "Prive": "Prive",
+      "Total Ekuitas": "Total Ekuitas",
+      "Total Liabilitas dan Ekuitas": "Total Liabilitas dan Ekuitas",
+      "Tidak ada transaksi yang tercatat pada periode ini.": "Tidak ada transaksi yang tercatat pada periode ini.",
+      "No transactions recorded for this period.": "Tidak ada transaksi yang tercatat pada periode ini.",
+      "connector-ready": "Siap digunakan",
+      "operational": "Beroperasi",
+      "configured": "Terkonfigurasi",
+      "down": "Tidak tersedia",
+      "HIGH": "TINGGI",
+      "MEDIUM": "SEDANG",
+      "LOW": "RENDAH"
     };
-    return labels[String(label)] || String(label)
-      .replace(/Business Condition Report/gi, "Laporan Kondisi Usaha")
-      .replace(/Business Diagnosis Report/gi, "Laporan Diagnosis Usaha")
-      .replace(/Business Perspective Report/gi, "Laporan Perspektif Bisnis")
-      .replace(/Strategy & Action Plan/gi, "Rencana Strategi dan Tindakan")
-      .replace(/Financial Statements/gi, "Laporan Keuangan");
+
+    const raw = String(label ?? "");
+    if (Object.prototype.hasOwnProperty.call(labels, raw)) return labels[raw];
+
+    // Fallback untuk key camelCase/snake-like yang mungkin muncul dari respons AI.
+    const normalized = raw
+      .replace(/([a-z])([A-Z])/g, "$1 $2")
+      .replace(/[_-]+/g, " ")
+      .trim();
+    if (Object.prototype.hasOwnProperty.call(labels, normalized)) return labels[normalized];
+
+    const lower = normalized.toLowerCase();
+    const dynamic = {
+      "score": "Skor", "status": "Status", "summary": "Ringkasan",
+      "main problem": "Masalah Utama", "positive": "Hal Positif",
+      "attention": "Perlu Perhatian", "priority": "Prioritas",
+      "next step": "Langkah Berikutnya", "strengths": "Kekuatan",
+      "problems": "Masalah", "opportunities": "Peluang",
+      "recommendations": "Rekomendasi", "action": "Tindakan",
+      "reason": "Alasan", "impact": "Dampak", "potential": "Potensi",
+      "description": "Deskripsi", "title": "Judul", "date": "Tanggal",
+      "type": "Jenis", "amount": "Jumlah", "market condition": "Kondisi Pasar",
+      "demand signal": "Sinyal Permintaan", "business perspective": "Perspektif Bisnis",
+      "external factors": "Faktor Eksternal", "risks": "Risiko",
+      "competition insight": "Wawasan Persaingan", "scenarios": "Skenario",
+      "optimistic": "Optimistis", "realistic": "Realistis",
+      "risk": "Risiko", "strategic implication": "Implikasi Strategis",
+      "limitations": "Keterbatasan", "demand signal": "Sinyal Permintaan"
+    };
+    return dynamic[lower] || normalized || raw;
   };
 
   const formatPdfValue = (value) => {
@@ -2366,7 +2480,7 @@ Aturan:
 
     const reportWindow = window.open("", "_blank", "width=980,height=900");
     if (!reportWindow) {
-      alert("Browser popup is blocked. Please allow popups for ZenAI and try again.");
+      alert("Popup browser diblokir. Izinkan popup untuk ZenAI, lalu coba lagi.");
       return;
     }
 
@@ -2425,7 +2539,7 @@ Aturan:
   <img class="pdf-logo" src="${window.location.origin}/zenai-logo.png" alt="ZenAI Logo" onerror="this.style.display='none'" />
   <div>
     <div class="brand">ZENAI</div>
-    <div class="subtitle">AI Business Assistant</div>
+    <div class="subtitle">Pendamping Bisnis Berbasis AI</div>
   </div>
 </header>
 <h1 class="report-title">${escapePdfHtml(title)}</h1>
@@ -2439,20 +2553,20 @@ ${sectionHtml}
   };
 
   const exportPulsePdf = () => exportReportPdf("Laporan Kondisi Usaha", [
-    { title: "Business Pulse", value: pulseData }
+    { title: "Kondisi Usaha", value: pulseData }
   ]);
 
   const exportDiagnosisPdf = () => exportReportPdf("Laporan Diagnosis Usaha", [
-    { title: "Diagnosis", value: diagnosis }
+    { title: "Diagnosis Usaha", value: diagnosis }
   ]);
 
   const exportMarketPdf = () => exportReportPdf("Laporan Perspektif Bisnis", [
-    { title: "Market Insight", value: marketData }
+    { title: "Wawasan Pasar", value: marketData }
   ]);
 
   const exportAutopilotPdf = () => exportReportPdf("Rencana Strategi dan Tindakan", [
-    { title: "Business Autopilot", value: autopilotData },
-    { title: "Growth Actions", value: growthActions }
+    { title: "Strategi & Tindakan", value: autopilotData },
+    { title: "Tindakan Pertumbuhan", value: growthActions }
   ]);
 
   const exportFinancePdf = () => {
@@ -2460,10 +2574,10 @@ ${sectionHtml}
     const transactions = financeTransactions
       .filter((item) => item.date?.slice(0, 7) === financePeriod)
       .map((item) => ({
-        Date: item.date,
-        Description: item.description,
-        Type: financeTypes.find((type) => type.value === item.type)?.label || item.type,
-        Amount: formatRupiah(item.amount)
+        Tanggal: item.date,
+        Keterangan: item.description,
+        Jenis: financeTypes.find((type) => type.value === item.type)?.label || item.type,
+        Jumlah: formatRupiah(item.amount)
       }));
 
     return exportReportPdf(`Laporan Keuangan — ${financePeriodLabel(financePeriod)}`, [
