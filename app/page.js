@@ -1370,7 +1370,6 @@ Balas dengan JSON valid menggunakan struktur:
 {
   "status": "",
   "summary": "",
-  "score": 0,
 
   "positive": [
     {
@@ -1400,7 +1399,6 @@ Balas dengan JSON valid menggunakan struktur:
 
 Aturan:
 
-- score harus angka 0 sampai 100.
 - Jangan membuat angka atau omzet jika tidak ada data.
 - Fokus pada kondisi usaha yang benar-benar tersedia.
 - Gunakan bahasa Indonesia sederhana.
@@ -2332,7 +2330,6 @@ Aturan:
       "Business Updates": "Pembaruan Usaha",
       "Financial Statements": "Laporan Keuangan",
       "Summary": "Ikhtisar",
-      "Score": "Skor",
       "Status": "Status",
       "Summary": "Ringkasan",
       "Main Problem": "Masalah Utama",
@@ -2437,7 +2434,7 @@ Aturan:
 
     const lower = normalized.toLowerCase();
     const dynamic = {
-      "score": "Skor", "status": "Status", "summary": "Ringkasan",
+      "status": "Status", "summary": "Ringkasan",
       "main problem": "Masalah Utama", "positive": "Hal Positif",
       "attention": "Perlu Perhatian", "priority": "Prioritas",
       "next step": "Langkah Berikutnya", "strengths": "Kekuatan",
