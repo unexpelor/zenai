@@ -2448,9 +2448,52 @@ Aturan:
       "competition insight": "Wawasan Persaingan", "scenarios": "Skenario",
       "optimistic": "Optimistis", "realistic": "Realistis",
       "risk": "Risiko", "strategic implication": "Implikasi Strategis",
-      "limitations": "Keterbatasan", "demand signal": "Sinyal Permintaan"
+      "limitations": "Keterbatasan",
+      "market insight": "Wawasan Pasar",
+      "market condition": "Kondisi Pasar",
+      "demand signal": "Sinyal Permintaan",
+      "business perspective": "Perspektif Bisnis",
+      "external factors": "Faktor Eksternal",
+      "competition insight": "Wawasan Persaingan",
+      "strategic implication": "Implikasi Strategis",
+      "scenarios": "Skenario",
+      "optimistic": "Optimistis",
+      "realistic": "Realistis",
+      "risk": "Risiko"
     };
     return dynamic[lower] || normalized || raw;
+  };
+
+  const translatePdfText = (value) => {
+    if (value === null || value === undefined) return value;
+    const replacements = [
+      [/\bMarket Insight\b/gi, "Wawasan Pasar"],
+      [/\bBusiness Perspective\b/gi, "Perspektif Bisnis"],
+      [/\bMarket Condition\b/gi, "Kondisi Pasar"],
+      [/\bDemand Signal\b/gi, "Sinyal Permintaan"],
+      [/\bExternal Factors\b/gi, "Faktor Eksternal"],
+      [/\bCompetition Insight\b/gi, "Wawasan Persaingan"],
+      [/\bStrategic Implication\b/gi, "Implikasi Strategis"],
+      [/\bOptimistic\b/gi, "Optimistis"],
+      [/\bRealistic\b/gi, "Realistis"],
+      [/\bRisk\b/gi, "Risiko"],
+      [/\bRisks\b/gi, "Risiko"],
+      [/\bOpportunities\b/gi, "Peluang"],
+      [/\bStrengths\b/gi, "Kekuatan"],
+      [/\bProblems\b/gi, "Masalah"],
+      [/\bRecommendations\b/gi, "Rekomendasi"],
+      [/\bSummary\b/gi, "Ringkasan"],
+      [/\bStatus\b/gi, "Status"],
+      [/\bReason\b/gi, "Alasan"],
+      [/\bLimitations\b/gi, "Keterbatasan"],
+      [/\bDemandSignal\b/gi, "Sinyal Permintaan"],
+      [/\bMarketCondition\b/gi, "Kondisi Pasar"],
+      [/\bBusinessPerspective\b/gi, "Perspektif Bisnis"],
+      [/\bExternalFactors\b/gi, "Faktor Eksternal"],
+      [/\bCompetitionInsight\b/gi, "Wawasan Persaingan"],
+      [/\bStrategicImplication\b/gi, "Implikasi Strategis"],
+    ];
+    return replacements.reduce((result, [pattern, replacement]) => result.replace(pattern, replacement), String(value));
   };
 
   const formatPdfValue = (value) => {
@@ -2469,7 +2512,7 @@ Aturan:
         .map(([key, item]) => `<tr><th>${escapePdfHtml(pdfLabel(key))}</th><td>${formatPdfValue(item)}</td></tr>`)
         .join("")}</tbody></table>`;
     }
-    return escapePdfHtml(value).replace(/\n/g, "<br />");
+    return escapePdfHtml(translatePdfText(value)).replace(/\n/g, "<br />");
   };
 
   const exportReportPdf = (title, sections = []) => {
@@ -2557,9 +2600,67 @@ ${sectionHtml}
     { title: "Diagnosis Usaha", value: diagnosis }
   ]);
 
-  const exportMarketPdf = () => exportReportPdf("Laporan Perspektif Bisnis", [
-    { title: "Wawasan Pasar", value: marketData }
-  ]);
+  const exportMarketPdf = () => {
+    const analysis = marketData?.analysis || {};
+    const sourceItems = Array.isArray(marketData?.sources)
+      ? marketData.sources.slice(0, 10).map((item, index) => ({
+          No: index + 1,
+          Judul: item?.title || "Sumber informasi",
+          Tanggal: item?.publishedDate || "—",
+          Tautan: item?.url || "—"
+        }))
+      : [];
+
+    return exportReportPdf("Laporan Perspektif Bisnis", [
+      {
+        title: "Ringkasan",
+        value: analysis.summary || "Belum tersedia."
+      },
+      {
+        title: "Kondisi Pasar",
+        value: analysis.marketCondition || "Belum tersedia."
+      },
+      {
+        title: "Sinyal Permintaan",
+        value: analysis.demandSignal || "Belum tersedia."
+      },
+      {
+        title: "Perspektif Bisnis",
+        value: analysis.businessPerspective || "Belum tersedia."
+      },
+      {
+        title: "Faktor Eksternal",
+        value: analysis.externalFactors || []
+      },
+      {
+        title: "Risiko",
+        value: analysis.risks || []
+      },
+      {
+        title: "Peluang",
+        value: analysis.opportunities || []
+      },
+      {
+        title: "Wawasan Persaingan",
+        value: analysis.competitionInsight || "Belum tersedia."
+      },
+      {
+        title: "Skenario",
+        value: analysis.scenarios || {}
+      },
+      {
+        title: "Implikasi Strategis",
+        value: analysis.strategicImplication || "Belum tersedia."
+      },
+      {
+        title: "Keterbatasan",
+        value: analysis.limitations || "Belum tersedia."
+      },
+      ...(sourceItems.length
+        ? [{ title: "Sumber Informasi", value: sourceItems }]
+        : [])
+    ]);
+  };
 
   const exportAutopilotPdf = () => exportReportPdf("Rencana Strategi dan Tindakan", [
     { title: "Strategi & Tindakan", value: autopilotData },
@@ -4385,7 +4486,7 @@ padding: isMobile ? "16px 12px" : "32px",
           >
             {pulseData && (
               <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "14px" }}>
-                <button type="button" onClick={exportPulsePdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}>📄 Export PDF</button>
+                <button type="button" onClick={exportPulsePdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}>📄 Ekspor PDF</button>
               </div>
             )}
             {!pulseData ? (
@@ -4994,7 +5095,7 @@ padding: isMobile ? "16px 12px" : "32px",
           >
             {diagnosis && (
               <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "14px" }}>
-                <button type="button" onClick={exportDiagnosisPdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}>📄 Export PDF</button>
+                <button type="button" onClick={exportDiagnosisPdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}>📄 Ekspor PDF</button>
               </div>
             )}
             {!diagnosis ? (
@@ -5643,7 +5744,7 @@ padding: isMobile ? "16px 12px" : "32px",
   <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
     {marketData && (
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "14px" }}>
-        <button type="button" onClick={exportMarketPdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}>📄 Export PDF</button>
+        <button type="button" onClick={exportMarketPdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}>📄 Ekspor PDF</button>
       </div>
     )}
     {!marketData && !marketLoading && !marketError && (
@@ -6064,7 +6165,7 @@ padding: isMobile ? "16px 12px" : "32px",
         {tab === "finance" && (
           <div>
             <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "14px" }}>
-              <button type="button" onClick={exportFinancePdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}>📄 Export PDF</button>
+              <button type="button" onClick={exportFinancePdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}>📄 Ekspor PDF</button>
             </div>
             <div
               style={{
@@ -6910,7 +7011,7 @@ padding: isMobile ? "16px 12px" : "32px",
           >
             {autopilotData && (
               <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "14px" }}>
-                <button type="button" onClick={exportAutopilotPdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}>📄 Export PDF</button>
+                <button type="button" onClick={exportAutopilotPdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}>📄 Ekspor PDF</button>
               </div>
             )}
             {!autopilotData ? (
