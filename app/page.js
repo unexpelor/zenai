@@ -1785,7 +1785,7 @@ Balas dengan JSON valid menggunakan struktur:
 
   "priority": "",
 
-  "plan7": [
+  "Rencana 7 Hari": [
     {
       "day": "",
       "title": "",
@@ -1794,7 +1794,7 @@ Balas dengan JSON valid menggunakan struktur:
     }
   ],
 
-  "plan14": [
+  "Rencana 14 Hari": [
     {
       "phase": "",
       "title": "",
@@ -1802,7 +1802,7 @@ Balas dengan JSON valid menggunakan struktur:
     }
   ],
 
-  "plan30": [
+  "Rencana 30 Hari": [
     {
       "phase": "",
       "title": "",
@@ -1810,7 +1810,7 @@ Balas dengan JSON valid menggunakan struktur:
     }
   ],
 
-  "plan": [
+  "RENCANA": [
     {
       "step": "",
       "action": "",
@@ -1818,7 +1818,7 @@ Balas dengan JSON valid menggunakan struktur:
     }
   ],
 
-  "warning": "",
+  "peringatan": "",
 
   "nextStep": ""
 }
