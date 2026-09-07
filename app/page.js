@@ -2460,6 +2460,7 @@ Aturan:
       "optimistic": "Optimistis",
       "realistic": "Realistis",
       "risk": "Risiko",
+      "warning": "peringatan",
       "plan": "Ringkasan Rencana",
       "plan7": "Rencana 7 Hari",
       "plan14": "Rencana 14 Hari",
@@ -2666,10 +2667,19 @@ ${sectionHtml}
     ]);
   };
 
-  const exportAutopilotPdf = () => exportReportPdf("Rencana Strategi dan Tindakan", [
-    { title: "Strategi & Tindakan", value: autopilotData },
-    { title: "Tindakan Pertumbuhan", value: growthActions }
-  ]);
+  const exportAutopilotPdf = () => {
+    const plans = [
+      { title: "Rencana 7 Hari", value: Array.isArray(autopilotData?.plan7) ? autopilotData.plan7 : [] },
+      { title: "Rencana 14 Hari", value: Array.isArray(autopilotData?.plan14) ? autopilotData.plan14 : [] },
+      { title: "Rencana 30 Hari", value: Array.isArray(autopilotData?.plan30) ? autopilotData.plan30 : [] },
+    ].filter((section) => section.value.length > 0);
+
+    return exportReportPdf("Rencana Strategi dan Tindakan", [
+      { title: "Strategi Utama", value: autopilotData?.mission || autopilotData?.strategy || {} },
+      ...plans,
+      { title: "Tindakan Pertumbuhan", value: growthActions }
+    ]);
+  };
 
   const exportFinancePdf = () => {
     const current = financeCurrentTotals;
