@@ -3032,11 +3032,19 @@ padding: isMobile ? "16px 12px" : "32px",
 
   {/* NAVIGASI UTAMA */}
   <nav
+    className="zenai-sidebar-nav"
     style={{
       display: "flex",
       flexDirection: "column",
       gap: "7px",
-      flexShrink: 0
+      flex: 1,
+      minHeight: 0,
+      overflowY: "auto",
+      overflowX: "hidden",
+      paddingRight: "3px",
+      paddingBottom: "4px",
+      scrollbarWidth: "thin",
+      WebkitOverflowScrolling: "touch"
     }}
   >
     {[
@@ -7783,6 +7791,11 @@ darkMode={darkMode}
 .zenai-dark button { color:#E5E7EB; }
 .zenai-dark button[style*="#2563EB"],.zenai-dark button[style*="#2563EB"] { color:#FFFFFF !important; }
 
+.zenai-sidebar-nav::-webkit-scrollbar { width: 5px; }
+.zenai-sidebar-nav::-webkit-scrollbar-track { background: transparent; }
+.zenai-sidebar-nav::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 999px; }
+.zenai-dark .zenai-sidebar-nav::-webkit-scrollbar-thumb { background: #475569; }
+
 @media (max-width:768px) {
   .zenai-app {
     width: 100vw !important;
@@ -7792,10 +7805,15 @@ darkMode={darkMode}
 
   .zenai-sidebar {
     flex-shrink: 0 !important;
-    overflow-x: hidden !important;
-    overflow-y: auto !important;
+    overflow: hidden !important;
     height: 100vh !important;
     max-height: 100vh !important;
+  }
+
+  .zenai-sidebar-nav {
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
     -webkit-overflow-scrolling: touch !important;
   }
 
