@@ -728,48 +728,123 @@ const [marketError, setMarketError] =
     );
   };
 
+  const financeDelta = (current, previous) => {
+    const delta = (Number(current) || 0) - (Number(previous) || 0);
+    const percentage = financeChange(current, previous);
+    return { delta, percentage };
+  };
+
+  const financeChangeLabel = (current, previous, inverse = false) => {
+    const { delta, percentage } = financeDelta(current, previous);
+    if (Number(previous) === 0) {
+      return delta === 0 ? "Tidak berubah" : "Belum ada basis pembanding";
+    }
+    const improving = inverse ? delta < 0 : delta > 0;
+    const tone = delta === 0 ? "Stabil" : improving ? "Membaik" : "Menurun";
+    return `${tone} ${delta >= 0 ? "↑" : "↓"} ${formatRupiah(Math.abs(delta))} (${Math.abs(percentage || 0).toFixed(1)}%)`;
+  };
+
   const financeInsight = (() => {
-    const current =
-      financeCurrentTotals;
+    const current = financeCurrentTotals;
+    const previous = financePreviousTotals;
+    const hasCurrent = current.income !== 0 || current.expense !== 0 || current.hpp !== 0 || current.cashChange !== 0;
 
-    const previous =
-      financePreviousTotals;
-
-    if (
-      current.income === 0 &&
-      current.expense === 0 &&
-      current.hpp === 0
-    ) {
-      return "Belum ada transaksi pada periode ini. Tambahkan transaksi untuk mendapatkan laporan dan insight ZenAI.";
+    if (!hasCurrent) {
+      return {
+        headline: "Belum cukup data untuk membaca arah keuangan.",
+        summary: "Tambahkan transaksi pada periode ini agar ZENAI dapat membandingkan kinerja dengan periode sebelumnya dan menghubungkannya dengan hasil analisis bisnis.",
+        points: []
+      };
     }
 
-    const profitChange =
-      financeChange(
-        current.netProfit,
-        previous.netProfit
+    const profitChange = financeChange(current.netProfit, previous.netProfit);
+    const incomeChange = financeChange(current.income, previous.income);
+    const hppChange = financeChange(current.hpp, previous.hpp);
+    const expenseChange = financeChange(current.expense, previous.expense);
+    const cashChange = financeChange(current.cashTotal, previous.cashTotal);
+
+    const grossMargin = current.income > 0 ? (current.grossProfit / current.income) * 100 : 0;
+    const previousGrossMargin = previous.income > 0 ? (previous.grossProfit / previous.income) * 100 : 0;
+    const netMargin = current.income > 0 ? (current.netProfit / current.income) * 100 : 0;
+    const previousNetMargin = previous.income > 0 ? (previous.netProfit / previous.income) * 100 : 0;
+
+    const points = [];
+
+    if (incomeChange !== null && incomeChange !== 0) {
+      points.push(
+        `Pendapatan ${incomeChange > 0 ? "naik" : "turun"} ${Math.abs(incomeChange).toFixed(1)}% menjadi ${formatRupiah(current.income)}.`
       );
+    }
 
-    if (
+    if (hppChange !== null && hppChange !== 0) {
+      points.push(
+        `HPP ${hppChange > 0 ? "naik" : "turun"} ${Math.abs(hppChange).toFixed(1)}% menjadi ${formatRupiah(current.hpp)}. ${hppChange > 0 && incomeChange !== null && hppChange > incomeChange ? "Kenaikan HPP lebih cepat daripada pertumbuhan pendapatan, sehingga margin perlu diwaspadai." : "Perubahan HPP masih perlu dibandingkan dengan perubahan pendapatan."}`
+      );
+    }
+
+    if (expenseChange !== null && expenseChange !== 0) {
+      points.push(
+        `Beban operasional ${expenseChange > 0 ? "naik" : "turun"} ${Math.abs(expenseChange).toFixed(1)}% menjadi ${formatRupiah(current.expense)}.`
+      );
+    }
+
+    if (profitChange !== null && profitChange !== 0) {
+      points.push(
+        `Laba bersih ${profitChange > 0 ? "meningkat" : "menurun"} ${Math.abs(profitChange).toFixed(1)}% dari ${formatRupiah(previous.netProfit)} menjadi ${formatRupiah(current.netProfit)}.`
+      );
+    }
+
+    if (current.netProfit < 0) {
+      points.push("Periode ini mencatat rugi bersih. Fokus utama adalah mengendalikan HPP dan biaya yang tidak menghasilkan pendapatan.");
+    }
+
+    if (previous.income > 0 && current.income > 0) {
+      const marginDelta = netMargin - previousNetMargin;
+      points.push(
+        `Margin laba bersih ${netMargin.toFixed(1)}%, ${marginDelta >= 0 ? "naik" : "turun"} ${Math.abs(marginDelta).toFixed(1)} poin persentase dari ${previousNetMargin.toFixed(1)}% pada periode sebelumnya.`
+      );
+    }
+
+    if (previous.income > 0 && current.income > 0) {
+      const grossMarginDelta = grossMargin - previousGrossMargin;
+      points.push(
+        `Margin laba kotor ${grossMargin.toFixed(1)}%, ${grossMarginDelta >= 0 ? "naik" : "turun"} ${Math.abs(grossMarginDelta).toFixed(1)} poin persentase dibanding ${previousGrossMargin.toFixed(1)}%.`
+      );
+    }
+
+    if (cashChange !== null && cashChange !== 0) {
+      points.push(
+        `Saldo kas dan bank ${cashChange > 0 ? "naik" : "turun"} ${Math.abs(cashChange).toFixed(1)}% menjadi ${formatRupiah(current.cashTotal)}.`
+      );
+    }
+
+    const headline =
       current.netProfit < 0
-    ) {
-      return "Periode ini mencatat rugi. Periksa HPP dan biaya usaha, lalu gunakan rincian transaksi untuk menemukan pengeluaran terbesar.";
-    }
+        ? "⚠️ Profitabilitas perlu segera diperbaiki."
+        : profitChange !== null && profitChange > 0
+        ? "📈 Kinerja laba membaik, tetapi sumber pertumbuhannya tetap perlu diperiksa."
+        : profitChange !== null && profitChange < 0
+        ? "⚠️ Laba melemah dan perlu ditelusuri penyebabnya."
+        : "🧭 Kinerja keuangan relatif stabil.";
 
-    if (
-      profitChange !== null &&
-      profitChange > 0
-    ) {
-      return `Laba bersih meningkat ${Math.abs(profitChange).toFixed(1)}% dibanding ${financePeriodLabel(financePreviousPeriod)}. Pertahankan pertumbuhan pendapatan sambil mengendalikan biaya.`;
+    const linkedAnalysis = [];
+    if (pulseData?.summary) linkedAnalysis.push(`Business Pulse: ${pulseData.summary}`);
+    if (diagnosis?.mainProblem) linkedAnalysis.push(`Masalah utama: ${diagnosis.mainProblem}`);
+    if (Array.isArray(diagnosis?.problems) && diagnosis.problems[0]?.description) {
+      linkedAnalysis.push(`Diagnosis: ${diagnosis.problems[0].title || "Temuan utama"} — ${diagnosis.problems[0].description}`);
     }
-
-    if (
-      profitChange !== null &&
-      profitChange < 0
-    ) {
-      return `Laba bersih menurun ${Math.abs(profitChange).toFixed(1)}% dibanding ${financePeriodLabel(financePreviousPeriod)}. Periksa perubahan HPP dan biaya usaha.`;
+    if (Array.isArray(pulseData?.priority) && pulseData.priority[0]) {
+      const item = pulseData.priority[0];
+      linkedAnalysis.push(`Prioritas ZENAI: ${item.title || ""}${item.action ? ` — ${item.action}` : ""}`);
     }
+    if (autopilotData?.priority) linkedAnalysis.push(`Strategi aktif: ${autopilotData.priority}`);
 
-    return "Keuangan periode ini sudah tercatat. Bandingkan dengan periode sebelumnya untuk melihat arah perkembangan usaha.";
+    return {
+      headline,
+      summary: `Periode ${financePeriodLabel(financePeriod)} dibandingkan dengan ${financePeriodLabel(financePreviousPeriod)}. ZENAI membaca perubahan nominal, persentase, margin, arus kas, serta temuan analisis bisnis yang paling terbaru.`,
+      points,
+      linkedAnalysis
+    };
   })();
 
   const formatError = (error) => {
@@ -2262,7 +2337,7 @@ Aturan:
       if (pulseData) {
         history.push({
           type:
-            "Kondisi Usaha",
+            "Lihat Kondisi Usaha",
 
           description:
             pulseData.summary ||
@@ -2730,6 +2805,15 @@ ${sectionHtml}
           "Prive": formatRupiah(current.withdrawal),
           "Total Ekuitas": formatRupiah(current.totalEquity),
           "Total Liabilitas dan Ekuitas": formatRupiah(current.debt + current.totalEquity)
+        }
+      },
+      {
+        title: "Analisis Keuangan ZENAI",
+        value: {
+          "Kesimpulan": financeInsight.headline,
+          "Ringkasan": financeInsight.summary,
+          "Perubahan Utama": financeInsight.points,
+          "Keterkaitan Analisis Bisnis": financeInsight.linkedAnalysis
         }
       },
       {
@@ -6418,19 +6502,59 @@ padding: isMobile ? "16px 12px" : "32px",
                     padding: "22px"
                   }}
                 >
-                  <h3 style={{ marginTop: 0 }}>
-                    🧠 Insight ZenAI
+                  <div style={{ fontSize: "12px", fontWeight: "800", letterSpacing: "0.08em", color: "#2563EB" }}>
+                    ZENAI FINANCIAL INTELLIGENCE
+                  </div>
+                  <h3 style={{ margin: "6px 0 8px" }}>
+                    {financeInsight.headline}
                   </h3>
-
-                  <p
-                    style={{
-                      marginBottom: 0,
-                      color: darkMode ? "#E2E8F0" : "#475569",
-                      lineHeight: "1.7"
-                    }}
-                  >
-                    {financeInsight}
+                  <p style={{ margin: 0, color: darkMode ? "#CBD5E1" : "#475569", lineHeight: "1.7" }}>
+                    {financeInsight.summary}
                   </p>
+
+                  {financeInsight.points.length > 0 && (
+                    <div style={{ display: "grid", gap: "10px", marginTop: "16px" }}>
+                      {financeInsight.points.map((point, index) => (
+                        <div
+                          key={index}
+                          style={{
+                            padding: "12px 14px",
+                            borderRadius: "12px",
+                            background: darkMode ? "#0B1120" : "#F8FAFC",
+                            color: darkMode ? "#E2E8F0" : "#334155",
+                            lineHeight: "1.6",
+                            fontSize: "14px"
+                          }}
+                        >
+                          <strong style={{ marginRight: "6px" }}>{index + 1}.</strong>{point}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {financeInsight.linkedAnalysis.length > 0 && (
+                    <div
+                      style={{
+                        marginTop: "18px",
+                        padding: "16px",
+                        borderRadius: "14px",
+                        background: darkMode ? "#172033" : "#EFF6FF",
+                        border: `1px solid ${darkMode ? "#1D4ED8" : "#BFDBFE"}`
+                      }}
+                    >
+                      <strong>🔗 Terhubung dengan Analisis ZENAI</strong>
+                      <div style={{ display: "grid", gap: "8px", marginTop: "10px" }}>
+                        {financeInsight.linkedAnalysis.map((item, index) => (
+                          <div key={index} style={{ fontSize: "14px", lineHeight: "1.6", color: darkMode ? "#DBEAFE" : "#1E3A8A" }}>
+                            • {item}
+                          </div>
+                        ))}
+                      </div>
+                      <div style={{ marginTop: "10px", fontSize: "12px", color: darkMode ? "#94A3B8" : "#64748B" }}>
+                        Penjelasan ini mengikuti state analisis terbaru. Saat Kondisi Usaha/Diagnosis diperbarui, bagian ini ikut berubah otomatis.
+                      </div>
+                    </div>
+                  )}
                 </section>
               </>
             )}
@@ -6817,33 +6941,50 @@ padding: isMobile ? "16px 12px" : "32px",
                   Laporan Laba Rugi — {financePeriodLabel(financePeriod)}
                 </h3>
 
-                {[
-                  ["Pendapatan", financeCurrentTotals.income, true],
-                  ["HPP", financeCurrentTotals.hpp, false],
-                  ["Laba Kotor", financeCurrentTotals.grossProfit, true],
-                  ["Beban Operasional", financeCurrentTotals.expense, false],
-                  ["Laba Bersih", financeCurrentTotals.netProfit, true]
-                ].map(([label, value, emphasis]) => (
-                  <div
-                    key={label}
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      gap: "20px",
-                      padding: "15px 0",
-                      borderBottom: `1px solid ${darkMode ? "#334155" : "#F1F5F9"}`,
-                      fontWeight:
-                        emphasis ? "800" : "500",
-                      fontSize:
-                        label === "Laba Bersih"
-                          ? "18px"
-                          : "15px"
-                    }}
-                  >
-                    <span>{label}</span>
-                    <span>{formatRupiah(value)}</span>
-                  </div>
-                ))}
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "720px" }}>
+                    <thead>
+                      <tr>
+                        {["Komponen", "Periode Ini", "Periode Sebelumnya", "Perubahan", "Arah"].map((heading) => (
+                          <th key={heading} style={{ textAlign: heading === "Komponen" ? "left" : "right", padding: "10px 8px", borderBottom: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}`, color: darkMode ? "#CBD5E1" : "#64748B", fontSize: "12px" }}>
+                            {heading}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        ["Pendapatan", financeCurrentTotals.income, financePreviousTotals.income, false],
+                        ["HPP", financeCurrentTotals.hpp, financePreviousTotals.hpp, true],
+                        ["Laba Kotor", financeCurrentTotals.grossProfit, financePreviousTotals.grossProfit, false],
+                        ["Beban Operasional", financeCurrentTotals.expense, financePreviousTotals.expense, true],
+                        ["Laba Bersih", financeCurrentTotals.netProfit, financePreviousTotals.netProfit, false]
+                      ].map(([label, value, previousValue, inverse]) => {
+                        const { delta, percentage } = financeDelta(value, previousValue);
+                        const better = inverse ? delta < 0 : delta > 0;
+                        return (
+                          <tr key={label}>
+                            <td style={{ padding: "13px 8px", borderBottom: `1px solid ${darkMode ? "#334155" : "#F1F5F9"}`, fontWeight: label === "Laba Bersih" ? "800" : "500" }}>{label}</td>
+                            <td style={{ padding: "13px 8px", textAlign: "right", borderBottom: `1px solid ${darkMode ? "#334155" : "#F1F5F9"}`, fontWeight: label === "Laba Bersih" ? "800" : "600" }}>{formatRupiah(value)}</td>
+                            <td style={{ padding: "13px 8px", textAlign: "right", borderBottom: `1px solid ${darkMode ? "#334155" : "#F1F5F9"}`, color: darkMode ? "#94A3B8" : "#64748B" }}>{formatRupiah(previousValue)}</td>
+                            <td style={{ padding: "13px 8px", textAlign: "right", borderBottom: `1px solid ${darkMode ? "#334155" : "#F1F5F9"}` }}>{delta === 0 ? "—" : `${delta >= 0 ? "+" : "-"}${formatRupiah(Math.abs(delta))}`}</td>
+                            <td style={{ padding: "13px 8px", textAlign: "right", borderBottom: `1px solid ${darkMode ? "#334155" : "#F1F5F9"}`, color: delta === 0 ? "#64748B" : better ? "#2563EB" : "#e11d48", fontWeight: "700" }}>
+                              {Number(previousValue) === 0 ? "—" : `${delta >= 0 ? "↑" : "↓"} ${Math.abs(percentage || 0).toFixed(1)}%`}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div style={{ marginTop: "18px", padding: "16px", borderRadius: "14px", background: darkMode ? "#0B1120" : "#F8FAFC" }}>
+                  <strong>📌 Cara membaca periode ini</strong>
+                  <p style={{ margin: "8px 0 0", color: darkMode ? "#CBD5E1" : "#475569", lineHeight: "1.7" }}>
+                    {financeChangeLabel(financeCurrentTotals.netProfit, financePreviousTotals.netProfit)}
+                    {" "}Laba bersih periode ini sebesar {formatRupiah(financeCurrentTotals.netProfit)} setelah memperhitungkan HPP {formatRupiah(financeCurrentTotals.hpp)} dan beban operasional {formatRupiah(financeCurrentTotals.expense)}.
+                  </p>
+                </div>
               </section>
             )}
 
@@ -6860,28 +7001,43 @@ padding: isMobile ? "16px 12px" : "32px",
                   Laporan Arus Kas — {financePeriodLabel(financePeriod)}
                 </h3>
 
-                {[
-                  ["Kas Masuk", financeCurrentTotals.cashIn, true],
-                  ["Kas Keluar", financeCurrentTotals.cashOut, false],
-                  ["Perubahan Kas", financeCurrentTotals.cashChange, true],
-                  ["Kas & Bank", financeCurrentTotals.cashTotal, true]
-                ].map(([label, value, emphasis]) => (
-                  <div
-                    key={label}
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      gap: "20px",
-                      padding: "15px 0",
-                      borderBottom: `1px solid ${darkMode ? "#334155" : "#F1F5F9"}`,
-                      fontWeight:
-                        emphasis ? "800" : "500"
-                    }}
-                  >
-                    <span>{label}</span>
-                    <span>{formatRupiah(value)}</span>
-                  </div>
-                ))}
+                <div style={{ overflowX: "auto" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "720px" }}>
+                    <thead>
+                      <tr>
+                        {["Komponen", "Periode Ini", "Periode Sebelumnya", "Perubahan", "Arah"].map((heading) => (
+                          <th key={heading} style={{ textAlign: heading === "Komponen" ? "left" : "right", padding: "10px 8px", borderBottom: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}`, color: darkMode ? "#CBD5E1" : "#64748B", fontSize: "12px" }}>{heading}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {[
+                        ["Kas Masuk", financeCurrentTotals.cashIn, financePreviousTotals.cashIn, false],
+                        ["Kas Keluar", financeCurrentTotals.cashOut, financePreviousTotals.cashOut, true],
+                        ["Perubahan Kas", financeCurrentTotals.cashChange, financePreviousTotals.cashChange, false],
+                        ["Kas & Bank", financeCurrentTotals.cashTotal, financePreviousTotals.cashTotal, false]
+                      ].map(([label, value, previousValue, inverse]) => {
+                        const { delta, percentage } = financeDelta(value, previousValue);
+                        const better = inverse ? delta < 0 : delta > 0;
+                        return (
+                          <tr key={label}>
+                            <td style={{ padding: "13px 8px", borderBottom: `1px solid ${darkMode ? "#334155" : "#F1F5F9"}`, fontWeight: label === "Kas & Bank" ? "800" : "500" }}>{label}</td>
+                            <td style={{ padding: "13px 8px", textAlign: "right", borderBottom: `1px solid ${darkMode ? "#334155" : "#F1F5F9"}`, fontWeight: label === "Kas & Bank" ? "800" : "600" }}>{formatRupiah(value)}</td>
+                            <td style={{ padding: "13px 8px", textAlign: "right", borderBottom: `1px solid ${darkMode ? "#334155" : "#F1F5F9"}`, color: darkMode ? "#94A3B8" : "#64748B" }}>{formatRupiah(previousValue)}</td>
+                            <td style={{ padding: "13px 8px", textAlign: "right", borderBottom: `1px solid ${darkMode ? "#334155" : "#F1F5F9"}` }}>{delta === 0 ? "—" : `${delta >= 0 ? "+" : "-"}${formatRupiah(Math.abs(delta))}`}</td>
+                            <td style={{ padding: "13px 8px", textAlign: "right", borderBottom: `1px solid ${darkMode ? "#334155" : "#F1F5F9"}`, color: delta === 0 ? "#64748B" : better ? "#2563EB" : "#e11d48", fontWeight: "700" }}>{Number(previousValue) === 0 ? "—" : `${delta >= 0 ? "↑" : "↓"} ${Math.abs(percentage || 0).toFixed(1)}%`}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <div style={{ marginTop: "18px", padding: "16px", borderRadius: "14px", background: darkMode ? "#0B1120" : "#F8FAFC" }}>
+                  <strong>💧 Analisis arus kas</strong>
+                  <p style={{ margin: "8px 0 0", color: darkMode ? "#CBD5E1" : "#475569", lineHeight: "1.7" }}>
+                    Kas masuk {financeCurrentTotals.cashIn >= financePreviousTotals.cashIn ? "lebih tinggi" : "lebih rendah"} dibanding periode sebelumnya, sementara kas keluar {financeCurrentTotals.cashOut >= financePreviousTotals.cashOut ? "lebih tinggi" : "lebih rendah"}. Saldo kas dan bank saat ini {formatRupiah(financeCurrentTotals.cashTotal)}.
+                  </p>
+                </div>
               </section>
             )}
 
@@ -6986,6 +7142,37 @@ padding: isMobile ? "16px 12px" : "32px",
                         )}
                       </span>
                     </div>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    marginTop: "18px",
+                    padding: "16px",
+                    borderRadius: "14px",
+                    background: darkMode ? "#0B1120" : "#F8FAFC"
+                  }}
+                >
+                  <strong>📊 Perubahan posisi keuangan</strong>
+                  <div style={{ display: "grid", gap: "8px", marginTop: "10px" }}>
+                    {[
+                      ["Total Aset", financeCurrentTotals.totalAssets, financePreviousTotals.totalAssets],
+                      ["Liabilitas", financeCurrentTotals.debt, financePreviousTotals.debt],
+                      ["Modal + Laba", financeCurrentTotals.totalEquity, financePreviousTotals.totalEquity]
+                    ].map(([label, value, previousValue]) => {
+                      const { delta, percentage } = financeDelta(value, previousValue);
+                      return (
+                        <div key={label} style={{ display: "flex", justifyContent: "space-between", gap: "12px", fontSize: "14px" }}>
+                          <span>{label}</span>
+                          <span style={{ fontWeight: "700" }}>
+                            {formatRupiah(value)}{" "}
+                            <span style={{ color: delta > 0 ? "#2563EB" : delta < 0 ? "#e11d48" : "#64748B" }}>
+                              {delta === 0 ? "(stabil)" : `(${delta > 0 ? "↑" : "↓"} ${Math.abs(delta).toFixed(1)}%)`}
+                            </span>
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
