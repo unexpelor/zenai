@@ -38,7 +38,10 @@ export default function Home() {
 
 useEffect(() => {
   const checkScreen = () => {
-    setIsMobile(window.innerWidth <= 768);
+    const mobile = window.innerWidth <= 768;
+    setIsMobile(mobile);
+    // Pada Android/HP, sidebar mulai dalam kondisi tertutup agar konten langsung memenuhi layar.
+    if (mobile) setSidebarOpen(false);
   };
 
   checkScreen();
@@ -2949,7 +2952,8 @@ padding: isMobile ? "16px 12px" : "32px",
   style={{
     width: isMobile ? (sidebarOpen ? "220px" : "64px") : (sidebarOpen ? "280px" : "72px"),
     minWidth: isMobile ? (sidebarOpen ? "220px" : "64px") : (sidebarOpen ? "280px" : "72px"),
-    height: "100vh",
+    height: "100dvh",
+    maxHeight: "100dvh",
     background: darkMode ? "#111827" : "#FFFFFF",
     borderRight: "1px solid #E2E8F0",
     padding: sidebarOpen
@@ -2963,6 +2967,7 @@ padding: isMobile ? "16px 12px" : "32px",
     overflow: "hidden",
     display: "flex",
     flexDirection: "column",
+    overscrollBehavior: "contain",
     transition: "width 0.25s ease, min-width 0.25s ease, padding 0.25s ease"
   }}
 >
@@ -3005,8 +3010,8 @@ padding: isMobile ? "16px 12px" : "32px",
       alt="ZENAI"
       style={{
         display: "block",
-        width: sidebarOpen ? (isMobile ? "105px" : "110px") : (isMobile ? "42px" : "46px"),
-        height: sidebarOpen ? (isMobile ? "105px" : "110px") : (isMobile ? "42px" : "46px"),
+        width: sidebarOpen ? "clamp(70px, 13vh, 110px)" : (isMobile ? "42px" : "46px"),
+        height: sidebarOpen ? "clamp(70px, 13vh, 110px)" : (isMobile ? "42px" : "46px"),
         objectFit: "contain",
         objectPosition: "center",
         filter: darkMode ? "brightness(1.08) saturate(1.05)" : "none",
@@ -3036,9 +3041,10 @@ padding: isMobile ? "16px 12px" : "32px",
     style={{
       display: "flex",
       flexDirection: "column",
-      gap: "7px",
-      flex: 1,
+      gap: "clamp(5px, 0.9vh, 7px)",
+      flex: "1 1 auto",
       minHeight: 0,
+      maxHeight: "100%",
       overflowY: "auto",
       overflowX: "hidden",
       paddingRight: "3px",
@@ -3098,9 +3104,10 @@ padding: isMobile ? "16px 12px" : "32px",
   {/* AREA BAWAH SIDEBAR */}
   <div
     style={{
-      marginTop: "14px",
-      paddingTop: "10px",
-      flexShrink: 0
+      marginTop: "clamp(6px, 1.5vh, 14px)",
+      paddingTop: "clamp(6px, 1.2vh, 10px)",
+      flexShrink: 0,
+      minHeight: 0
     }}
   >
     <div
@@ -7796,25 +7803,36 @@ darkMode={darkMode}
 .zenai-sidebar-nav::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 999px; }
 .zenai-dark .zenai-sidebar-nav::-webkit-scrollbar-thumb { background: #475569; }
 
-@media (max-width:768px) {
+@media (max-width: 768px) {
   .zenai-app {
     width: 100vw !important;
     max-width: 100vw !important;
+    min-height: 100dvh !important;
     overflow-x: hidden !important;
   }
 
   .zenai-sidebar {
-    flex-shrink: 0 !important;
-    overflow: hidden !important;
-    height: 100vh !important;
-    max-height: 100vh !important;
+    width: min(78vw, 280px) !important;
+    min-width: min(78vw, 280px) !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+    padding: 10px 8px !important;
+    box-shadow: 4px 0 20px rgba(15, 23, 42, 0.10) !important;
+  }
+
+  .zenai-sidebar.closed {
+    width: 64px !important;
+    min-width: 64px !important;
   }
 
   .zenai-sidebar-nav {
     min-height: 0 !important;
+    flex: 1 1 auto !important;
     overflow-y: auto !important;
     overflow-x: hidden !important;
     -webkit-overflow-scrolling: touch !important;
+    overscroll-behavior: contain !important;
+    scrollbar-width: thin !important;
   }
 
   .zenai-content {
@@ -7827,8 +7845,26 @@ darkMode={darkMode}
   }
 
   .zenai-sidebar.open ~ .zenai-content {
-    margin-left: 220px !important;
-    width: calc(100% - 220px) !important;
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+}
+
+/* Layar pendek: otomatis mengecilkan elemen atas agar menu bawah tetap muat. */
+@media (min-width: 769px) and (max-height: 720px) {
+  .zenai-sidebar {
+    padding-top: 10px !important;
+    padding-bottom: 10px !important;
+  }
+
+  .zenai-sidebar-nav {
+    gap: 5px !important;
+  }
+
+  .zenai-sidebar-nav button {
+    min-height: 39px !important;
+    padding-top: 7px !important;
+    padding-bottom: 7px !important;
   }
 }
 `}</style>
