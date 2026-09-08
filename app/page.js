@@ -427,14 +427,17 @@ const [marketError, setMarketError] =
   };
 
   const financePeriodLabel = (period) => {
-    const [year, month] =
-      String(period).split("-");
+    const value = String(period || "");
+    const match = /^(\d{4})-(\d{2})$/.exec(value);
 
-    const date = new Date(
-      Number(year),
-      Number(month) - 1,
-      1
-    );
+    if (!match) return "periode tidak valid";
+
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+
+    if (month < 1 || month > 12) return "periode tidak valid";
+
+    const date = new Date(year, month - 1, 1);
 
     return date.toLocaleDateString(
       "id-ID",
@@ -445,35 +448,40 @@ const [marketError, setMarketError] =
     );
   };
 
-  const financeCurrent = financeTransactions.filter(
+  const financeCurrent = (Array.isArray(financeTransactions) ? financeTransactions : []).filter(
     (item) =>
-      item.date &&
+      item &&
+      typeof item.date === "string" &&
       item.date.slice(0, 7) === financePeriod
   );
 
   const financePreviousPeriod = (() => {
-    const [year, month] =
-      financePeriod.split("-").map(Number);
+    const match = /^(\d{4})-(\d{2})$/.exec(String(financePeriod || ""));
+    if (!match) return financePeriod;
+
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+    if (!Number.isFinite(year) || month < 1 || month > 12) return financePeriod;
 
     const date = new Date(year, month - 2, 1);
-
     return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
   })();
 
-  const financePrevious = financeTransactions.filter(
+  const financePrevious = (Array.isArray(financeTransactions) ? financeTransactions : []).filter(
     (item) =>
-      item.date &&
+      item &&
+      typeof item.date === "string" &&
       item.date.slice(0, 7) === financePreviousPeriod
   );
 
   // Laporan posisi keuangan menggunakan saldo kumulatif sampai akhir periode,
   // sedangkan laba rugi dan arus kas tetap menggunakan transaksi periode terpilih.
-  const financeThroughCurrent = financeTransactions.filter(
-    (item) => item.date && item.date.slice(0, 7) <= financePeriod
+  const financeThroughCurrent = (Array.isArray(financeTransactions) ? financeTransactions : []).filter(
+    (item) => item && typeof item.date === "string" && item.date.slice(0, 7) <= financePeriod
   );
 
-  const financeThroughPrevious = financeTransactions.filter(
-    (item) => item.date && item.date.slice(0, 7) <= financePreviousPeriod
+  const financeThroughPrevious = (Array.isArray(financeTransactions) ? financeTransactions : []).filter(
+    (item) => item && typeof item.date === "string" && item.date.slice(0, 7) <= financePreviousPeriod
   );
 
   const calculateFinance = (periodItems, balanceItems = periodItems) => {
@@ -750,10 +758,39 @@ const [marketError, setMarketError] =
     const hasCurrent = current.income !== 0 || current.expense !== 0 || current.hpp !== 0 || current.cashChange !== 0;
 
     if (!hasCurrent) {
+      const hasPrevious =
+        previous.income !== 0 ||
+        previous.expense !== 0 ||
+        previous.hpp !== 0 ||
+        previous.cashChange !== 0;
+
+      const linkedAnalysis = [];
+      if (pulseData?.summary) linkedAnalysis.push(`Business Pulse: ${pulseData.summary}`);
+      if (diagnosis?.mainProblem) linkedAnalysis.push(`Masalah utama: ${diagnosis.mainProblem}`);
+      if (Array.isArray(diagnosis?.problems) && diagnosis.problems[0]?.description) {
+        linkedAnalysis.push(`Diagnosis: ${diagnosis.problems[0].title || "Temuan utama"} — ${diagnosis.problems[0].description}`);
+      }
+      if (Array.isArray(pulseData?.priority) && pulseData.priority[0]) {
+        const item = pulseData.priority[0];
+        linkedAnalysis.push(`Prioritas ZENAI: ${item.title || ""}${item.action ? ` — ${item.action}` : ""}`);
+      }
+      if (autopilotData?.priority) linkedAnalysis.push(`Strategi aktif: ${autopilotData.priority}`);
+
       return {
-        headline: "Belum cukup data untuk membaca arah keuangan.",
-        summary: "Tambahkan transaksi pada periode ini agar ZENAI dapat membandingkan kinerja dengan periode sebelumnya dan menghubungkannya dengan hasil analisis bisnis.",
-        points: []
+        headline: hasPrevious
+          ? `Tidak ada transaksi pada ${financePeriodLabel(financePeriod)}, sehingga belum ada kinerja baru yang dapat dibandingkan.`
+          : `Belum ada transaksi pada ${financePeriodLabel(financePeriod)}.`,
+        summary: hasPrevious
+          ? `ZENAI tetap menampilkan periode sebelumnya sebagai konteks, tetapi tidak menganggap bulan kosong sebagai penurunan 100%. Tambahkan transaksi jika memang ada aktivitas keuangan pada periode ini.`
+          : `Belum ada transaksi yang tercatat pada ${financePeriodLabel(financePeriod)}. Laporan ditampilkan sebagai nol dan tidak akan dianggap sebagai penurunan kinerja.`,
+        points: hasPrevious
+          ? [
+              `Periode sebelumnya (${financePeriodLabel(financePreviousPeriod)}) memiliki data: pendapatan ${formatRupiah(previous.income)}, HPP ${formatRupiah(previous.hpp)}, beban ${formatRupiah(previous.expense)}, dan laba bersih ${formatRupiah(previous.netProfit)}.`,
+              "Perubahan persentase tidak dihitung untuk periode kosong agar tidak menghasilkan kesimpulan yang menyesatkan.",
+              "Analisis bisnis tetap menggunakan hasil ZENAI terbaru dan tidak berubah hanya karena periode laporan keuangan sedang kosong."
+            ]
+          : [],
+        linkedAnalysis
       };
     }
 
@@ -6776,6 +6813,11 @@ padding: isMobile ? "16px 12px" : "32px",
                   <h3 style={{ marginTop: 0 }}>
                     Transaksi {financePeriodLabel(financePeriod)}
                   </h3>
+                  {financeCurrent.length === 0 && (
+                    <div style={{ marginTop: "10px", padding: "10px 12px", borderRadius: "10px", background: darkMode ? "#172033" : "#F8FAFC", color: darkMode ? "#CBD5E1" : "#64748B", fontSize: "13px", lineHeight: 1.5 }}>
+                      Tidak ada transaksi pada periode ini. Laporan tetap aman ditampilkan dan tidak menganggap bulan kosong sebagai penurunan kinerja.
+                    </div>
+                  )}
 
                   {financeCurrent.length === 0 ? (
                     <p>
