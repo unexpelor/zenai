@@ -2262,7 +2262,7 @@ Aturan:
       if (pulseData) {
         history.push({
           type:
-            "Lihat Kondisi Usaha",
+            "Kondisi Usaha",
 
           description:
             pulseData.summary ||
