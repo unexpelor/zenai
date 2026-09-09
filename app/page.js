@@ -182,8 +182,8 @@ const [marketError, setMarketError] =
     useState("summary");
 
   // =========================
-  // ZENAI WAR ROOM
-  // Satu modul untuk menyerang kelemahan bisnis sebelum pasar melakukannya.
+  // ZENAI ANALISIS LANJUTAN
+  // Modul untuk menguji risiko, ketahanan, dan keputusan bisnis.
   // =========================
   const [warRoomDecision, setWarRoomDecision] = useState("");
   const [warRoomResult, setWarRoomResult] = useState(null);
@@ -464,6 +464,80 @@ const [marketError, setMarketError] =
       }
     );
   };
+
+  const financePeriodOptions = (() => {
+    const options = [];
+    const current = new Date();
+    for (let year = current.getFullYear() - 2; year <= current.getFullYear() + 1; year += 1) {
+      for (let month = 1; month <= 12; month += 1) {
+        const value = `${year}-${String(month).padStart(2, "0")}`;
+        options.push({ value, label: financePeriodLabel(value) });
+      }
+    }
+    return options.reverse();
+  })();
+
+  const handleFinancePeriodChange = (value) => {
+    if (!/^\d{4}-\d{2}$/.test(String(value || ""))) return;
+    setFinancePeriod(value);
+    setWarRoomResult(null);
+  };
+
+  const renderFinancePeriodSelector = (compact = false) => (
+    <div style={{
+      display: "flex",
+      alignItems: compact ? "center" : "flex-start",
+      gap: "10px",
+      flexWrap: "wrap"
+    }}>
+      <div>
+        <div style={{
+          fontSize: "11px",
+          fontWeight: "800",
+          letterSpacing: "0.08em",
+          textTransform: "uppercase",
+          color: darkMode ? "#94A3B8" : "#64748B",
+          marginBottom: "5px"
+        }}>
+          Periode Pelaporan
+        </div>
+        <select
+          value={financePeriod}
+          onChange={(event) => handleFinancePeriodChange(event.target.value)}
+          aria-label="Pilih periode pelaporan"
+          style={{
+            minWidth: compact ? "170px" : "210px",
+            height: "42px",
+            borderRadius: "10px",
+            border: `1px solid ${darkMode ? "#475569" : "#CBD5E1"}`,
+            background: darkMode ? "#0F172A" : "#FFFFFF",
+            color: darkMode ? "#F8FAFC" : "#0F172A",
+            padding: "0 12px",
+            fontSize: "13px",
+            fontWeight: "700",
+            outline: "none"
+          }}
+        >
+          {financePeriodOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div style={{
+        padding: compact ? "0" : "10px 12px",
+        color: darkMode ? "#94A3B8" : "#64748B",
+        fontSize: "12px",
+        lineHeight: 1.5,
+        alignSelf: "flex-end"
+      }}>
+        Dibandingkan dengan <strong style={{ color: darkMode ? "#CBD5E1" : "#475569" }}>
+          {financePeriodLabel(financePreviousPeriod)}
+        </strong>
+      </div>
+    </div>
+  );
 
   const financeCurrent = (Array.isArray(financeTransactions) ? financeTransactions : []).filter(
     (item) =>
@@ -1027,7 +1101,7 @@ const [marketError, setMarketError] =
       setWarRoomResult(result);
       return result;
     } catch (error) {
-      console.error("WAR ROOM ERROR:", error);
+      console.error("ANALISIS LANJUTAN ERROR:", error);
       alert(formatError(error));
       return null;
     } finally {
@@ -3336,7 +3410,7 @@ padding: isMobile ? "16px 12px" : "32px",
       ["market", "⚖", "Perspektif Bisnis"],
       ["autopilot", "⚡", "Strategi & Tindakan"],
       ["finance", "💰", "Laporan Keuangan"],
-      ["warroom", "⚔️", "Ruang Perang"],
+      ["warroom", "🎯", "Analisis Lanjutan"],
     ].map(([key, icon, label]) => (
       <button
         key={key}
@@ -3555,6 +3629,9 @@ padding: isMobile ? "16px 12px" : "32px",
 
 {tab === "market" &&
   "Perspektif Bisnis"}
+
+              {tab === "warroom" &&
+                "Analisis Lanjutan"}
             </h2>
 
             <p
@@ -6469,7 +6546,8 @@ padding: isMobile ? "16px 12px" : "32px",
 
         {tab === "finance" && (
           <div>
-            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "14px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: "16px", flexWrap: "wrap", marginBottom: "18px" }}>
+              {renderFinancePeriodSelector()}
               <button type="button" onClick={exportFinancePdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}>📄 Ekspor PDF</button>
             </div>
             <div
@@ -7430,37 +7508,34 @@ padding: isMobile ? "16px 12px" : "32px",
               <div style={{ display: "flex", justifyContent: "space-between", gap: "18px", alignItems: "flex-start", flexWrap: "wrap" }}>
                 <div style={{ maxWidth: "760px" }}>
                   <div style={{ fontSize: "12px", fontWeight: "800", letterSpacing: "1.5px", color: darkMode ? "#F59E0B" : "#B45309", marginBottom: "8px" }}>
-                    ⚔️ ZENAI WAR ROOM
+                    🎯 ZENAI ANALISIS LANJUTAN
                   </div>
                   <h2 style={{ margin: 0, fontSize: isMobile ? "25px" : "34px", lineHeight: 1.12 }}>
-                    Serang bisnis Anda sebelum pasar melakukannya.
+                    Uji ketahanan dan keputusan bisnis sebelum diterapkan.
                   </h2>
                   <p style={{ margin: "10px 0 0", color: darkMode ? "#CBD5E1" : "#64748B", lineHeight: 1.65 }}>
-                    ZENAI mencari titik lemah, mengukur uang yang terekspos, menguji ketahanan bisnis, dan menantang keputusan Anda sebelum keputusan tersebut menghabiskan uang.
+                    ZENAI menguji titik lemah, mengukur eksposur keuangan, mensimulasikan perubahan kondisi, dan mengevaluasi keputusan berdasarkan data yang tersedia.
                   </p>
                 </div>
-                <div style={{ minWidth: isMobile ? "100%" : "220px", padding: "15px", borderRadius: "16px", background: darkMode ? "#1E293B" : "#F8FAFC", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
-                  <div style={{ fontSize: "11px", color: darkMode ? "#94A3B8" : "#64748B", fontWeight: "700" }}>PERIODE ANALISIS</div>
-                  <div style={{ fontSize: "17px", fontWeight: "800", marginTop: "5px" }}>{financePeriodLabel(financePeriod)}</div>
-                </div>
+                <div style={{ minWidth: isMobile ? "100%" : "250px" }}>{renderFinancePeriodSelector(true)}</div>
               </div>
 
               <div style={{ marginTop: "22px", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(4, 1fr)", gap: "12px" }}>
                 {[
-                  ["💰", "Uang terekspos", warRoomResult ? formatRupiah(warRoomResult.moneyExposure) : "Belum diuji"],
+                  ["💰", "Eksposur keuangan", warRoomResult ? formatRupiah(warRoomResult.moneyExposure) : "Belum diuji"],
                   ["📈", "Margin bersih", warRoomResult ? `${warRoomResult.netMargin.toFixed(1)}%` : "—"],
-                  ["🚧", "Batas aman omzet", warRoomResult?.breakPointPct !== null && warRoomResult?.breakPointPct !== undefined ? `${warRoomResult.breakPointPct.toFixed(1)}%` : "—"],
-                  ["🛡️", "Status bisnis", warRoomResult ? warRoomResult.verdict : "Belum diuji"]
+                  ["🚧", "Batas penurunan omzet", warRoomResult?.breakPointPct !== null && warRoomResult?.breakPointPct !== undefined ? `${warRoomResult.breakPointPct.toFixed(1)}%` : "—"],
+                  ["🛡️", "Status usaha", warRoomResult ? warRoomResult.verdict : "Belum diuji"]
                 ].map(([icon, label, value]) => (
                   <div key={label} style={{ padding: "15px", borderRadius: "15px", background: darkMode ? "#111827" : "#F8FAFC", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
                     <div style={{ fontSize: "12px", color: darkMode ? "#94A3B8" : "#64748B", fontWeight: "700" }}>{icon} {label}</div>
-                    <div style={{ marginTop: "8px", fontWeight: "800", fontSize: label === "Status bisnis" ? "14px" : "20px" }}>{value}</div>
+                    <div style={{ marginTop: "8px", fontWeight: "800", fontSize: label === "Status usaha" ? "14px" : "20px" }}>{value}</div>
                   </div>
                 ))}
               </div>
 
               <div style={{ marginTop: "22px", padding: "18px", borderRadius: "18px", background: darkMode ? "#111827" : "#FFFBEB", border: `1px solid ${darkMode ? "#334155" : "#FDE68A"}` }}>
-                <div style={{ fontSize: "12px", fontWeight: "800", color: darkMode ? "#FBBF24" : "#92400E", marginBottom: "8px" }}>☢️ SERANG BISNIS</div>
+                <div style={{ fontSize: "12px", fontWeight: "800", color: darkMode ? "#FBBF24" : "#92400E", marginBottom: "8px" }}>🧪 UJI SKENARIO</div>
                 <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
                   <button
                     type="button"
@@ -7468,25 +7543,25 @@ padding: isMobile ? "16px 12px" : "32px",
                     disabled={warRoomRunning}
                     style={{ border: "none", background: "#0F172A", color: "#FFFFFF", padding: "12px 18px", borderRadius: "12px", cursor: warRoomRunning ? "wait" : "pointer", fontWeight: "800" }}
                   >
-                    {warRoomRunning ? "Sedang menguji..." : "⚔️ Serang Bisnis Saya"}
+                    {warRoomRunning ? "Sedang menguji..." : "▶ Jalankan Simulasi"}
                   </button>
                   <button
                     type="button"
                     onClick={() => {
-                      const ok = window.confirm("Jalankan uji kekacauan: omzet turun 40%, HPP naik 5%, dan beban naik 10%?");
+                      const ok = window.confirm("Jalankan skenario risiko: omzet turun 40%, HPP naik 5%, dan beban naik 10%?");
                       if (ok) runWarRoom();
                     }}
                     disabled={warRoomRunning}
                     style={{ border: `1px solid ${darkMode ? "#475569" : "#CBD5E1"}`, background: darkMode ? "#1E293B" : "#FFFFFF", color: darkMode ? "#F8FAFC" : "#0F172A", padding: "12px 18px", borderRadius: "12px", cursor: "pointer", fontWeight: "800" }}
                   >
-                    ☢️ Uji Kekacauan
+                    🧪 Uji Skenario Risiko
                   </button>
                 </div>
               </div>
 
               <div style={{ marginTop: "18px" }}>
                 <label style={{ display: "block", fontWeight: "800", fontSize: "13px", marginBottom: "8px" }}>
-                  😈 Tantang keputusan saya
+                  🧠 Evaluasi keputusan
                 </label>
                 <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
                   <input
@@ -7501,7 +7576,7 @@ padding: isMobile ? "16px 12px" : "32px",
                     disabled={warRoomRunning}
                     style={{ border: "none", background: "#B91C1C", color: "#FFFFFF", padding: "12px 18px", borderRadius: "12px", cursor: "pointer", fontWeight: "800" }}
                   >
-                    Buktikan Saya Salah
+                    Uji Asumsi
                   </button>
                 </div>
               </div>
@@ -7509,7 +7584,7 @@ padding: isMobile ? "16px 12px" : "32px",
               {warRoomResult && (
                 <div style={{ marginTop: "22px", display: "grid", gap: "14px" }}>
                   <div style={{ padding: "20px", borderRadius: "18px", background: darkMode ? "#172033" : "#F8FAFC", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
-                    <div style={{ fontSize: "12px", fontWeight: "800", color: darkMode ? "#FBBF24" : "#92400E" }}>HASIL SERANGAN</div>
+                    <div style={{ fontSize: "12px", fontWeight: "800", color: darkMode ? "#FBBF24" : "#92400E" }}>HASIL SIMULASI</div>
                     <h3 style={{ margin: "7px 0 5px", fontSize: "24px" }}>{warRoomResult.verdict}</h3>
                     <p style={{ margin: 0, color: darkMode ? "#CBD5E1" : "#64748B" }}>{warRoomResult.trendText}</p>
                     <p style={{ margin: "12px 0 0", fontWeight: "700" }}>{warRoomResult.recommendation}</p>
@@ -7517,7 +7592,7 @@ padding: isMobile ? "16px 12px" : "32px",
 
                   <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "14px" }}>
                     <div style={{ padding: "18px", borderRadius: "18px", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
-                      <h3 style={{ margin: "0 0 12px" }}>💀 Rantai Ancaman</h3>
+                      <h3 style={{ margin: "0 0 12px" }}>🔗 Rangkaian Risiko</h3>
                       {warRoomResult.killChain.map((item, index) => (
                         <div key={item} style={{ padding: "9px 0", borderBottom: index === warRoomResult.killChain.length - 1 ? "none" : `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
                           {index + 1}. {item}
@@ -7526,7 +7601,7 @@ padding: isMobile ? "16px 12px" : "32px",
                     </div>
 
                     <div style={{ padding: "18px", borderRadius: "18px", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
-                      <h3 style={{ margin: "0 0 12px" }}>💰 Uang Terekspos</h3>
+                      <h3 style={{ margin: "0 0 12px" }}>💰 Eksposur Keuangan</h3>
                       {warRoomResult.exposureItems.map((item) => (
                         <div key={item.title} style={{ padding: "8px 0", display: "flex", justifyContent: "space-between", gap: "12px", borderBottom: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
                           <div><strong>{item.title}</strong><div style={{ fontSize: "11px", color: darkMode ? "#94A3B8" : "#64748B", marginTop: "3px" }}>{item.reason}</div></div>
@@ -7537,7 +7612,7 @@ padding: isMobile ? "16px 12px" : "32px",
                   </div>
 
                   <div style={{ padding: "18px", borderRadius: "18px", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
-                    <h3 style={{ margin: "0 0 14px" }}>☢️ Uji Ketahanan Bisnis</h3>
+                    <h3 style={{ margin: "0 0 14px" }}>🧪 Uji Ketahanan Bisnis</h3>
                     <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: "10px" }}>
                       {warRoomResult.scenarios.map((scenario) => (
                         <div key={scenario.drop} style={{ padding: "13px", borderRadius: "13px", background: darkMode ? "#111827" : "#F8FAFC" }}>
@@ -7556,7 +7631,7 @@ padding: isMobile ? "16px 12px" : "32px",
 
                   {warRoomResult.decision && (
                     <div style={{ padding: "18px", borderRadius: "18px", background: darkMode ? "#3B121D" : "#FFF1F2", border: `1px solid ${darkMode ? "#9F1239" : "#FECDD3"}` }}>
-                      <h3 style={{ margin: "0 0 8px" }}>😈 Tantangan Keputusan</h3>
+                      <h3 style={{ margin: "0 0 8px" }}>🧠 Evaluasi Keputusan</h3>
                       <p style={{ margin: "0 0 10px", fontWeight: "800" }}>“{warRoomResult.decision}”</p>
                       {warRoomResult.decisionRisk.length ? warRoomResult.decisionRisk.map((risk) => <div key={risk} style={{ marginTop: "6px" }}>• {risk}</div>) : <div>ZENAI belum menemukan sinyal risiko tambahan dari data keuangan yang tersedia. Tetap uji asumsi sebelum eksekusi.</div>}
                     </div>
@@ -7564,7 +7639,7 @@ padding: isMobile ? "16px 12px" : "32px",
 
                   {warRoomResult.linked.length > 0 && (
                     <div style={{ padding: "18px", borderRadius: "18px", background: darkMode ? "#172033" : "#EFF6FF", border: `1px solid ${darkMode ? "#334155" : "#BFDBFE"}` }}>
-                      <h3 style={{ margin: "0 0 10px" }}>🧠 Terhubung dengan Analisis ZENAI</h3>
+                      <h3 style={{ margin: "0 0 10px" }}>🔗 Terintegrasi dengan Analisis ZENAI</h3>
                       {warRoomResult.linked.map((item) => <div key={item} style={{ marginTop: "7px" }}>• {item}</div>)}
                     </div>
                   )}
@@ -7573,9 +7648,9 @@ padding: isMobile ? "16px 12px" : "32px",
 
               {!warRoomResult && (
                 <div style={{ marginTop: "20px", padding: "22px", textAlign: "center", borderRadius: "18px", border: `1px dashed ${darkMode ? "#475569" : "#CBD5E1"}`, color: darkMode ? "#CBD5E1" : "#64748B" }}>
-                  <div style={{ fontSize: "30px" }}>⚔️</div>
-                  <strong style={{ display: "block", marginTop: "7px", color: darkMode ? "#F8FAFC" : "#0F172A" }}>Bisnis belum diuji.</strong>
-                  <span style={{ display: "block", marginTop: "5px" }}>Tekan “Serang Bisnis Saya” untuk menemukan titik lemah dari data yang tersedia.</span>
+                  <div style={{ fontSize: "30px" }}>🎯</div>
+                  <strong style={{ display: "block", marginTop: "7px", color: darkMode ? "#F8FAFC" : "#0F172A" }}>Analisis belum dijalankan.</strong>
+                  <span style={{ display: "block", marginTop: "5px" }}>Pilih periode pelaporan, lalu jalankan simulasi untuk menemukan titik lemah dari data yang tersedia.</span>
                 </div>
               )}
             </section>
