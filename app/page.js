@@ -6522,8 +6522,8 @@ padding: isMobile ? "16px 12px" : "32px",
 
                 <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, minmax(180px, 1fr))", gap: "10px", width: isMobile ? "100%" : "430px" }}>
                   {[
-                    ["Bulan Asal", financePeriod, setFinancePeriod],
-                    ["Bulan Pembanding", financeComparisonPeriod, setFinanceComparisonPeriod]
+                    ["Periode Dianalisis", financePeriod, setFinancePeriod],
+                    ["Periode Pembanding", financeComparisonPeriod, setFinanceComparisonPeriod]
                   ].map(([label, value, setter]) => (
                     <label key={label} style={{ display: "block", fontSize: "11px", fontWeight: "800", color: darkMode ? "#CBD5E1" : "#475569" }}>
                       <span style={{ display: "block", marginBottom: "6px" }}>{label}</span>
@@ -7444,11 +7444,11 @@ padding: isMobile ? "16px 12px" : "32px",
                   <div style={{ fontSize: "11px", color: darkMode ? "#94A3B8" : "#64748B", fontWeight: "700", marginBottom: "9px" }}>PERIODE ANALISIS</div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
                     <label style={{ display: "block", fontSize: "10px", fontWeight: "800", color: darkMode ? "#CBD5E1" : "#475569" }}>
-                      Bulan Asal
+                      Periode Analisis
                       <input type="month" value={financePeriod} onChange={(event) => { setFinancePeriod(event.target.value); setWarRoomResult(null); }} style={{ width: "100%", marginTop: "5px", minHeight: "40px", borderRadius: "10px", border: `1px solid ${darkMode ? "#475569" : "#CBD5E1"}`, padding: "0 8px", background: darkMode ? "#0F172A" : "#FFFFFF", color: darkMode ? "#F8FAFC" : "#0F172A", fontWeight: "700" }} />
                     </label>
                     <label style={{ display: "block", fontSize: "10px", fontWeight: "800", color: darkMode ? "#CBD5E1" : "#475569" }}>
-                      Bulan Pembanding
+                      Periode Pembanding
                       <input type="month" value={financeComparisonPeriod} onChange={(event) => { setFinanceComparisonPeriod(event.target.value); setWarRoomResult(null); }} style={{ width: "100%", marginTop: "5px", minHeight: "40px", borderRadius: "10px", border: `1px solid ${darkMode ? "#475569" : "#CBD5E1"}`, padding: "0 8px", background: darkMode ? "#0F172A" : "#FFFFFF", color: darkMode ? "#F8FAFC" : "#0F172A", fontWeight: "700" }} />
                     </label>
                   </div>
