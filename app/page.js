@@ -181,6 +181,14 @@ const [marketError, setMarketError] =
   const [financeView, setFinanceView] =
     useState("summary");
 
+  // =========================
+  // ZENAI WAR ROOM
+  // Satu modul untuk menyerang kelemahan bisnis sebelum pasar melakukannya.
+  // =========================
+  const [warRoomDecision, setWarRoomDecision] = useState("");
+  const [warRoomResult, setWarRoomResult] = useState(null);
+  const [warRoomRunning, setWarRoomRunning] = useState(false);
+
   const [financeMessage, setFinanceMessage] =
     useState("");
 
@@ -229,6 +237,9 @@ const [marketError, setMarketError] =
     setUpdateText("");
     setFinanceMessage("");
     setEditingFinanceId(null);
+    setWarRoomDecision("");
+    setWarRoomResult(null);
+    setWarRoomRunning(false);
     setTab("capture");
   };
 
@@ -281,6 +292,8 @@ const [marketError, setMarketError] =
         if (Array.isArray(saved.growthActions)) setGrowthActions(saved.growthActions);
         if (Array.isArray(saved.financeTransactions)) setFinanceTransactions(saved.financeTransactions);
         if (saved.financePeriod) setFinancePeriod(saved.financePeriod);
+        if (saved.warRoomDecision !== undefined) setWarRoomDecision(saved.warRoomDecision || "");
+        if (saved.warRoomResult !== undefined) setWarRoomResult(saved.warRoomResult || null);
         if (saved.tab) setTab(saved.tab);
       }
 
@@ -335,6 +348,8 @@ const [marketError, setMarketError] =
               growthActions,
               financeTransactions,
               financePeriod,
+              warRoomDecision,
+              warRoomResult,
               tab
             },
             updated_at: new Date().toISOString()
@@ -363,6 +378,8 @@ const [marketError, setMarketError] =
     growthActions,
     financeTransactions,
     financePeriod,
+    warRoomDecision,
+    warRoomResult,
     tab
   ]);
 
@@ -883,6 +900,140 @@ const [marketError, setMarketError] =
       linkedAnalysis
     };
   })();
+
+
+  const runWarRoom = async (decisionOverride = null) => {
+    setWarRoomRunning(true);
+    try {
+      const current = financeCurrentTotals || {};
+      const previous = financePreviousTotals || {};
+
+      const income = Number(current.income) || 0;
+      const hpp = Number(current.hpp) || 0;
+      const expense = Number(current.expense) || 0;
+      const profit = Number(current.netProfit) || 0;
+      const cash = Number(current.cashTotal) || 0;
+      const receivable = Number(current.receivable) || 0;
+      const previousIncome = Number(previous.income) || 0;
+
+      const grossMargin = income > 0 ? ((income - hpp) / income) * 100 : 0;
+      const netMargin = income > 0 ? (profit / income) * 100 : 0;
+      const contributionRate = income > 0 ? Math.max(0, (income - hpp) / income) : 0;
+      const breakEvenRevenue = contributionRate > 0 ? expense / contributionRate : Infinity;
+      const breakPointPct =
+        income > 0 && Number.isFinite(breakEvenRevenue)
+          ? Math.max(0, Math.min(100, ((income - breakEvenRevenue) / income) * 100))
+          : null;
+
+      const scenarios = [10, 20, 30, 40].map((drop) => {
+        const scenarioIncome = income * (1 - drop / 100);
+        const scenarioHpp = hpp * 1.05;
+        const scenarioExpense = expense * 1.10;
+        const scenarioProfit = scenarioIncome - scenarioHpp - scenarioExpense;
+        const scenarioCash = cash + scenarioProfit;
+        return {
+          drop,
+          profit: scenarioProfit,
+          cash: scenarioCash,
+          status: scenarioProfit < 0 || scenarioCash < 0 ? "kritis" : scenarioProfit < profit ? "tertekan" : "aman"
+        };
+      });
+
+      const criticalScenario = scenarios.find((item) => item.status === "kritis") || null;
+
+      const exposureItems = [
+        {
+          title: "Kas dan bank",
+          amount: Math.max(0, cash),
+          reason: cash <= 0 ? "Tidak ada bantalan kas yang tercatat." : "Menjadi bantalan utama ketika terjadi guncangan."
+        },
+        {
+          title: "Piutang",
+          amount: Math.max(0, receivable),
+          reason: receivable > 0 ? "Belum menjadi kas sampai benar-benar tertagih." : "Tidak ada piutang yang tercatat."
+        },
+        {
+          title: "HPP",
+          amount: Math.max(0, hpp),
+          reason: income > 0 && hpp / income > 0.6 ? "Menyerap lebih dari 60% pendapatan." : "Perlu dipantau terhadap pertumbuhan pendapatan."
+        },
+        {
+          title: "Beban operasional",
+          amount: Math.max(0, expense),
+          reason: income > 0 && expense / income > 0.3 ? "Menyerap porsi besar pendapatan." : "Masih perlu dibandingkan dengan kemampuan menghasilkan laba."
+        }
+      ];
+
+      const totalExposure = exposureItems.reduce((sum, item) => sum + item.amount, 0);
+
+      const killChain = [];
+      if (income > 0 && hpp / income > 0.6) killChain.push("HPP tinggi → margin tertekan");
+      if (profit < 0) killChain.push("Rugi bersih → modal terkikis");
+      if (cash <= 0) killChain.push("Kas tidak memiliki bantalan");
+      else if (expense > 0 && cash < expense * 2) killChain.push("Bantalan kas tipis terhadap beban");
+      if (income > 0 && receivable > income * 0.3) killChain.push("Piutang besar → uang tertahan");
+      if (!killChain.length) killChain.push("Belum ditemukan rantai krisis dominan dari data yang tersedia.");
+
+      const decision = String(decisionOverride ?? warRoomDecision ?? "").trim();
+      const decisionRisk = decision
+        ? [
+            expense > 0 && cash < expense * 2 ? "Jangan sampai keputusan menghabiskan bantalan kas." : null,
+            profit < 0 ? "Perbaiki profitabilitas sebelum menambah komitmen biaya." : null,
+            breakPointPct !== null && breakPointPct < 20 ? "Ruang aman terhadap penurunan omzet relatif sempit." : null
+          ].filter(Boolean)
+        : [];
+
+      let verdict = "🟢 RELATIF AMAN";
+      if (profit < 0 || cash < 0 || criticalScenario?.status === "kritis") {
+        verdict = "🔴 KRITIS";
+      } else if ((breakPointPct !== null && breakPointPct < 20) || (expense > 0 && cash < expense * 2)) {
+        verdict = "🟠 RUANG AMAN TIPIS";
+      }
+
+      const trendText =
+        previousIncome > 0 && income !== previousIncome
+          ? `Pendapatan ${income > previousIncome ? "naik" : "turun"} ${Math.abs(((income - previousIncome) / previousIncome) * 100).toFixed(1)}% dibanding periode sebelumnya.`
+          : "Belum ada basis pendapatan periode sebelumnya yang cukup untuk membaca tren.";
+
+      const result = {
+        period: financePeriodLabel(financePeriod),
+        verdict,
+        trendText,
+        moneyExposure: totalExposure,
+        grossMargin,
+        netMargin,
+        breakPointPct,
+        scenarios,
+        criticalScenario,
+        exposureItems,
+        killChain,
+        decision,
+        decisionRisk,
+        recommendation:
+          profit < 0
+            ? "Prioritaskan pemulihan laba dan arus kas. Hindari keputusan yang menambah beban tetap."
+            : criticalScenario
+              ? "Bangun bantalan kas dan kurangi titik biaya paling sensitif sebelum ekspansi."
+              : expense > 0 && cash < expense * 2
+                ? "Pertahankan kas sebagai prioritas. Hindari mengunci uang terlalu lama."
+                : "Bisnis masih memiliki ruang manuver. Uji keputusan besar sebelum uang benar-benar dikeluarkan.",
+        linked: [
+          pulseData?.summary ? `Kondisi Usaha: ${pulseData.summary}` : null,
+          diagnosis?.mainProblem ? `Diagnosis: ${diagnosis.mainProblem}` : null,
+          autopilotData?.priority ? `Prioritas tindakan: ${autopilotData.priority}` : null
+        ].filter(Boolean)
+      };
+
+      setWarRoomResult(result);
+      return result;
+    } catch (error) {
+      console.error("WAR ROOM ERROR:", error);
+      alert(formatError(error));
+      return null;
+    } finally {
+      setWarRoomRunning(false);
+    }
+  };
 
   const formatError = (error) => {
     if (!error) {
@@ -2082,6 +2233,9 @@ Aturan:
       setAutopilotData(null);
       setMarketData(null);
       setMarketError("");
+      setWarRoomDecision("");
+      setWarRoomResult(null);
+      setWarRoomRunning(false);
 
       setProvider("");
       setBusy(false);
@@ -3182,6 +3336,7 @@ padding: isMobile ? "16px 12px" : "32px",
       ["market", "⚖", "Perspektif Bisnis"],
       ["autopilot", "⚡", "Strategi & Tindakan"],
       ["finance", "💰", "Laporan Keuangan"],
+      ["warroom", "⚔️", "Ruang Perang"],
     ].map(([key, icon, label]) => (
       <button
         key={key}
@@ -7261,6 +7416,172 @@ padding: isMobile ? "16px 12px" : "32px",
           </div>
         )}
 
+        {tab === "warroom" && (
+          <div style={{ maxWidth: "1120px", margin: "0 auto", width: "100%" }}>
+            <section
+              style={{
+                background: darkMode ? "#0F172A" : "#FFFFFF",
+                border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}`,
+                borderRadius: "22px",
+                padding: isMobile ? "18px" : "28px",
+                boxShadow: "0 12px 35px rgba(15,23,42,0.07)"
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", gap: "18px", alignItems: "flex-start", flexWrap: "wrap" }}>
+                <div style={{ maxWidth: "760px" }}>
+                  <div style={{ fontSize: "12px", fontWeight: "800", letterSpacing: "1.5px", color: darkMode ? "#F59E0B" : "#B45309", marginBottom: "8px" }}>
+                    ⚔️ ZENAI WAR ROOM
+                  </div>
+                  <h2 style={{ margin: 0, fontSize: isMobile ? "25px" : "34px", lineHeight: 1.12 }}>
+                    Serang bisnis Anda sebelum pasar melakukannya.
+                  </h2>
+                  <p style={{ margin: "10px 0 0", color: darkMode ? "#CBD5E1" : "#64748B", lineHeight: 1.65 }}>
+                    ZENAI mencari titik lemah, mengukur uang yang terekspos, menguji ketahanan bisnis, dan menantang keputusan Anda sebelum keputusan tersebut menghabiskan uang.
+                  </p>
+                </div>
+                <div style={{ minWidth: isMobile ? "100%" : "220px", padding: "15px", borderRadius: "16px", background: darkMode ? "#1E293B" : "#F8FAFC", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
+                  <div style={{ fontSize: "11px", color: darkMode ? "#94A3B8" : "#64748B", fontWeight: "700" }}>PERIODE ANALISIS</div>
+                  <div style={{ fontSize: "17px", fontWeight: "800", marginTop: "5px" }}>{financePeriodLabel(financePeriod)}</div>
+                </div>
+              </div>
+
+              <div style={{ marginTop: "22px", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(4, 1fr)", gap: "12px" }}>
+                {[
+                  ["💰", "Uang terekspos", warRoomResult ? formatRupiah(warRoomResult.moneyExposure) : "Belum diuji"],
+                  ["📈", "Margin bersih", warRoomResult ? `${warRoomResult.netMargin.toFixed(1)}%` : "—"],
+                  ["🚧", "Batas aman omzet", warRoomResult?.breakPointPct !== null && warRoomResult?.breakPointPct !== undefined ? `${warRoomResult.breakPointPct.toFixed(1)}%` : "—"],
+                  ["🛡️", "Status bisnis", warRoomResult ? warRoomResult.verdict : "Belum diuji"]
+                ].map(([icon, label, value]) => (
+                  <div key={label} style={{ padding: "15px", borderRadius: "15px", background: darkMode ? "#111827" : "#F8FAFC", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
+                    <div style={{ fontSize: "12px", color: darkMode ? "#94A3B8" : "#64748B", fontWeight: "700" }}>{icon} {label}</div>
+                    <div style={{ marginTop: "8px", fontWeight: "800", fontSize: label === "Status bisnis" ? "14px" : "20px" }}>{value}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ marginTop: "22px", padding: "18px", borderRadius: "18px", background: darkMode ? "#111827" : "#FFFBEB", border: `1px solid ${darkMode ? "#334155" : "#FDE68A"}` }}>
+                <div style={{ fontSize: "12px", fontWeight: "800", color: darkMode ? "#FBBF24" : "#92400E", marginBottom: "8px" }}>☢️ SERANG BISNIS</div>
+                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                  <button
+                    type="button"
+                    onClick={() => runWarRoom()}
+                    disabled={warRoomRunning}
+                    style={{ border: "none", background: "#0F172A", color: "#FFFFFF", padding: "12px 18px", borderRadius: "12px", cursor: warRoomRunning ? "wait" : "pointer", fontWeight: "800" }}
+                  >
+                    {warRoomRunning ? "Sedang menguji..." : "⚔️ Serang Bisnis Saya"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const ok = window.confirm("Jalankan uji kekacauan: omzet turun 40%, HPP naik 5%, dan beban naik 10%?");
+                      if (ok) runWarRoom();
+                    }}
+                    disabled={warRoomRunning}
+                    style={{ border: `1px solid ${darkMode ? "#475569" : "#CBD5E1"}`, background: darkMode ? "#1E293B" : "#FFFFFF", color: darkMode ? "#F8FAFC" : "#0F172A", padding: "12px 18px", borderRadius: "12px", cursor: "pointer", fontWeight: "800" }}
+                  >
+                    ☢️ Uji Kekacauan
+                  </button>
+                </div>
+              </div>
+
+              <div style={{ marginTop: "18px" }}>
+                <label style={{ display: "block", fontWeight: "800", fontSize: "13px", marginBottom: "8px" }}>
+                  😈 Tantang keputusan saya
+                </label>
+                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                  <input
+                    value={warRoomDecision}
+                    onChange={(event) => setWarRoomDecision(event.target.value)}
+                    placeholder="Contoh: Saya ingin membuka cabang baru dengan modal Rp20 juta"
+                    style={{ flex: "1 1 500px", minHeight: "46px", border: `1px solid ${darkMode ? "#475569" : "#CBD5E1"}`, borderRadius: "12px", padding: "0 13px", background: darkMode ? "#0F172A" : "#FFFFFF", color: darkMode ? "#F8FAFC" : "#0F172A" }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => runWarRoom()}
+                    disabled={warRoomRunning}
+                    style={{ border: "none", background: "#B91C1C", color: "#FFFFFF", padding: "12px 18px", borderRadius: "12px", cursor: "pointer", fontWeight: "800" }}
+                  >
+                    Buktikan Saya Salah
+                  </button>
+                </div>
+              </div>
+
+              {warRoomResult && (
+                <div style={{ marginTop: "22px", display: "grid", gap: "14px" }}>
+                  <div style={{ padding: "20px", borderRadius: "18px", background: darkMode ? "#172033" : "#F8FAFC", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
+                    <div style={{ fontSize: "12px", fontWeight: "800", color: darkMode ? "#FBBF24" : "#92400E" }}>HASIL SERANGAN</div>
+                    <h3 style={{ margin: "7px 0 5px", fontSize: "24px" }}>{warRoomResult.verdict}</h3>
+                    <p style={{ margin: 0, color: darkMode ? "#CBD5E1" : "#64748B" }}>{warRoomResult.trendText}</p>
+                    <p style={{ margin: "12px 0 0", fontWeight: "700" }}>{warRoomResult.recommendation}</p>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "14px" }}>
+                    <div style={{ padding: "18px", borderRadius: "18px", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
+                      <h3 style={{ margin: "0 0 12px" }}>💀 Rantai Ancaman</h3>
+                      {warRoomResult.killChain.map((item, index) => (
+                        <div key={item} style={{ padding: "9px 0", borderBottom: index === warRoomResult.killChain.length - 1 ? "none" : `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
+                          {index + 1}. {item}
+                        </div>
+                      ))}
+                    </div>
+
+                    <div style={{ padding: "18px", borderRadius: "18px", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
+                      <h3 style={{ margin: "0 0 12px" }}>💰 Uang Terekspos</h3>
+                      {warRoomResult.exposureItems.map((item) => (
+                        <div key={item.title} style={{ padding: "8px 0", display: "flex", justifyContent: "space-between", gap: "12px", borderBottom: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
+                          <div><strong>{item.title}</strong><div style={{ fontSize: "11px", color: darkMode ? "#94A3B8" : "#64748B", marginTop: "3px" }}>{item.reason}</div></div>
+                          <strong style={{ whiteSpace: "nowrap" }}>{formatRupiah(item.amount)}</strong>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div style={{ padding: "18px", borderRadius: "18px", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
+                    <h3 style={{ margin: "0 0 14px" }}>☢️ Uji Ketahanan Bisnis</h3>
+                    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: "10px" }}>
+                      {warRoomResult.scenarios.map((scenario) => (
+                        <div key={scenario.drop} style={{ padding: "13px", borderRadius: "13px", background: darkMode ? "#111827" : "#F8FAFC" }}>
+                          <div style={{ fontWeight: "800" }}>Omzet -{scenario.drop}%</div>
+                          <div style={{ marginTop: "7px", fontWeight: "700" }}>{formatRupiah(scenario.profit)}</div>
+                          <div style={{ marginTop: "4px", fontSize: "12px" }}>{scenario.status === "kritis" ? "🔴 Kritis" : scenario.status === "tertekan" ? "🟠 Tertekan" : "🟢 Aman"}</div>
+                        </div>
+                      ))}
+                    </div>
+                    {warRoomResult.criticalScenario && (
+                      <p style={{ margin: "14px 0 0", fontWeight: "800" }}>
+                        ⚠️ Skenario kritis pertama muncul ketika omzet turun {warRoomResult.criticalScenario.drop}% dengan asumsi HPP naik 5% dan beban naik 10%.
+                      </p>
+                    )}
+                  </div>
+
+                  {warRoomResult.decision && (
+                    <div style={{ padding: "18px", borderRadius: "18px", background: darkMode ? "#3B121D" : "#FFF1F2", border: `1px solid ${darkMode ? "#9F1239" : "#FECDD3"}` }}>
+                      <h3 style={{ margin: "0 0 8px" }}>😈 Tantangan Keputusan</h3>
+                      <p style={{ margin: "0 0 10px", fontWeight: "800" }}>“{warRoomResult.decision}”</p>
+                      {warRoomResult.decisionRisk.length ? warRoomResult.decisionRisk.map((risk) => <div key={risk} style={{ marginTop: "6px" }}>• {risk}</div>) : <div>ZENAI belum menemukan sinyal risiko tambahan dari data keuangan yang tersedia. Tetap uji asumsi sebelum eksekusi.</div>}
+                    </div>
+                  )}
+
+                  {warRoomResult.linked.length > 0 && (
+                    <div style={{ padding: "18px", borderRadius: "18px", background: darkMode ? "#172033" : "#EFF6FF", border: `1px solid ${darkMode ? "#334155" : "#BFDBFE"}` }}>
+                      <h3 style={{ margin: "0 0 10px" }}>🧠 Terhubung dengan Analisis ZENAI</h3>
+                      {warRoomResult.linked.map((item) => <div key={item} style={{ marginTop: "7px" }}>• {item}</div>)}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {!warRoomResult && (
+                <div style={{ marginTop: "20px", padding: "22px", textAlign: "center", borderRadius: "18px", border: `1px dashed ${darkMode ? "#475569" : "#CBD5E1"}`, color: darkMode ? "#CBD5E1" : "#64748B" }}>
+                  <div style={{ fontSize: "30px" }}>⚔️</div>
+                  <strong style={{ display: "block", marginTop: "7px", color: darkMode ? "#F8FAFC" : "#0F172A" }}>Bisnis belum diuji.</strong>
+                  <span style={{ display: "block", marginTop: "5px" }}>Tekan “Serang Bisnis Saya” untuk menemukan titik lemah dari data yang tersedia.</span>
+                </div>
+              )}
+            </section>
+          </div>
+        )}
+
         {tab === "autopilot" && (
           <div
             style={{
@@ -8027,10 +8348,8 @@ darkMode={darkMode}
 .zenai-dark button { color:#E5E7EB; }
 .zenai-dark button[style*="#2563EB"],.zenai-dark button[style*="#2563EB"] { color:#FFFFFF !important; }
 
-.zenai-sidebar-nav::-webkit-scrollbar { width: 5px; }
-.zenai-sidebar-nav::-webkit-scrollbar-track { background: transparent; }
-.zenai-sidebar-nav::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 999px; }
-.zenai-dark .zenai-sidebar-nav::-webkit-scrollbar-thumb { background: #475569; }
+/* Sidebar tidak memakai scroll; ukuran elemen mengikuti tinggi viewport. */
+.zenai-sidebar-nav { overflow: visible !important; }
 
 @media (max-width: 768px) {
   .zenai-app {
