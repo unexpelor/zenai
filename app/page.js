@@ -196,9 +196,16 @@ const [marketError, setMarketError] =
   const [decisionResult, setDecisionResult] = useState(null);
   const [decisionRunning, setDecisionRunning] = useState(false);
   const [decisionScenario, setDecisionScenario] = useState({
-    revenueChange: "",
+    currentPrice: "",
+    plannedPrice: "",
+    volumeChange: "",
     hppChange: "",
     expenseChange: "",
+    investmentAmount: "",
+    expectedRevenue: "",
+    incrementalHppRate: "",
+    incrementalExpense: "",
+    revenueChange: "",
     cashImpact: ""
   });
   const [decisionType, setDecisionType] = useState("custom");
@@ -916,20 +923,89 @@ const [marketError, setMarketError] =
 
 
   const runDecisionSimulation = async (decisionOverride = null) => {
-    const scenario = {
-      revenueChange: Number(decisionScenario.revenueChange),
-      hppChange: Number(decisionScenario.hppChange),
-      expenseChange: Number(decisionScenario.expenseChange),
-      cashImpact: decisionScenario.cashImpact === "" ? 0 : Number(decisionScenario.cashImpact)
+    const num = (key) => {
+      const value = decisionScenario?.[key];
+      if (value === "" || value === null || value === undefined) return null;
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : null;
     };
 
-    if (![scenario.revenueChange, scenario.hppChange, scenario.expenseChange, scenario.cashImpact].every(Number.isFinite)) {
-      setFinanceMessage("Lengkapi asumsi keputusan dengan angka yang valid.");
+    const base = financeCurrentTotals || {};
+    const comparison = financePreviousTotals || {};
+    const income = Number(base.income) || 0;
+    const hpp = Number(base.hpp) || 0;
+    const expense = Number(base.expense) || 0;
+    const profit = Number(base.netProfit) || 0;
+    const cash = Number(base.cashTotal) || 0;
+    const baseMargin = income > 0 ? (profit / income) * 100 : 0;
+    const hppRate = income > 0 ? (hpp / income) * 100 : 0;
+    const expenseRate = income > 0 ? (expense / income) * 100 : 0;
+
+    if (!income && !hpp && !expense && !cash) {
+      setFinanceMessage("Periode dasar belum memiliki data keuangan yang cukup untuk disimulasikan.");
       return null;
     }
 
-    if (scenario.revenueChange <= -100) {
-      setFinanceMessage("Perubahan pendapatan tidak dapat mencapai atau melewati -100%.");
+    const type = decisionType || "custom";
+    const decision = String(decisionOverride ?? decisionText ?? "").trim();
+    if (!decision) {
+      setFinanceMessage("Tuliskan keputusan yang ingin diuji.");
+      return null;
+    }
+
+    const requiredByType = {
+      pricing: ["currentPrice", "plannedPrice", "volumeChange"],
+      sales: ["volumeChange"],
+      cost: ["hppChange", "expenseChange"],
+      investment: ["investmentAmount", "expectedRevenue", "incrementalHppRate", "incrementalExpense"],
+      custom: ["revenueChange", "hppChange", "expenseChange"]
+    };
+
+    const missing = (requiredByType[type] || requiredByType.custom).filter((key) => num(key) === null);
+    if (missing.length) {
+      const labels = {
+        currentPrice: "harga saat ini",
+        plannedPrice: "harga rencana",
+        volumeChange: "perubahan volume penjualan",
+        hppChange: "perubahan HPP",
+        expenseChange: "perubahan beban",
+        investmentAmount: "nilai investasi/pengeluaran",
+        expectedRevenue: "tambahan pendapatan yang diharapkan",
+        incrementalHppRate: "HPP atas tambahan penjualan",
+        incrementalExpense: "beban tambahan"
+      };
+      setFinanceMessage(`Lengkapi asumsi: ${missing.map((key) => labels[key] || key).join(", ")}.`);
+      return null;
+    }
+
+    const assumptions = {
+      currentPrice: num("currentPrice"),
+      plannedPrice: num("plannedPrice"),
+      volumeChange: num("volumeChange"),
+      hppChange: num("hppChange"),
+      expenseChange: num("expenseChange"),
+      investmentAmount: num("investmentAmount"),
+      expectedRevenue: num("expectedRevenue"),
+      incrementalHppRate: num("incrementalHppRate"),
+      incrementalExpense: num("incrementalExpense"),
+      revenueChange: num("revenueChange"),
+      cashImpact: num("cashImpact") || 0
+    };
+
+    if (assumptions.volumeChange <= -100 || assumptions.revenueChange <= -100) {
+      setFinanceMessage("Perubahan volume atau pendapatan tidak boleh mencapai -100% atau lebih rendah.");
+      return null;
+    }
+    if (type === "pricing" && assumptions.currentPrice <= 0) {
+      setFinanceMessage("Harga saat ini harus lebih besar dari nol.");
+      return null;
+    }
+    if (type === "pricing" && assumptions.plannedPrice <= 0) {
+      setFinanceMessage("Harga rencana harus lebih besar dari nol.");
+      return null;
+    }
+    if (type === "investment" && assumptions.investmentAmount < 0) {
+      setFinanceMessage("Nilai investasi/pengeluaran tidak boleh negatif.");
       return null;
     }
 
@@ -937,96 +1013,186 @@ const [marketError, setMarketError] =
     setDecisionRunning(true);
 
     try {
-      const base = financeCurrentTotals || {};
-      const comparison = financePreviousTotals || {};
-      const income = Number(base.income) || 0;
-      const hpp = Number(base.hpp) || 0;
-      const expense = Number(base.expense) || 0;
-      const profit = Number(base.netProfit) || 0;
-      const cash = Number(base.cashTotal) || 0;
-      const comparisonProfit = Number(comparison.netProfit) || 0;
-      const comparisonIncome = Number(comparison.income) || 0;
+      let simulatedIncome = income;
+      let simulatedHpp = hpp;
+      let simulatedExpense = expense;
+      let directCashAdjustment = assumptions.cashImpact;
+      let modelExplanation = "";
+      let keyVariable = "";
+      let keyVariableValue = null;
 
-      const simulatedIncome = income * (1 + scenario.revenueChange / 100);
-      const simulatedHpp = hpp * (1 + scenario.hppChange / 100);
-      const simulatedExpense = expense * (1 + scenario.expenseChange / 100);
-      const simulatedProfit = simulatedIncome - simulatedHpp - simulatedExpense;
-      const simulatedCash = cash + (simulatedProfit - profit) + scenario.cashImpact;
+      if (type === "pricing") {
+        const priceFactor = assumptions.plannedPrice / assumptions.currentPrice;
+        const volumeFactor = 1 + assumptions.volumeChange / 100;
+        simulatedIncome = income * priceFactor * volumeFactor;
+        simulatedHpp = hpp * volumeFactor * (1 + assumptions.hppChange / 100);
+        simulatedExpense = expense * (1 + assumptions.expenseChange / 100);
+        modelExplanation = `Pendapatan diproyeksikan dari perubahan harga ${((priceFactor - 1) * 100).toFixed(1)}% dan perubahan volume ${assumptions.volumeChange.toFixed(1)}%. HPP mengikuti perubahan volume dan asumsi perubahan HPP.`;
+        keyVariable = "volumeChange";
+        keyVariableValue = assumptions.volumeChange;
+      } else if (type === "sales") {
+        const volumeFactor = 1 + assumptions.volumeChange / 100;
+        simulatedIncome = income * volumeFactor;
+        simulatedHpp = hpp * volumeFactor * (1 + assumptions.hppChange / 100);
+        simulatedExpense = expense * (1 + assumptions.expenseChange / 100);
+        modelExplanation = `Pendapatan mengikuti perubahan volume ${assumptions.volumeChange.toFixed(1)}%. HPP mengikuti volume dan perubahan HPP ${assumptions.hppChange.toFixed(1)}%, sedangkan beban mengikuti perubahan ${assumptions.expenseChange.toFixed(1)}%.`;
+        keyVariable = "volumeChange";
+        keyVariableValue = assumptions.volumeChange;
+      } else if (type === "cost") {
+        simulatedIncome = income * (1 + assumptions.revenueChange / 100);
+        simulatedHpp = hpp * (1 + assumptions.hppChange / 100);
+        simulatedExpense = expense * (1 + assumptions.expenseChange / 100);
+        modelExplanation = `Simulasi biaya mempertahankan pendapatan pada perubahan ${assumptions.revenueChange.toFixed(1)}%, lalu mengubah HPP ${assumptions.hppChange.toFixed(1)}% dan beban ${assumptions.expenseChange.toFixed(1)}%.`;
+        keyVariable = "hppChange";
+        keyVariableValue = assumptions.hppChange;
+      } else if (type === "investment") {
+        simulatedIncome = income + assumptions.expectedRevenue;
+        simulatedHpp = hpp + (assumptions.expectedRevenue * assumptions.incrementalHppRate / 100);
+        simulatedExpense = expense + assumptions.incrementalExpense;
+        directCashAdjustment -= assumptions.investmentAmount;
+        modelExplanation = `Investasi/pengeluaran sebesar ${formatRupiah(assumptions.investmentAmount)} dibandingkan dengan tambahan pendapatan ${formatRupiah(assumptions.expectedRevenue)}, HPP tambahan ${assumptions.incrementalHppRate.toFixed(1)}% atas pendapatan tambahan, dan beban tambahan ${formatRupiah(assumptions.incrementalExpense)}.`;
+        keyVariable = "expectedRevenue";
+        keyVariableValue = assumptions.expectedRevenue;
+      } else {
+        simulatedIncome = income * (1 + assumptions.revenueChange / 100);
+        simulatedHpp = hpp * (1 + assumptions.hppChange / 100);
+        simulatedExpense = expense * (1 + assumptions.expenseChange / 100);
+        modelExplanation = `Skenario khusus mengubah pendapatan ${assumptions.revenueChange.toFixed(1)}%, HPP ${assumptions.hppChange.toFixed(1)}%, dan beban ${assumptions.expenseChange.toFixed(1)}%.`;
+        keyVariable = "revenueChange";
+        keyVariableValue = assumptions.revenueChange;
+      }
+
+      const simulatedGrossProfit = simulatedIncome - simulatedHpp;
+      const simulatedProfit = simulatedGrossProfit - simulatedExpense;
+      const simulatedMargin = simulatedIncome > 0 ? (simulatedProfit / simulatedIncome) * 100 : 0;
       const profitDelta = simulatedProfit - profit;
       const incomeDelta = simulatedIncome - income;
-      const marginBefore = income > 0 ? (profit / income) * 100 : 0;
-      const marginAfter = simulatedIncome > 0 ? (simulatedProfit / simulatedIncome) * 100 : 0;
-      const marginDelta = marginAfter - marginBefore;
-
-      // Titik impas keputusan: perubahan pendapatan maksimum yang masih menjaga laba tidak negatif.
-      const contributionRate = simulatedIncome > 0 ? Math.max(0, (simulatedIncome - simulatedHpp) / simulatedIncome) : 0;
-      const breakEvenRevenue = contributionRate > 0 ? simulatedExpense / contributionRate : Infinity;
-      const revenueHeadroom = income > 0 && Number.isFinite(breakEvenRevenue)
-        ? ((income - breakEvenRevenue) / income) * 100
-        : null;
+      const hppDelta = simulatedHpp - hpp;
+      const expenseDelta = simulatedExpense - expense;
+      const cashDelta = (simulatedIncome - income) - (simulatedHpp - hpp) - (simulatedExpense - expense) + directCashAdjustment;
+      const simulatedCash = cash + cashDelta;
+      const marginDelta = simulatedMargin - baseMargin;
 
       let assessment = "Perlu Dipertimbangkan";
-      if (simulatedProfit > profit && simulatedCash >= 0 && marginAfter >= marginBefore) {
-        assessment = "Berpotensi Menguntungkan";
-      } else if (simulatedProfit < 0 || simulatedCash < 0) {
-        assessment = "Berisiko Tinggi";
-      } else if (simulatedProfit < profit || marginAfter < marginBefore) {
-        assessment = "Perlu Kehati-hatian";
+      if (simulatedProfit <= 0 || simulatedCash < 0) {
+        assessment = "Tidak Menguntungkan";
+      } else if (profitDelta > 0 && marginDelta >= 0 && cashDelta >= 0) {
+        assessment = "Menguntungkan";
+      } else if (profitDelta > 0 || cashDelta > 0) {
+        assessment = "Perlu Dipertimbangkan";
+      } else {
+        assessment = "Tidak Menguntungkan";
       }
 
-      const sensitivities = [];
-      if (income > 0) {
-        const baseHppRate = hpp / income;
-        const baseExpense = expense;
-        if (baseHppRate < 1) {
-          const fixedContribution = Math.max(0, 1 - (simulatedHpp / Math.max(simulatedIncome, 1)));
-          const threshold = fixedContribution > 0 ? simulatedExpense / fixedContribution : Infinity;
-          if (Number.isFinite(threshold)) {
-            const maxRevenueDecline = Math.max(0, ((simulatedIncome - threshold) / simulatedIncome) * 100);
-            sensitivities.push(`Pada struktur biaya hasil simulasi, penurunan pendapatan sekitar ${maxRevenueDecline.toFixed(1)}% dari pendapatan simulasi menjadi batas sebelum laba berpotensi negatif.`);
+      const boundary = {
+        label: "",
+        value: null,
+        unit: "%",
+        explanation: ""
+      };
+
+      const contributionAfter = simulatedIncome > 0 ? Math.max(0, (simulatedIncome - simulatedHpp) / simulatedIncome) : 0;
+      const expenseAfter = simulatedExpense;
+
+      if (type === "pricing") {
+        // Batas volume saat laba sama dengan laba dasar, dengan harga/HPP/beban hasil simulasi tetap.
+        const unitPriceFactor = assumptions.plannedPrice / assumptions.currentPrice;
+        const hppPerIncomeBase = hpp / Math.max(income, 1);
+        const simulatedHppRate = hppPerIncomeBase * (1 + assumptions.hppChange / 100) / Math.max(unitPriceFactor, 0.000001);
+        const contribution = 1 - simulatedHppRate;
+        if (contribution > 0 && income > 0) {
+          const requiredRevenue = (expenseAfter + profit) / contribution;
+          const requiredVolumeFactor = requiredRevenue / (income * unitPriceFactor);
+          const maxVolumeDecline = Math.max(0, (1 - requiredVolumeFactor) * 100);
+          boundary.label = "Batas penurunan volume";
+          boundary.value = maxVolumeDecline;
+          boundary.explanation = `Dengan harga rencana dan struktur biaya simulasi, volume penjualan masih dapat turun sekitar ${maxVolumeDecline.toFixed(1)}% sebelum laba turun ke tingkat laba periode dasar.`;
+        }
+      } else if (type === "investment") {
+        const incrementalContribution = 1 - assumptions.incrementalHppRate / 100;
+        if (incrementalContribution > 0) {
+          const minimumRevenue = (assumptions.investmentAmount + assumptions.incrementalExpense) / incrementalContribution;
+          boundary.label = "Tambahan pendapatan minimum";
+          boundary.unit = "Rp";
+          boundary.value = minimumRevenue;
+          boundary.explanation = `Investasi membutuhkan tambahan pendapatan minimal sekitar ${formatRupiah(minimumRevenue)} agar biaya investasi dan beban tambahannya tertutup oleh margin kontribusi.`;
+        }
+      } else if (type === "sales") {
+        if (contributionAfter > 0) {
+          const breakEvenRevenue = expenseAfter / contributionAfter;
+          const maxRevenueDecline = income > 0 ? Math.max(0, (1 - breakEvenRevenue / Math.max(simulatedIncome, 1)) * 100) : null;
+          if (maxRevenueDecline !== null) {
+            boundary.label = "Batas penurunan pendapatan";
+            boundary.value = maxRevenueDecline;
+            boundary.explanation = `Pada struktur HPP dan beban hasil simulasi, pendapatan masih memiliki ruang turun sekitar ${maxRevenueDecline.toFixed(1)}% dari hasil simulasi sebelum laba berpotensi menjadi nol.`;
           }
         }
-        if (baseExpense > 0) {
-          sensitivities.push(`Setiap tambahan beban Rp1.000.000 secara langsung mengurangi laba sekitar Rp1.000.000, dengan asumsi pendapatan dan HPP tidak berubah.`);
+      } else if (type === "cost") {
+        const availableForCost = income - hpp - expense;
+        const hppBase = Math.max(hpp, 1);
+        const maxHppIncrease = availableForCost > 0 ? Math.max(0, (availableForCost / hppBase) * 100) : 0;
+        boundary.label = "Batas kenaikan HPP";
+        boundary.value = maxHppIncrease;
+        boundary.explanation = `Jika pendapatan dan beban lain tetap, kenaikan HPP sekitar ${maxHppIncrease.toFixed(1)}% dari HPP periode dasar akan membawa laba mendekati nol.`;
+      } else {
+        if (contributionAfter > 0 && simulatedIncome > 0) {
+          const breakEvenRevenue = expenseAfter / contributionAfter;
+          boundary.label = "Batas penurunan pendapatan";
+          boundary.value = Math.max(0, (1 - breakEvenRevenue / simulatedIncome) * 100);
+          boundary.explanation = `Dengan struktur biaya hasil simulasi, pendapatan masih memiliki ruang turun sekitar ${boundary.value.toFixed(1)}% sebelum laba berpotensi menjadi nol.`;
         }
       }
 
-      const decision = String(decisionOverride ?? decisionText ?? "").trim();
+      const comparisonIncome = Number(comparison.income) || 0;
+      const comparisonProfit = Number(comparison.netProfit) || 0;
+      const comparisonMargin = comparisonIncome > 0 ? (comparisonProfit / comparisonIncome) * 100 : 0;
       const comparisonText = comparisonIncome > 0
-        ? `Pendapatan periode dasar ${income >= comparisonIncome ? "lebih tinggi" : "lebih rendah"} ${Math.abs(((income - comparisonIncome) / comparisonIncome) * 100).toFixed(1)}% dibanding periode pembanding.`
-        : "Periode pembanding belum memiliki basis pendapatan yang cukup untuk membaca perubahan.";
+        ? `Periode dasar memiliki pendapatan ${formatRupiah(income)} dan laba ${formatRupiah(profit)}, sedangkan periode pembanding memiliki pendapatan ${formatRupiah(comparisonIncome)} dan laba ${formatRupiah(comparisonProfit)}. Margin laba bersih berubah dari ${comparisonMargin.toFixed(1)}% pada pembanding menjadi ${baseMargin.toFixed(1)}% pada dasar.`
+        : `Periode pembanding ${financePeriodLabel(financeComparisonPeriod)} belum memiliki pendapatan yang dapat dijadikan basis perbandingan.`;
 
       const result = {
         decision,
-        decisionType,
+        decisionType: type,
         basePeriod: financePeriodLabel(financePeriod),
-        comparisonPeriod: financePeriodLabel(financePreviousPeriod),
-        assumptions: scenario,
+        comparisonPeriod: financePeriodLabel(financeComparisonPeriod),
+        assumptions,
+        baseline: { income, hpp, expense, profit, cash, margin: baseMargin },
+        simulated: { income: simulatedIncome, hpp: simulatedHpp, expense: simulatedExpense, profit: simulatedProfit, cash: simulatedCash, margin: simulatedMargin },
+        deltas: { income: incomeDelta, hpp: hppDelta, expense: expenseDelta, profit: profitDelta, cash: cashDelta, margin: marginDelta },
         assessment,
-        baseline: { income, hpp, expense, profit, cash, margin: marginBefore },
-        simulated: { income: simulatedIncome, hpp: simulatedHpp, expense: simulatedExpense, profit: simulatedProfit, cash: simulatedCash, margin: marginAfter },
-        deltas: { income: incomeDelta, profit: profitDelta, cash: simulatedCash - cash, margin: marginDelta },
-        revenueHeadroom,
+        boundary,
+        keyVariable,
+        keyVariableValue,
+        modelExplanation,
         comparisonText,
-        sensitivities,
-        interpretation: "",
+        baselineRates: { hppRate, expenseRate },
         linked: [
           pulseData?.summary ? `Kondisi usaha: ${pulseData.summary}` : null,
-          diagnosis?.mainProblem ? `Temuan utama: ${diagnosis.mainProblem}` : null,
+          diagnosis?.mainProblem ? `Temuan diagnosis: ${diagnosis.mainProblem}` : null,
           autopilotData?.priority ? `Prioritas tindakan: ${autopilotData.priority}` : null
-        ].filter(Boolean)
+        ].filter(Boolean),
+        interpretation: ""
       };
 
-      // AI hanya digunakan untuk interpretasi hasil; seluruh angka telah dihitung deterministik.
       try {
         const aiRaw = await askAI({
-          prompt: `Berikan interpretasi singkat dan profesional atas simulasi keputusan berikut. Jangan mengubah angka. Jangan membuat data baru. Fokus pada trade-off, faktor paling sensitif, dan kondisi yang dapat membuat keputusan berubah.\n\n${JSON.stringify(result, null, 2)}`,
-          system: "Anda adalah Financial Decision Intelligence AI ZENAI. Tulis 2-4 kalimat Bahasa Indonesia yang formal, jelas, praktis, dan berbasis hanya pada data yang diberikan. Jangan gunakan markdown, emoji, atau istilah agresif."
+          prompt: `Anda sedang menjelaskan hasil SIMULASI KEPUTUSAN BISNIS. Jangan membuat angka baru dan jangan mengulang nasihat bisnis generik. Gunakan HANYA data berikut.
+
+${JSON.stringify(result, null, 2)}
+
+Jelaskan secara spesifik:
+1. apa keputusan yang diuji dan mekanisme dampaknya;
+2. perubahan laba, kas, pendapatan, atau margin yang paling penting;
+3. trade-off yang muncul;
+4. batas keputusan jika tersedia;
+5. kondisi yang harus dipenuhi agar keputusan tetap layak.
+Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan, katakan tidak cukup.`,
+          system: "Anda adalah Financial Decision Intelligence AI ZENAI. Berikan 4-6 kalimat Bahasa Indonesia formal dan konkret. Jangan memberi nasihat umum seperti 'tingkatkan pemasaran', 'efisiensi biaya', atau 'pantau secara berkala' kecuali langsung terkait dengan angka simulasi. Jangan mengubah angka. Jangan membuat data. Jangan markdown atau emoji."
         });
         result.interpretation = String(aiRaw || "").trim();
       } catch (aiError) {
         console.warn("Interpretasi AI tidak tersedia:", aiError);
-        result.interpretation = "Interpretasi AI tidak tersedia. Hasil numerik tetap dihitung berdasarkan data transaksi dan asumsi yang dimasukkan pengguna.";
+        result.interpretation = `${modelExplanation} Dampak terhadap laba adalah ${formatRupiah(profitDelta)} dan dampak terhadap kas adalah ${formatRupiah(cashDelta)}. ${boundary.explanation || "Batas keputusan belum dapat dihitung dari data yang tersedia."}`;
       }
 
       setDecisionResult(result);
@@ -2309,6 +2475,11 @@ Aturan:
           growthActions: [],
           financeTransactions: [],
           financePeriod: new Date().toISOString().slice(0, 7),
+          financeComparisonPeriod: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1).toISOString().slice(0, 7),
+          decisionScenario: { currentPrice: "", plannedPrice: "", volumeChange: "", hppChange: "", expenseChange: "", investmentAmount: "", expectedRevenue: "", incrementalHppRate: "", incrementalExpense: "", revenueChange: "", cashImpact: "" },
+          decisionType: "pricing",
+          decisionText: "",
+          decisionResult: null,
           tab: "capture"
         };
 
@@ -3341,7 +3512,7 @@ padding: isMobile ? "16px 12px" : "32px",
       ["market", "⚖", "Perspektif Bisnis"],
       ["autopilot", "⚡", "Strategi & Tindakan"],
       ["finance", "💰", "Laporan Keuangan"],
-      ["warroom", "◉", "Analisis Lanjutan"],
+      ["advancedAnalysis", "◉", "Analisis Lanjutan"],
     ].map(([key, icon, label]) => (
       <button
         key={key}
@@ -7412,163 +7583,205 @@ padding: isMobile ? "16px 12px" : "32px",
           </div>
         )}
 
-        {tab === "warroom" && (
-          <div style={{ maxWidth: "1040px", margin: "0 auto", width: "100%" }}>
-            <section style={{
-              background: darkMode ? "#0F172A" : "#FFFFFF",
-              border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}`,
-              borderRadius: "22px",
-              padding: isMobile ? "18px" : "30px",
-              boxShadow: "0 12px 35px rgba(15,23,42,0.07)"
-            }}>
-              <div style={{ maxWidth: "780px" }}>
-                <div style={{ fontSize: "12px", fontWeight: "800", letterSpacing: "1.4px", color: darkMode ? "#94A3B8" : "#64748B", marginBottom: "8px" }}>
-                  ANALISIS LANJUTAN
-                </div>
-                <h2 style={{ margin: 0, fontSize: isMobile ? "26px" : "36px", lineHeight: 1.12 }}>
-                  Uji keputusan sebelum diterapkan.
-                </h2>
-                <p style={{ margin: "11px 0 0", color: darkMode ? "#CBD5E1" : "#64748B", lineHeight: 1.65 }}>
-                  Masukkan keputusan atau perubahan yang sedang Anda pertimbangkan. ZENAI menggunakan data periode dasar untuk menghitung dampaknya terhadap pendapatan, biaya, laba, margin, dan kas.
-                </p>
-              </div>
+        {tab === "advancedAnalysis" && (() => {
+          const inputStyle = {
+            width: "100%", marginTop: "6px", minHeight: "44px", boxSizing: "border-box",
+            border: `1px solid ${darkMode ? "#475569" : "#CBD5E1"}`, borderRadius: "10px",
+            padding: "0 11px", background: darkMode ? "#0F172A" : "#FFFFFF",
+            color: darkMode ? "#F8FAFC" : "#0F172A", fontWeight: "700"
+          };
+          const field = (key, label, suffix = "", placeholder = "") => (
+            <label key={key} style={{ display: "block", fontSize: "12px", fontWeight: "700" }}>
+              {label}{suffix ? ` (${suffix})` : ""}
+              <input
+                type="number"
+                step="0.1"
+                value={decisionScenario[key] ?? ""}
+                onChange={(event) => { setDecisionScenario((prev) => ({ ...prev, [key]: event.target.value })); setDecisionResult(null); }}
+                placeholder={placeholder}
+                style={inputStyle}
+              />
+            </label>
+          );
 
-              <div style={{ marginTop: "24px", padding: "18px", borderRadius: "18px", background: darkMode ? "#111827" : "#F8FAFC", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
-                <div style={{ fontSize: "12px", fontWeight: "800", letterSpacing: "0.5px", marginBottom: "12px" }}>PERIODE ANALISIS</div>
-                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "12px" }}>
-                  <label style={{ fontSize: "12px", fontWeight: "800" }}>
-                    Periode Dasar
-                    <input type="month" value={financePeriod} onChange={(event) => { setFinancePeriod(event.target.value); setDecisionResult(null); }} style={{ width: "100%", marginTop: "6px", minHeight: "42px", borderRadius: "10px", border: `1px solid ${darkMode ? "#475569" : "#CBD5E1"}`, padding: "0 9px", background: darkMode ? "#0F172A" : "#FFFFFF", color: darkMode ? "#F8FAFC" : "#0F172A", fontWeight: "700" }} />
-                  </label>
-                  <label style={{ fontSize: "12px", fontWeight: "800" }}>
-                    Periode Pembanding
-                    <input type="month" value={financeComparisonPeriod} onChange={(event) => { setFinanceComparisonPeriod(event.target.value); setDecisionResult(null); }} style={{ width: "100%", marginTop: "6px", minHeight: "42px", borderRadius: "10px", border: `1px solid ${darkMode ? "#475569" : "#CBD5E1"}`, padding: "0 9px", background: darkMode ? "#0F172A" : "#FFFFFF", color: darkMode ? "#F8FAFC" : "#0F172A", fontWeight: "700" }} />
-                  </label>
-                </div>
-                <div style={{ marginTop: "9px", fontSize: "11px", color: darkMode ? "#94A3B8" : "#64748B" }}>
-                  Dasar: {financePeriodLabel(financePeriod)} · Pembanding: {financePeriodLabel(financeComparisonPeriod)}
-                </div>
-              </div>
+          const typeInfo = {
+            pricing: { title: "Perubahan harga", description: "Uji apakah perubahan harga tetap layak ketika volume penjualan ikut berubah." },
+            sales: { title: "Perubahan penjualan", description: "Uji dampak kenaikan atau penurunan volume penjualan terhadap laba dan kas." },
+            cost: { title: "Perubahan biaya", description: "Uji seberapa besar perubahan HPP dan beban dapat ditanggung oleh struktur usaha saat ini." },
+            investment: { title: "Pengeluaran atau investasi", description: "Uji apakah uang yang dikeluarkan dapat ditutup oleh pendapatan tambahan yang diharapkan." },
+            custom: { title: "Skenario khusus", description: "Uji perubahan pendapatan, HPP, dan beban yang Anda tentukan sendiri." }
+          }[decisionType] || { title: "Skenario khusus", description: "Tentukan perubahan yang ingin diuji." };
 
-              <div style={{ marginTop: "20px" }}>
-                <label style={{ display: "block", fontSize: "13px", fontWeight: "800", marginBottom: "7px" }}>KEPUTUSAN YANG INGIN DIUJI</label>
-                <textarea value={decisionText} onChange={(event) => { setDecisionText(event.target.value); setDecisionResult(null); }} placeholder="Contoh: Saya ingin meningkatkan anggaran promosi sebesar Rp3 juta untuk meningkatkan penjualan." rows={3} style={{ width: "100%", resize: "vertical", minHeight: "82px", border: `1px solid ${darkMode ? "#475569" : "#CBD5E1"}`, borderRadius: "12px", padding: "12px 13px", background: darkMode ? "#0F172A" : "#FFFFFF", color: darkMode ? "#F8FAFC" : "#0F172A", lineHeight: 1.5 }} />
+          const renderAssumptionFields = () => {
+            if (decisionType === "pricing") return (
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)", gap: "13px" }}>
+                {field("currentPrice", "Harga saat ini", "Rp", "Contoh: 25000")}
+                {field("plannedPrice", "Harga rencana", "Rp", "Contoh: 28000")}
+                {field("volumeChange", "Perubahan volume penjualan", "%", "Contoh: -10")}
+                {field("hppChange", "Perubahan HPP per unit", "%", "Contoh: 0")}
+                {field("expenseChange", "Perubahan beban operasional", "%", "Contoh: 0")}
               </div>
+            );
+            if (decisionType === "sales") return (
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: "13px" }}>
+                {field("volumeChange", "Perubahan volume penjualan", "%", "Contoh: 15")}
+                {field("hppChange", "Perubahan HPP", "%", "Contoh: 5")}
+                {field("expenseChange", "Perubahan beban", "%", "Contoh: 3")}
+              </div>
+            );
+            if (decisionType === "cost") return (
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: "13px" }}>
+                {field("revenueChange", "Perubahan pendapatan", "%", "Contoh: 0")}
+                {field("hppChange", "Perubahan HPP", "%", "Contoh: 8")}
+                {field("expenseChange", "Perubahan beban", "%", "Contoh: 5")}
+              </div>
+            );
+            if (decisionType === "investment") return (
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)", gap: "13px" }}>
+                {field("investmentAmount", "Nilai investasi / pengeluaran", "Rp", "Contoh: 5000000")}
+                {field("expectedRevenue", "Tambahan pendapatan yang diharapkan", "Rp", "Contoh: 8000000")}
+                {field("incrementalHppRate", "HPP atas tambahan penjualan", "%", "Contoh: 40")}
+                {field("incrementalExpense", "Beban tambahan", "Rp", "Contoh: 500000")}
+              </div>
+            );
+            return (
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: "13px" }}>
+                {field("revenueChange", "Perubahan pendapatan", "%", "Contoh: -15")}
+                {field("hppChange", "Perubahan HPP", "%", "Contoh: 5")}
+                {field("expenseChange", "Perubahan beban", "%", "Contoh: 3")}
+              </div>
+            );
+          };
 
-              <div style={{ marginTop: "18px", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "12px" }}>
-                <label style={{ fontSize: "12px", fontWeight: "800" }}>
-                  Jenis Keputusan
-                  <select value={decisionType} onChange={(event) => { setDecisionType(event.target.value); setDecisionResult(null); }} style={{ width: "100%", marginTop: "6px", minHeight: "42px", borderRadius: "10px", border: `1px solid ${darkMode ? "#475569" : "#CBD5E1"}`, padding: "0 9px", background: darkMode ? "#0F172A" : "#FFFFFF", color: darkMode ? "#F8FAFC" : "#0F172A" }}>
-                    <option value="custom">Skenario yang saya tentukan</option>
-                    <option value="pricing">Perubahan harga</option>
-                    <option value="sales">Perubahan penjualan</option>
-                    <option value="cost">Perubahan biaya</option>
-                    <option value="investment">Pengeluaran atau investasi</option>
-                  </select>
-                </label>
-                <div style={{ padding: "10px 12px", borderRadius: "10px", background: darkMode ? "#172033" : "#EFF6FF", color: darkMode ? "#CBD5E1" : "#475569", fontSize: "11px", lineHeight: 1.5, alignSelf: "end" }}>
-                  Pilihan ini membantu memberi konteks pada simulasi. Perhitungan tetap berdasarkan asumsi yang Anda masukkan.
+          return (
+            <div style={{ maxWidth: "1040px", margin: "0 auto", width: "100%" }}>
+              <section style={{ background: darkMode ? "#0F172A" : "#FFFFFF", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}`, borderRadius: "22px", padding: isMobile ? "18px" : "30px", boxShadow: "0 12px 35px rgba(15,23,42,0.06)" }}>
+                <div style={{ maxWidth: "780px" }}>
+                  <div style={{ fontSize: "12px", fontWeight: "800", letterSpacing: "1.4px", color: darkMode ? "#93C5FD" : "#2563EB", marginBottom: "8px" }}>ANALISIS LANJUTAN</div>
+                  <h2 style={{ margin: 0, fontSize: isMobile ? "26px" : "36px", lineHeight: 1.12 }}>Uji keputusan sebelum diterapkan.</h2>
+                  <p style={{ margin: "11px 0 0", color: darkMode ? "#CBD5E1" : "#64748B", lineHeight: 1.65 }}>
+                    Pilih satu keputusan nyata yang sedang dipertimbangkan. ZENAI menghitung konsekuensinya menggunakan data keuangan periode dasar, bukan sekadar memberikan rekomendasi umum.
+                  </p>
                 </div>
-              </div>
 
-              <div style={{ marginTop: "18px", padding: "18px", borderRadius: "18px", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
-                <div style={{ fontSize: "13px", fontWeight: "800", marginBottom: "4px" }}>ASUMSI SIMULASI</div>
-                <div style={{ fontSize: "11px", color: darkMode ? "#94A3B8" : "#64748B", marginBottom: "14px" }}>Anda menentukan sendiri perubahan yang ingin diuji. ZENAI tidak menetapkan skenario secara otomatis.</div>
-                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(4, 1fr)", gap: "11px" }}>
-                  {[
-                    ["revenueChange", "Pendapatan", "Contoh: -15"],
-                    ["hppChange", "HPP", "Contoh: 5"],
-                    ["expenseChange", "Beban", "Contoh: 3"],
-                    ["cashImpact", "Dampak kas langsung", "Contoh: -3000000"]
-                  ].map(([key, label, placeholder]) => (
-                    <label key={key} style={{ fontSize: "11px", fontWeight: "800" }}>
-                      {label}{key !== "cashImpact" ? " (%)" : " (Rp)"}
-                      <input type="number" step="0.1" value={decisionScenario[key]} onChange={(event) => { setDecisionScenario((prev) => ({ ...prev, [key]: event.target.value })); setDecisionResult(null); }} placeholder={placeholder} style={{ width: "100%", marginTop: "6px", minHeight: "42px", border: `1px solid ${darkMode ? "#475569" : "#CBD5E1"}`, borderRadius: "10px", padding: "0 10px", background: darkMode ? "#0F172A" : "#FFFFFF", color: darkMode ? "#F8FAFC" : "#0F172A" }} />
+                <div style={{ marginTop: "24px", padding: "18px", borderRadius: "18px", background: darkMode ? "#111827" : "#F8FAFC", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
+                  <div style={{ fontSize: "12px", fontWeight: "800", letterSpacing: "0.5px", marginBottom: "12px" }}>DATA YANG MENJADI DASAR</div>
+                  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "12px" }}>
+                    <label style={{ fontSize: "12px", fontWeight: "800" }}>Periode Dasar<input type="month" value={financePeriod} onChange={(event) => { setFinancePeriod(event.target.value); setDecisionResult(null); }} style={inputStyle} /></label>
+                    <label style={{ fontSize: "12px", fontWeight: "800" }}>Periode Pembanding<input type="month" value={financeComparisonPeriod} onChange={(event) => { setFinanceComparisonPeriod(event.target.value); setDecisionResult(null); }} style={inputStyle} /></label>
+                  </div>
+                  <div style={{ marginTop: "10px", fontSize: "11px", color: darkMode ? "#94A3B8" : "#64748B", lineHeight: 1.6 }}>
+                    Periode dasar menjadi titik awal simulasi. Periode pembanding hanya digunakan untuk membaca konteks historis dan tidak otomatis dianggap sebagai bulan sebelumnya.
+                  </div>
+                </div>
+
+                <div style={{ marginTop: "20px", padding: "18px", borderRadius: "18px", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
+                  <div style={{ fontSize: "12px", fontWeight: "800", marginBottom: "10px" }}>KEPUTUSAN YANG DIUJI</div>
+                  <textarea value={decisionText} onChange={(event) => { setDecisionText(event.target.value); setDecisionResult(null); }} placeholder="Contoh: Saya ingin menaikkan harga produk dari Rp25.000 menjadi Rp28.000 karena biaya bahan meningkat." rows={3} style={{ width: "100%", resize: "vertical", minHeight: "82px", boxSizing: "border-box", border: `1px solid ${darkMode ? "#475569" : "#CBD5E1"}`, borderRadius: "12px", padding: "12px 13px", background: darkMode ? "#0F172A" : "#FFFFFF", color: darkMode ? "#F8FAFC" : "#0F172A", lineHeight: 1.5 }} />
+
+                  <div style={{ marginTop: "14px", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "12px", alignItems: "end" }}>
+                    <label style={{ fontSize: "12px", fontWeight: "800" }}>Jenis Keputusan
+                      <select value={decisionType} onChange={(event) => { setDecisionType(event.target.value); setDecisionResult(null); }} style={inputStyle}>
+                        <option value="pricing">Perubahan harga</option>
+                        <option value="sales">Perubahan penjualan</option>
+                        <option value="cost">Perubahan biaya / HPP</option>
+                        <option value="investment">Pengeluaran atau investasi</option>
+                        <option value="custom">Skenario khusus</option>
+                      </select>
                     </label>
-                  ))}
-                </div>
-              </div>
-
-              <div style={{ marginTop: "18px", display: "flex", justifyContent: "flex-end", gap: "10px", flexWrap: "wrap" }}>
-                <button type="button" onClick={() => { setDecisionResult(null); setDecisionScenario({ revenueChange: "", hppChange: "", expenseChange: "", cashImpact: "" }); }} style={{ border: `1px solid ${darkMode ? "#475569" : "#CBD5E1"}`, background: "transparent", color: darkMode ? "#F8FAFC" : "#0F172A", padding: "11px 16px", borderRadius: "11px", fontWeight: "800", cursor: "pointer" }}>Atur Ulang</button>
-                <button type="button" onClick={() => runDecisionSimulation()} disabled={decisionRunning || !decisionText.trim()} style={{ border: "none", background: "#0F172A", color: "#FFFFFF", padding: "11px 18px", borderRadius: "11px", cursor: decisionRunning ? "wait" : "pointer", fontWeight: "800", opacity: decisionRunning || !decisionText.trim() ? 0.55 : 1 }}>
-                  {decisionRunning ? "Menghitung dampak..." : "Hitung Dampak Keputusan"}
-                </button>
-              </div>
-
-              {decisionResult && (
-                <div style={{ marginTop: "24px", display: "grid", gap: "14px" }}>
-                  <div style={{ padding: "21px", borderRadius: "18px", background: darkMode ? "#172033" : "#F8FAFC", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
-                    <div style={{ fontSize: "11px", fontWeight: "800", letterSpacing: "1px", color: darkMode ? "#94A3B8" : "#64748B" }}>PENILAIAN KEPUTUSAN</div>
-                    <h3 style={{ margin: "7px 0 6px", fontSize: "26px" }}>{decisionResult.assessment}</h3>
-                    <p style={{ margin: 0, color: darkMode ? "#CBD5E1" : "#64748B", lineHeight: 1.6 }}>{decisionResult.interpretation}</p>
-                  </div>
-
-                  <div style={{ padding: "18px", borderRadius: "18px", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
-                    <div style={{ fontSize: "12px", fontWeight: "800", marginBottom: "13px" }}>DAMPAK KEUANGAN</div>
-                    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: "10px" }}>
-                      {[
-                        ["Pendapatan", decisionResult.baseline.income, decisionResult.simulated.income],
-                        ["Laba", decisionResult.baseline.profit, decisionResult.simulated.profit],
-                        ["Kas", decisionResult.baseline.cash, decisionResult.simulated.cash]
-                      ].map(([label, before, after]) => (
-                        <div key={label} style={{ padding: "13px", borderRadius: "12px", background: darkMode ? "#111827" : "#F8FAFC" }}>
-                          <div style={{ fontSize: "11px", color: darkMode ? "#94A3B8" : "#64748B" }}>{label}</div>
-                          <div style={{ marginTop: "5px", fontWeight: "800" }}>{formatRupiah(after)}</div>
-                          <div style={{ marginTop: "4px", fontSize: "10px", color: darkMode ? "#94A3B8" : "#64748B" }}>sebelumnya {formatRupiah(before)}</div>
-                        </div>
-                      ))}
-                      <div style={{ padding: "13px", borderRadius: "12px", background: darkMode ? "#111827" : "#F8FAFC" }}>
-                        <div style={{ fontSize: "11px", color: darkMode ? "#94A3B8" : "#64748B" }}>Margin laba</div>
-                        <div style={{ marginTop: "5px", fontWeight: "800" }}>{decisionResult.simulated.margin.toFixed(1)}%</div>
-                        <div style={{ marginTop: "4px", fontSize: "10px", color: darkMode ? "#94A3B8" : "#64748B" }}>sebelumnya {decisionResult.baseline.margin.toFixed(1)}%</div>
-                      </div>
+                    <div style={{ padding: "11px 13px", borderRadius: "10px", background: darkMode ? "#172033" : "#F8FAFC", color: darkMode ? "#CBD5E1" : "#475569", fontSize: "11px", lineHeight: 1.55 }}>
+                      <strong>{typeInfo.title}</strong><br />{typeInfo.description}
                     </div>
                   </div>
+                </div>
 
-                  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "14px" }}>
-                    <div style={{ padding: "18px", borderRadius: "18px", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
-                      <div style={{ fontSize: "12px", fontWeight: "800", marginBottom: "11px" }}>PERUBAHAN HASIL</div>
-                      <div style={{ lineHeight: 1.9, fontSize: "13px" }}>
-                        <div>Perubahan pendapatan: <strong>{decisionResult.deltas.income >= 0 ? "+" : ""}{formatRupiah(decisionResult.deltas.income)}</strong></div>
-                        <div>Perubahan laba: <strong>{decisionResult.deltas.profit >= 0 ? "+" : ""}{formatRupiah(decisionResult.deltas.profit)}</strong></div>
-                        <div>Perubahan kas: <strong>{decisionResult.deltas.cash >= 0 ? "+" : ""}{formatRupiah(decisionResult.deltas.cash)}</strong></div>
-                        <div>Perubahan margin: <strong>{decisionResult.deltas.margin >= 0 ? "+" : ""}{decisionResult.deltas.margin.toFixed(1)} poin</strong></div>
+                <div style={{ marginTop: "16px", padding: "18px", borderRadius: "18px", background: darkMode ? "#111827" : "#FAFAFA", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
+                  <div style={{ fontSize: "12px", fontWeight: "800", marginBottom: "4px" }}>ASUMSI KEPUTUSAN</div>
+                  <div style={{ fontSize: "11px", color: darkMode ? "#94A3B8" : "#64748B", marginBottom: "14px" }}>Isi asumsi yang benar-benar Anda perkirakan. Tidak ada skenario angka yang dipilih otomatis oleh ZENAI.</div>
+                  {renderAssumptionFields()}
+                </div>
+
+                {financeMessage && <div style={{ marginTop: "14px", padding: "12px 14px", borderRadius: "11px", border: "1px solid #FCA5A5", background: darkMode ? "#3B121D" : "#FEF2F2", color: darkMode ? "#FECACA" : "#991B1B", fontSize: "13px" }}>{financeMessage}</div>}
+
+                <div style={{ marginTop: "18px", display: "flex", justifyContent: "flex-end", gap: "10px", flexWrap: "wrap" }}>
+                  <button type="button" onClick={() => { setDecisionResult(null); setFinanceMessage(""); setDecisionScenario({ currentPrice: "", plannedPrice: "", volumeChange: "", hppChange: "", expenseChange: "", investmentAmount: "", expectedRevenue: "", incrementalHppRate: "", incrementalExpense: "", revenueChange: "", cashImpact: "" }); }} style={{ border: `1px solid ${darkMode ? "#475569" : "#CBD5E1"}`, background: "transparent", color: darkMode ? "#F8FAFC" : "#0F172A", padding: "11px 16px", borderRadius: "11px", fontWeight: "800", cursor: "pointer" }}>Atur Ulang</button>
+                  <button type="button" onClick={() => runDecisionSimulation()} disabled={decisionRunning || !decisionText.trim()} style={{ border: "none", background: "#0F172A", color: "#FFFFFF", padding: "11px 18px", borderRadius: "11px", cursor: decisionRunning ? "wait" : "pointer", fontWeight: "800", opacity: decisionRunning || !decisionText.trim() ? 0.55 : 1 }}>
+                    {decisionRunning ? "Menghitung dampak..." : "Hitung Dampak"}
+                  </button>
+                </div>
+
+                {decisionResult && (
+                  <div style={{ marginTop: "26px", display: "grid", gap: "14px" }}>
+                    <section style={{ padding: "21px", borderRadius: "18px", background: darkMode ? "#111827" : "#FFFFFF", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
+                      <div style={{ fontSize: "11px", fontWeight: "800", letterSpacing: "1px", color: darkMode ? "#93C5FD" : "#2563EB" }}>KEPUTUSAN YANG DIUJI</div>
+                      <h3 style={{ margin: "8px 0 7px", fontSize: "21px" }}>{decisionResult.decision}</h3>
+                      <div style={{ fontSize: "12px", color: darkMode ? "#94A3B8" : "#64748B" }}>{decisionResult.basePeriod} dibandingkan dengan {decisionResult.comparisonPeriod}</div>
+                    </section>
+
+                    <section style={{ padding: "18px", borderRadius: "18px", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
+                      <div style={{ fontSize: "12px", fontWeight: "800", marginBottom: "12px" }}>ASUMSI YANG DIUJI</div>
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                        {Object.entries(decisionResult.assumptions).filter(([, value]) => value !== null && value !== 0).map(([key, value]) => {
+                          const labels = { currentPrice: "Harga saat ini", plannedPrice: "Harga rencana", volumeChange: "Perubahan volume", hppChange: "Perubahan HPP", expenseChange: "Perubahan beban", investmentAmount: "Investasi/pengeluaran", expectedRevenue: "Pendapatan tambahan", incrementalHppRate: "HPP tambahan", incrementalExpense: "Beban tambahan", revenueChange: "Perubahan pendapatan", cashImpact: "Penyesuaian kas" };
+                          const isPercent = ["volumeChange", "hppChange", "expenseChange", "incrementalHppRate", "revenueChange"].includes(key);
+                          return <div key={key} style={{ padding: "8px 10px", borderRadius: "9px", background: darkMode ? "#172033" : "#F8FAFC", fontSize: "11px" }}><strong>{labels[key]}</strong>: {isPercent ? `${Number(value).toFixed(1)}%` : formatRupiah(value)}</div>;
+                        })}
                       </div>
-                    </div>
-                    <div style={{ padding: "18px", borderRadius: "18px", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
-                      <div style={{ fontSize: "12px", fontWeight: "800", marginBottom: "11px" }}>BATAS KEPUTUSAN</div>
-                      <div style={{ fontSize: "13px", lineHeight: 1.65 }}>
-                        {decisionResult.revenueHeadroom !== null ? `Dengan struktur biaya hasil simulasi, ruang penurunan pendapatan sebelum laba berpotensi negatif sekitar ${Math.max(0, decisionResult.revenueHeadroom).toFixed(1)}%.` : "Batas penurunan pendapatan belum dapat dihitung dari data yang tersedia."}
+                      <p style={{ margin: "12px 0 0", color: darkMode ? "#CBD5E1" : "#475569", fontSize: "12px", lineHeight: 1.65 }}>{decisionResult.modelExplanation}</p>
+                    </section>
+
+                    <section style={{ padding: "18px", borderRadius: "18px", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
+                      <div style={{ fontSize: "12px", fontWeight: "800", marginBottom: "12px" }}>DAMPAK TERHADAP KEUANGAN</div>
+                      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: "10px" }}>
+                        {[ ["Pendapatan", decisionResult.baseline.income, decisionResult.simulated.income], ["HPP", decisionResult.baseline.hpp, decisionResult.simulated.hpp], ["Laba Bersih", decisionResult.baseline.profit, decisionResult.simulated.profit], ["Kas", decisionResult.baseline.cash, decisionResult.simulated.cash] ].map(([label, before, after]) => (
+                          <div key={label} style={{ padding: "13px", borderRadius: "12px", background: darkMode ? "#111827" : "#F8FAFC" }}>
+                            <div style={{ fontSize: "11px", color: darkMode ? "#94A3B8" : "#64748B" }}>{label}</div>
+                            <div style={{ marginTop: "5px", fontWeight: "800", fontSize: "15px" }}>{formatRupiah(after)}</div>
+                            <div style={{ marginTop: "4px", fontSize: "10px", color: darkMode ? "#94A3B8" : "#64748B" }}>sebelum {formatRupiah(before)}</div>
+                          </div>
+                        ))}
                       </div>
-                      {decisionResult.sensitivities.map((item) => <div key={item} style={{ marginTop: "9px", fontSize: "11px", color: darkMode ? "#94A3B8" : "#64748B" }}>{item}</div>)}
+                      <div style={{ marginTop: "13px", padding: "12px", borderRadius: "11px", background: darkMode ? "#172033" : "#F8FAFC", fontSize: "12px", lineHeight: 1.8 }}>
+                        Perubahan laba: <strong>{decisionResult.deltas.profit >= 0 ? "+" : "-"}{formatRupiah(Math.abs(decisionResult.deltas.profit))}</strong> · Perubahan kas: <strong>{decisionResult.deltas.cash >= 0 ? "+" : "-"}{formatRupiah(Math.abs(decisionResult.deltas.cash))}</strong> · Margin: <strong>{decisionResult.baseline.margin.toFixed(1)}% → {decisionResult.simulated.margin.toFixed(1)}%</strong>
+                      </div>
+                    </section>
+
+                    <section style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "14px" }}>
+                      <div style={{ padding: "18px", borderRadius: "18px", background: darkMode ? "#111827" : "#FFFFFF", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
+                        <div style={{ fontSize: "11px", fontWeight: "800", color: darkMode ? "#93C5FD" : "#2563EB", letterSpacing: "0.7px" }}>PENILAIAN</div>
+                        <div style={{ marginTop: "7px", fontSize: "25px", fontWeight: "850" }}>{decisionResult.assessment}</div>
+                        <p style={{ margin: "10px 0 0", color: darkMode ? "#CBD5E1" : "#475569", lineHeight: 1.7, fontSize: "13px" }}>{decisionResult.interpretation}</p>
+                      </div>
+                      <div style={{ padding: "18px", borderRadius: "18px", background: darkMode ? "#111827" : "#FFFFFF", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
+                        <div style={{ fontSize: "11px", fontWeight: "800", color: darkMode ? "#93C5FD" : "#2563EB", letterSpacing: "0.7px" }}>BATAS KEPUTUSAN</div>
+                        {decisionResult.boundary.value !== null ? <>
+                          <div style={{ marginTop: "8px", fontSize: "18px", fontWeight: "800" }}>{decisionResult.boundary.label}: {decisionResult.boundary.unit === "Rp" ? formatRupiah(decisionResult.boundary.value) : `${decisionResult.boundary.value.toFixed(1)}%`}</div>
+                          <p style={{ margin: "9px 0 0", color: darkMode ? "#CBD5E1" : "#475569", lineHeight: 1.65, fontSize: "12px" }}>{decisionResult.boundary.explanation}</p>
+                        </> : <p style={{ margin: "9px 0 0", color: darkMode ? "#CBD5E1" : "#475569", lineHeight: 1.65, fontSize: "12px" }}>Batas keputusan belum dapat dihitung dari struktur data yang tersedia.</p>}
+                      </div>
+                    </section>
+
+                    <section style={{ padding: "18px", borderRadius: "18px", background: darkMode ? "#0F172A" : "#F8FAFC", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
+                      <div style={{ fontSize: "11px", fontWeight: "800", marginBottom: "7px" }}>KONTEKS PERIODE</div>
+                      <div style={{ fontSize: "12px", color: darkMode ? "#CBD5E1" : "#475569", lineHeight: 1.65 }}>{decisionResult.comparisonText}</div>
+                    </section>
+
+                    {decisionResult.linked.length > 0 && <details style={{ padding: "15px 18px", borderRadius: "16px", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}><summary style={{ cursor: "pointer", fontWeight: "800", fontSize: "12px" }}>Konteks usaha yang digunakan</summary><div style={{ marginTop: "10px", fontSize: "11px", lineHeight: 1.6, color: darkMode ? "#CBD5E1" : "#475569" }}>{decisionResult.linked.map((item) => <div key={item} style={{ marginTop: "5px" }}>{item}</div>)}</div></details>}
+
+                    <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                      <button type="button" onClick={() => setDecisionResult(null)} style={{ border: `1px solid ${darkMode ? "#475569" : "#CBD5E1"}`, background: darkMode ? "#111827" : "#FFFFFF", color: darkMode ? "#F8FAFC" : "#0F172A", padding: "10px 15px", borderRadius: "10px", fontWeight: "800", cursor: "pointer" }}>Perubahan Asumsi</button>
                     </div>
                   </div>
+                )}
 
-                  <div style={{ padding: "18px", borderRadius: "18px", background: darkMode ? "#111827" : "#F8FAFC", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
-                    <div style={{ fontSize: "12px", fontWeight: "800", marginBottom: "8px" }}>KONTEKS PERIODE</div>
-                    <div style={{ fontSize: "12px", color: darkMode ? "#CBD5E1" : "#475569" }}>{decisionResult.comparisonText}</div>
-                    <div style={{ marginTop: "7px", fontSize: "11px", color: darkMode ? "#94A3B8" : "#64748B" }}>Periode dasar: {decisionResult.basePeriod} · Pembanding: {decisionResult.comparisonPeriod}</div>
-                  </div>
-
-                  {decisionResult.linked.length > 0 && (
-                    <details style={{ padding: "15px 18px", borderRadius: "16px", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
-                      <summary style={{ cursor: "pointer", fontWeight: "800", fontSize: "12px" }}>Konteks analisis ZENAI</summary>
-                      <div style={{ marginTop: "10px", fontSize: "11px", lineHeight: 1.6, color: darkMode ? "#CBD5E1" : "#475569" }}>{decisionResult.linked.map((item) => <div key={item} style={{ marginTop: "5px" }}>{item}</div>)}</div>
-                    </details>
-                  )}
-                </div>
-              )}
-
-              {!decisionResult && (
-                <div style={{ marginTop: "20px", padding: "22px", textAlign: "center", borderRadius: "18px", border: `1px dashed ${darkMode ? "#475569" : "#CBD5E1"}`, color: darkMode ? "#CBD5E1" : "#64748B" }}>
-                  <strong style={{ display: "block", color: darkMode ? "#F8FAFC" : "#0F172A" }}>Belum ada simulasi.</strong>
-                  <span style={{ display: "block", marginTop: "5px", fontSize: "12px" }}>Tentukan keputusan dan asumsi yang ingin diuji, kemudian hitung dampaknya.</span>
-                </div>
-              )}
-            </section>
-          </div>
-        )}
+                {!decisionResult && <div style={{ marginTop: "20px", padding: "22px", textAlign: "center", borderRadius: "18px", border: `1px dashed ${darkMode ? "#475569" : "#CBD5E1"}`, color: darkMode ? "#CBD5E1" : "#64748B" }}>
+                  <strong style={{ display: "block", color: darkMode ? "#F8FAFC" : "#0F172A" }}>Belum ada hasil simulasi.</strong>
+                  <span style={{ display: "block", marginTop: "5px", fontSize: "12px" }}>Tentukan keputusan dan asumsi spesifiknya, lalu ZENAI akan menghitung konsekuensinya.</span>
+                </div>}
+              </section>
+            </div>
+          );
+        })()}
 
         {tab === "autopilot" && (
           <div
