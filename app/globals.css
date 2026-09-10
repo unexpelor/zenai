@@ -798,3 +798,108 @@ select:disabled {
 @media(max-width:768px){.zenai-mobile-menu{display:grid;place-items:center;position:fixed;top:12px;left:12px;width:42px;height:42px;border:1px solid #e2e8f0;border-radius:11px;background:#fff;color:#0f172a;z-index:900;box-shadow:0 6px 18px rgba(15,23,42,.08)}.zenai-dark .zenai-mobile-menu{background:#111827;border-color:#334155;color:#f8fafc}.zenai-sidebar.open .zenai-mobile-menu{display:none}}
 
 @media (max-width: 768px){.zenai-sidebar{width:220px!important;min-width:220px!important;transform:translateX(-100%);box-shadow:12px 0 35px rgba(15,23,42,.14)}.zenai-sidebar.open{transform:translateX(0)}.zenai-sidebar.closed{transform:translateX(-100%)}.zenai-content{margin-left:0!important;width:100%!important}.zenai-mobile-menu{position:fixed!important;left:14px!important;top:14px!important;z-index:1100!important}.zenai-page-header{padding-left:54px!important}}
+
+
+/* =========================================================
+   ZENAI — Premium Motion Layer
+   Calm, purposeful motion. No heavy animation libraries.
+   ========================================================= */
+
+@media (prefers-reduced-motion: no-preference) {
+  .zenai-motion-reveal {
+    animation: zenaiFadeUp 560ms cubic-bezier(.22,1,.36,1) both;
+  }
+
+  .zenai-motion-reveal-delay-1 { animation-delay: 90ms; }
+  .zenai-motion-reveal-delay-2 { animation-delay: 170ms; }
+  .zenai-motion-reveal-delay-3 { animation-delay: 250ms; }
+
+  .zenai-motion-float {
+    animation: zenaiFloat 5.5s ease-in-out infinite;
+  }
+
+  .zenai-motion-pulse {
+    animation: zenaiSoftPulse 2.8s ease-in-out infinite;
+  }
+
+  .zenai-motion-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .zenai-motion-shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-110%);
+    background: linear-gradient(
+      100deg,
+      transparent 35%,
+      rgba(255,255,255,.34) 50%,
+      transparent 65%
+    );
+    animation: zenaiShimmer 3.8s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  .zenai-hover-lift {
+    transition:
+      transform 220ms cubic-bezier(.22,1,.36,1),
+      box-shadow 220ms ease,
+      border-color 220ms ease;
+  }
+
+  .zenai-hover-lift:hover {
+    transform: translateY(-3px);
+  }
+
+  .zenai-hover-icon svg {
+    transition: transform 220ms cubic-bezier(.22,1,.36,1);
+  }
+
+  .zenai-hover-icon:hover svg {
+    transform: translateY(-1px) scale(1.04);
+  }
+
+  .zenai-nav-scrolled {
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+}
+
+@keyframes zenaiFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes zenaiFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes zenaiSoftPulse {
+  0%, 100% { opacity: .78; }
+  50% { opacity: 1; }
+}
+
+@keyframes zenaiShimmer {
+  0%, 55% { transform: translateX(-110%); }
+  75%, 100% { transform: translateX(110%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
