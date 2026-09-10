@@ -3558,11 +3558,6 @@ padding: isMobile ? "16px 12px" : "32px",
       <button
         key={key}
         onClick={() => {
-          if ((key === "market" || key === "autopilot") && !business) {
-            alert("Ceritakan usaha terlebih dahulu.");
-            setTab("capture");
-            return;
-          }
           setTab(key);
           if (isMobile) setSidebarOpen(false);
         }}
@@ -3713,11 +3708,11 @@ padding: isMobile ? "16px 12px" : "32px",
     minWidth: 0,
 
     marginLeft: isMobile
-      ? (sidebarOpen ? "220px" : "64px")
+      ? "0"
       : (sidebarOpen ? "280px" : "72px"),
 
     width: isMobile
-      ? `calc(100% - ${sidebarOpen ? "220px" : "64px"})`
+      ? "100%"
       : `calc(100% - ${sidebarOpen ? "280px" : "72px"})`,
 
     padding: isMobile ? "24px 12px" : "32px",
@@ -3774,6 +3769,9 @@ padding: isMobile ? "16px 12px" : "32px",
 
 {tab === "market" &&
   "Perspektif Bisnis"}
+
+              {tab === "advancedAnalysis" &&
+                "Analisis Lanjutan"}
             </h2>
 
             <p
