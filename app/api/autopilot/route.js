@@ -1,0 +1,235 @@
+import { jsonError, rateLimit, requireApiUser } from "../../../lib/api-security";
+function validateAutopilotResult(result, duration) {
+  if (!result || typeof result !== "object" || Array.isArray(result)) return null;
+  if (!result.mission || typeof result.mission !== "object" || Array.isArray(result.mission)) return null;
+  if (!Array.isArray(result.actions) || result.actions.length === 0 || result.actions.length > duration) return null;
+
+  const actions = result.actions.map((action, index) => {
+    if (!action || typeof action !== "object" || Array.isArray(action)) return null;
+    const title = String(action.title || "").trim();
+    const description = String(action.description || "").trim();
+    const output = String(action.output || "").trim();
+    if (!title || !description || !output) return null;
+    return {
+      id: Number.isFinite(Number(action.id)) ? Number(action.id) : index + 1,
+      title,
+      type: String(action.type || "ACTION").trim().toUpperCase(),
+      description,
+      output,
+    };
+  });
+  if (actions.some((item) => !item)) return null;
+
+  return {
+    mission: {
+      title: String(result.mission.title || "Strategi Bisnis").trim(),
+      target: String(result.mission.target || "Meningkatkan pertumbuhan bisnis").trim(),
+      duration: `${duration} hari`,
+      priority: String(result.mission.priority || "HIGH").trim().toUpperCase(),
+    },
+    actions,
+  };
+}
+
+export async function POST(req) {
+  const auth = await requireApiUser(req);
+  if (!auth.ok) return jsonError(auth.message, auth.status);
+
+  const limited = rateLimit(req, "autopilot", 10, 60_000, auth.user?.id);
+  if (!limited.ok) return jsonError("Terlalu banyak permintaan. Silakan coba lagi.", 429, { "Retry-After": String(limited.retryAfter) });
+
+  try {
+    let body;
+    try { body = await req.json(); } catch { return jsonError("Format permintaan tidak valid.", 400); }
+    if (!body || typeof body !== "object" || Array.isArray(body)) return jsonError("Data permintaan tidak valid.", 400);
+
+    if (!body.business) {
+      return Response.json(
+        {
+          message: "Data bisnis tidak ditemukan.",
+        },
+        {
+          status: 400,
+        }
+      );
+    }
+
+    const duration = Number(body.duration || 7);
+    if (![7, 14, 30].includes(duration)) {
+      return jsonError("Durasi Autopilot tidak valid.", 400);
+    }
+
+    const businessPayload = JSON.stringify(body.business);
+    if (businessPayload.length > 20000) {
+      return jsonError("Data usaha terlalu besar.", 413);
+    }
+
+    const prompt = `
+Anda adalah Business Autopilot untuk UMKM Indonesia.
+
+Buat strategi bisnis selama ${duration} hari berdasarkan data berikut.
+
+DATA BISNIS:
+${JSON.stringify(body.business, null, 2)}
+
+ATURAN WAJIB:
+
+1. JANGAN menampilkan proses berpikir.
+2. JANGAN menggunakan tag <think>.
+3. JANGAN menampilkan reasoning atau analisis internal.
+4. JANGAN menggunakan markdown.
+5. JANGAN menggunakan \`\`\`json.
+6. LANGSUNG mulai output dengan karakter {
+7. LANGSUNG akhiri output dengan karakter }
+8. Jangan menulis teks apa pun sebelum JSON.
+9. Jangan menulis teks apa pun setelah JSON.
+10. Output HARUS JSON valid.
+
+Gunakan struktur JSON berikut:
+
+{
+  "mission": {
+    "title": "Judul strategi",
+    "target": "Target utama",
+    "duration": "${duration} hari",
+    "priority": "HIGH"
+  },
+  "actions": [
+    {
+      "id": 1,
+      "title": "Judul aksi",
+      "type": "CONTENT",
+      "description": "Penjelasan aksi",
+      "output": "Hasil yang diharapkan"
+    }
+  ]
+}
+
+Buat jumlah action yang sesuai dengan durasi ${duration} hari.
+
+Untuk 7 hari: buat maksimal 7 action.
+Untuk 14 hari: buat maksimal 14 action.
+Untuk 30 hari: buat maksimal 30 action.
+
+Tetap ringkas agar JSON selesai dihasilkan.
+`;
+
+    const response = await fetch(
+      new URL("/api/ai", req.url),
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(req.headers.get("authorization")
+            ? { Authorization: req.headers.get("authorization") }
+            : {}),
+        },
+        body: JSON.stringify({
+          prompt,
+          system: `
+Anda adalah Business Autopilot UMKM Indonesia.
+
+PENTING:
+Jangan tampilkan <think>.
+Jangan tampilkan proses berpikir.
+Jangan tampilkan reasoning internal.
+Jangan gunakan markdown.
+Jangan gunakan code block.
+Output harus langsung berupa JSON valid.
+Karakter pertama harus {
+Karakter terakhir harus }
+`,
+        }),
+        signal: AbortSignal.timeout(30000),
+      }
+    );
+
+    let data;
+
+    try {
+      data = await response.json();
+    } catch (error) {
+      return Response.json(
+        {
+          message:
+            "Respons dari AI Router bukan JSON valid.",
+          error: "Respons AI tidak dapat diproses."
+        },
+        {
+          status: 500,
+        }
+      );
+    }
+
+    if (!response.ok) {
+      console.error("AI ROUTER ERROR:", data);
+      return Response.json(
+        {
+          message: data.message || data.error || "AI gagal",
+          details: [],
+        },
+        { status: response.status || 500 }
+      );
+    }
+
+    let raw = String(data.text || "").trim();
+
+    if (!raw) {
+      return jsonError("AI tidak mengembalikan respons.", 502);
+    }
+
+    // Bersihkan markdown/code fence dan blok <think> jika provider menyertakannya.
+    raw = raw
+      .replace(/<think>[\s\S]*?<\/think>/gi, "")
+      .replace(/```json/gi, "")
+      .replace(/```JSON/gi, "")
+      .replace(/```/g, "")
+      .trim();
+
+    // Ambil objek JSON pertama sampai kurung kurawal penutup terakhir.
+    const start = raw.indexOf("{");
+    const end = raw.lastIndexOf("}");
+
+    if (start === -1 || end <= start) {
+      return jsonError("Respons AI tidak berisi JSON yang valid.", 502);
+    }
+
+    const jsonText = raw.substring(start, end + 1).trim();
+
+    let result;
+    try {
+      result = JSON.parse(jsonText);
+    } catch (error) {
+      console.error("AUTOPILOT JSON PARSE ERROR:", error?.message || error);
+      return jsonError("Format respons AI tidak valid.", 502);
+    }
+
+    const validated = validateAutopilotResult(result, duration);
+    if (!validated) {
+      return Response.json(
+        {
+          success: false,
+          message: "Format strategi Autopilot dari AI tidak sesuai schema.",
+        },
+        { status: 502 }
+      );
+    }
+
+    return Response.json({
+      success: true,
+      result: validated,
+      provider: data.provider || "AI",
+    });
+
+  } catch (error) {
+    console.error("AUTOPILOT FATAL ERROR:", error);
+
+    return Response.json(
+      {
+        success: false,
+        message: "Terjadi kesalahan pada Autopilot.",
+      },
+      { status: 500 }
+    );
+  }
+}
