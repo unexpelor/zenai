@@ -822,3 +822,232 @@ select:disabled {
 @media(max-width:1050px){.home-nav-links{display:none}.home-hero{grid-template-columns:1fr;gap:50px}.home-hero-copy{max-width:760px}.command-window{max-width:800px;margin:auto}.story-intro{grid-template-columns:1fr 1fr}.story-intro p{grid-column:2}.home-diagnosis{grid-template-columns:1fr;gap:55px}.home-features{grid-template-columns:1fr}.home-personas{grid-template-columns:1fr;gap:55px}.home-final{grid-template-columns:50px 1fr 70px}}
 @media(max-width:720px){.home-nav{padding:0 18px;height:68px}.home-nav-actions{gap:10px}.home-nav-actions .home-nav-cta{padding:10px 11px}.home-hero{padding:55px 18px 70px}.home-hero h1{font-size:48px;letter-spacing:-3px}.home-hero-copy>p{font-size:13px}.home-hero-actions{align-items:flex-start;flex-direction:column;gap:15px}.home-mini-proof{display:grid;gap:9px}.command-body{grid-template-columns:42px 1fr;min-height:370px}.command-main{padding:18px 15px}.command-head h3{font-size:17px}.metric-row{gap:5px}.metric-row>div{padding:9px}.metric-row strong{font-size:12px}.metric-row em{font-size:7px}.insight-panel{padding:11px}.insight-panel h4{font-size:12px}.command-bottom{grid-template-columns:1fr}.priority-box{display:none}.home-signal{padding:14px 18px;gap:18px}.home-signal b:before{margin-right:18px}.home-product-story,.home-method,.home-personas{padding:80px 18px}.story-intro,.method-head{grid-template-columns:1fr;gap:20px}.story-intro p{grid-column:auto}.story-intro h2,.method-head h2,.feature-lead h2,.persona-copy h2{font-size:43px;letter-spacing:-2px}.story-flow{grid-template-columns:1fr;margin-top:35px;gap:10px}.story-arrow{height:20px;transform:rotate(90deg)}.story-card{min-height:270px}.home-diagnosis{padding:80px 18px}.diagnosis-copy h2{font-size:42px;letter-spacing:-2px}.signal-main{grid-template-columns:1fr}.signal-score{border-right:0;border-bottom:1px solid #dfe6e5;padding:0 0 20px}.home-features{padding:80px 18px}.feature-mosaic{grid-template-columns:1fr}.feature-big{grid-row:auto;min-height:330px!important}.feature-wide{grid-column:auto}.home-personas{gap:40px}.home-final{padding:75px 18px;grid-template-columns:30px 1fr}.final-mark{display:none}.home-final h2{font-size:43px;letter-spacing:-2px}.home-footer{padding:24px 18px;display:grid;grid-template-columns:1fr;gap:10px}}
 @media(prefers-reduced-motion:no-preference){.home-primary,.feature-mosaic article,.command-window{transition:transform .25s ease,box-shadow .25s ease}.home-hero-copy{animation:zenHomeIn .7s ease both}.home-command{animation:zenHomeIn .8s .1s ease both}.story-card,.method-grid article,.feature-mosaic article,.persona-list>div{animation:zenHomeIn .65s ease both}.home-command .insight-panel{animation:zenHomeIn .8s .35s ease both}@keyframes zenHomeIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}}
+
+/* =========================================================
+   ZENAI 2.0 — PREMIUM PRODUCT EXPERIENCE OVERRIDES
+   UI-only redesign. Existing application logic is untouched.
+   ========================================================= */
+:root{
+  --z2-bg:#f6f8fb;
+  --z2-surface:rgba(255,255,255,.84);
+  --z2-solid:#ffffff;
+  --z2-ink:#0b1220;
+  --z2-muted:#667085;
+  --z2-soft:#eef3f8;
+  --z2-line:#e3e9f0;
+  --z2-blue:#2563eb;
+  --z2-cyan:#06b6d4;
+  --z2-navy:#0a1628;
+  --z2-radius:20px;
+  --z2-shadow:0 20px 70px rgba(15,23,42,.08);
+  --z2-shadow-hover:0 28px 90px rgba(15,23,42,.13);
+}
+
+/* ---------- Global motion / polish ---------- */
+html{scroll-behavior:smooth}
+body{background:var(--z2-bg)}
+button,a{transition:color .2s ease,background-color .2s ease,border-color .2s ease,box-shadow .25s ease,transform .25s ease,opacity .2s ease}
+
+.zenai-home{
+  --accent:var(--z2-blue)!important;
+  --paper:var(--z2-bg)!important;
+  --ink:var(--z2-ink)!important;
+  --muted:var(--z2-muted)!important;
+  --line:var(--z2-line)!important;
+  background:
+    radial-gradient(900px 500px at 85% 4%,rgba(37,99,235,.09),transparent 65%),
+    radial-gradient(700px 450px at 8% 18%,rgba(6,182,212,.055),transparent 65%),
+    var(--z2-bg)!important;
+  color:var(--z2-ink)!important;
+  position:relative;
+  isolation:isolate;
+}
+.zenai-home:before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opacity:.34;
+  background-image:linear-gradient(rgba(15,23,42,.028) 1px,transparent 1px),linear-gradient(90deg,rgba(15,23,42,.028) 1px,transparent 1px);
+  background-size:42px 42px;
+  mask-image:linear-gradient(to bottom,black,transparent 70%);
+}
+.zenai-home-dark{
+  --z2-bg:#060d18;--z2-surface:rgba(12,23,39,.82);--z2-solid:#0d1726;--z2-ink:#f5f8fc;
+  --z2-muted:#98a7b8;--z2-soft:#142238;--z2-line:#223247;
+  background:
+    radial-gradient(900px 500px at 82% 2%,rgba(37,99,235,.14),transparent 64%),
+    radial-gradient(700px 500px at 10% 15%,rgba(6,182,212,.06),transparent 64%),
+    var(--z2-bg)!important;
+}
+.zenai-home-dark:before{opacity:.2;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px)}
+
+/* ---------- Navigation ---------- */
+.zenai-home .home-nav{
+  position:sticky!important;top:0;z-index:100;height:76px!important;max-width:none!important;
+  padding:0 clamp(20px,4vw,64px)!important;border-bottom:1px solid transparent!important;
+  background:rgba(246,248,251,.58)!important;backdrop-filter:blur(18px) saturate(150%);
+  -webkit-backdrop-filter:blur(18px) saturate(150%);
+}
+.zenai-home-dark .home-nav{background:rgba(6,13,24,.62)!important}
+.zenai-home .home-nav:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:1px;background:linear-gradient(90deg,transparent,rgba(37,99,235,.18),transparent);opacity:.7}
+.zenai-home .home-brand{gap:11px!important}
+.zenai-home .home-brand img{width:38px!important;height:38px!important;filter:drop-shadow(0 8px 18px rgba(37,99,235,.16))}
+.zenai-home .home-brand b{font-size:16px!important;letter-spacing:.7px!important}
+.zenai-home .home-brand small{font-size:9px!important;letter-spacing:.25px}
+.zenai-home .home-nav-links{gap:30px!important}
+.zenai-home .home-nav-links a{position:relative;font-size:12px!important;color:#526071!important}
+.zenai-home .home-nav-links a:after{content:"";position:absolute;left:0;right:100%;bottom:-7px;height:1px;background:var(--z2-blue);transition:right .25s ease}
+.zenai-home .home-nav-links a:hover{color:var(--z2-blue)!important}.zenai-home .home-nav-links a:hover:after{right:0}
+.zenai-home .home-nav-actions{gap:18px!important}.zenai-home .home-nav-actions>button:first-child{font-size:12px!important;font-weight:700!important;color:#526071!important;background:transparent!important}
+.zenai-home .home-nav-cta{border-radius:12px!important;padding:11px 15px!important;background:linear-gradient(135deg,#2563eb,#1d4ed8)!important;box-shadow:0 10px 28px rgba(37,99,235,.22)!important}
+.zenai-home .home-nav-cta:hover{transform:translateY(-2px);box-shadow:0 16px 36px rgba(37,99,235,.28)!important}
+
+/* ---------- Hero ---------- */
+.zenai-home .home-hero{
+  max-width:1440px!important;padding:92px clamp(20px,5vw,76px) 110px!important;grid-template-columns:minmax(0,.9fr) minmax(520px,1.1fr)!important;gap:72px!important;
+  min-height:calc(100vh - 76px);overflow:hidden;
+}
+.zenai-home .home-hero:before{width:720px!important;height:720px!important;right:-330px!important;top:-80px!important;border:1px solid rgba(37,99,235,.12)!important;box-shadow:0 0 0 80px rgba(37,99,235,.018),0 0 0 160px rgba(37,99,235,.012)}
+.zenai-home .home-hero:after{content:"";position:absolute;width:8px;height:8px;border-radius:50%;right:13%;top:21%;background:#60a5fa;box-shadow:0 0 0 7px rgba(96,165,250,.1),0 0 34px rgba(37,99,235,.45);animation:z2Pulse 3.2s ease-in-out infinite}
+.zenai-home .home-hero-copy{position:relative;z-index:2;animation:z2HeroCopy .85s cubic-bezier(.2,.8,.2,1) both}
+.zenai-home .home-eyebrow{color:var(--z2-blue)!important;font-size:10px!important;letter-spacing:1.9px!important}
+.zenai-home .live-dot{background:var(--z2-blue)!important;box-shadow:0 0 0 6px rgba(37,99,235,.09),0 0 18px rgba(37,99,235,.28)!important;animation:z2Pulse 2.6s ease-in-out infinite}
+.zenai-home .home-hero h1{font-size:clamp(52px,6.5vw,88px)!important;letter-spacing:-5.6px!important;line-height:.96!important;margin:24px 0 30px!important;font-weight:760!important}
+.zenai-home .home-hero h1 span{color:#667085!important}.zenai-home .home-hero h1 i{color:var(--z2-blue)!important}.zenai-home .home-hero h1 i:after{height:2px!important;background:linear-gradient(90deg,var(--z2-blue),var(--z2-cyan))!important}
+.zenai-home .home-hero-copy>p{font-size:16px!important;line-height:1.85!important;color:#64748b!important;max-width:590px!important}
+.zenai-home .home-hero-actions{margin-top:36px!important;gap:22px!important}
+.zenai-home .home-primary{border-radius:13px!important;padding:15px 19px!important;background:linear-gradient(135deg,#2563eb,#1d4ed8)!important;box-shadow:0 14px 36px rgba(37,99,235,.22)!important}
+.zenai-home .home-primary:hover{transform:translateY(-3px)!important;box-shadow:0 22px 44px rgba(37,99,235,.27)!important}
+.zenai-home .home-primary:active{transform:translateY(-1px) scale(.985)!important}
+.zenai-home .home-text-link{font-size:12px!important;color:#475569!important}.zenai-home .home-text-link:hover{color:var(--z2-blue)!important}
+.zenai-home .home-mini-proof{gap:20px!important;margin-top:30px!important;color:#748094!important}.zenai-home .home-mini-proof span{gap:7px!important}.zenai-home .home-mini-proof svg{color:#2563eb}
+
+/* ---------- Command center ---------- */
+.zenai-home .home-command{position:relative;z-index:2;animation:z2HeroCommand 1s .12s cubic-bezier(.2,.8,.2,1) both}
+.zenai-home .command-glow{inset:-18% -12%!important;background:radial-gradient(circle,rgba(37,99,235,.18),rgba(6,182,212,.07) 34%,transparent 68%)!important;filter:blur(18px)!important;animation:z2Glow 6s ease-in-out infinite}
+.zenai-home .command-window{
+  border-radius:24px!important;border:1px solid rgba(148,163,184,.32)!important;background:rgba(255,255,255,.88)!important;
+  box-shadow:0 35px 90px rgba(15,23,42,.13),0 2px 0 rgba(255,255,255,.9) inset!important;transform:perspective(1400px) rotateY(-3deg) rotateX(1deg)!important;
+  transition:transform .6s cubic-bezier(.2,.8,.2,1),box-shadow .4s ease!important
+}
+.zenai-home .home-command:hover .command-window{transform:perspective(1400px) rotateY(0) rotateX(0) translateY(-6px)!important;box-shadow:0 42px 110px rgba(15,23,42,.18),0 2px 0 rgba(255,255,255,.95) inset!important}
+.zenai-home .command-bar{height:46px!important;background:rgba(248,250,252,.88)!important;border-color:#e5eaf0!important}
+.zenai-home .command-bar>b{color:#2563eb!important;animation:z2Pulse 2.4s ease-in-out infinite}
+.zenai-home .command-body{min-height:405px!important}.zenai-home .command-main{padding:30px!important}
+.zenai-home .command-head h3{font-size:24px!important;letter-spacing:-.8px!important}.zenai-home .health-pill{border-radius:999px!important;background:#eff6ff!important;color:#2563eb!important;border:1px solid #dbeafe!important}
+.zenai-home .metric-row>div{border-radius:14px!important;background:#fbfcfe!important;border-color:#e7edf3!important;transition:transform .3s ease,box-shadow .3s ease!important}
+.zenai-home .metric-row>div:hover{transform:translateY(-3px);box-shadow:0 14px 30px rgba(15,23,42,.07)}
+.zenai-home .metric-row strong{font-variant-numeric:tabular-nums}
+.zenai-home .insight-panel{border-radius:17px!important;background:linear-gradient(135deg,#eef6ff,#f7fbff)!important;border-color:#d8e7fb!important;box-shadow:0 12px 30px rgba(37,99,235,.06)!important;position:relative;overflow:hidden}
+.zenai-home .insight-panel:after{content:"";position:absolute;inset:auto -40px -70px auto;width:180px;height:180px;border-radius:50%;background:rgba(37,99,235,.08);filter:blur(12px)}
+.zenai-home .insight-action{position:relative;z-index:1}.zenai-home .chart-box,.zenai-home .priority-box{border-radius:15px!important;background:#fbfcfe!important;border-color:#e7edf3!important}
+.zenai-home .chart i{animation:z2Chart 2.8s ease-in-out infinite alternate}.zenai-home .chart i:nth-child(2){animation-delay:.15s}.zenai-home .chart i:nth-child(3){animation-delay:.3s}.zenai-home .chart i:nth-child(4){animation-delay:.45s}.zenai-home .chart i:nth-child(5){animation-delay:.6s}.zenai-home .chart i:nth-child(6){animation-delay:.75s}
+
+/* ---------- Signal rail ---------- */
+.zenai-home .home-signal{padding:19px clamp(20px,5vw,76px)!important;background:rgba(255,255,255,.48)!important;border-color:#e2e8f0!important;gap:30px!important}
+.zenai-home .home-signal span{color:#7b8797!important}.zenai-home .home-signal b{color:#334155!important;font-size:11px!important}.zenai-home .home-signal b:before{color:#2563eb!important}
+
+/* ---------- Story / sections ---------- */
+.zenai-home .home-product-story,.zenai-home .home-diagnosis,.zenai-home .home-method,.zenai-home .home-personas{max-width:1440px!important;padding-left:clamp(20px,5vw,76px)!important;padding-right:clamp(20px,5vw,76px)!important}
+.zenai-home .home-product-story{padding-top:140px!important;padding-bottom:135px!important}
+.zenai-home .story-intro{grid-template-columns:.75fr 1.25fr .85fr!important;gap:70px!important}
+.zenai-home .story-intro h2,.zenai-home .method-head h2,.zenai-home .feature-lead h2,.zenai-home .persona-copy h2{font-size:clamp(40px,5vw,70px)!important;letter-spacing:-4px!important;line-height:.98!important}
+.zenai-home .story-card{border-radius:20px!important;padding:30px!important;background:rgba(255,255,255,.72)!important;box-shadow:0 12px 40px rgba(15,23,42,.045)!important;transition:transform .4s cubic-bezier(.2,.8,.2,1),box-shadow .4s ease,border-color .3s ease!important}
+.zenai-home .story-card:hover{transform:translateY(-8px)!important;box-shadow:0 25px 60px rgba(15,23,42,.11)!important;border-color:#cbd8e6!important}
+.zenai-home .story-card.story-ai{background:linear-gradient(145deg,#0b1628,#12243c)!important;border-color:#1d3555!important;box-shadow:0 24px 60px rgba(10,22,40,.18)!important}
+.zenai-home .story-card.story-result{background:linear-gradient(145deg,#eff7ff,#f7fbff)!important;border-color:#d8e8fb!important}
+.zenai-home .story-icon{border-radius:12px!important;background:#eff6ff!important;color:#2563eb!important}.zenai-home .story-ai .story-icon{background:#18304e!important;color:#7dd3fc!important}
+.zenai-home .story-arrow{font-size:25px!important;color:#94a3b8!important;animation:z2Arrow 2s ease-in-out infinite}
+
+/* ---------- Diagnosis ---------- */
+.zenai-home .home-diagnosis{padding-top:120px!important;padding-bottom:120px!important;grid-template-columns:.8fr 1.2fr!important;gap:90px!important;background:linear-gradient(180deg,transparent,rgba(239,246,255,.38),transparent)!important}
+.zenai-home .diagnosis-copy h2{font-size:clamp(40px,4.8vw,65px)!important;letter-spacing:-3.5px!important;line-height:.99!important}
+.zenai-home .signal-board{border-radius:24px!important;background:rgba(255,255,255,.78)!important;border:1px solid #dfe7ef!important;box-shadow:var(--z2-shadow)!important;transition:transform .45s ease,box-shadow .45s ease!important}
+.zenai-home .signal-board:hover{transform:translateY(-5px);box-shadow:var(--z2-shadow-hover)!important}
+.zenai-home .signal-head,.zenai-home .signal-foot{border-color:#e6ebf1!important}.zenai-home .signal-score strong{font-size:74px!important;letter-spacing:-5px!important}.zenai-home .score-ring{box-shadow:0 0 0 8px rgba(37,99,235,.05),0 0 45px rgba(37,99,235,.08)!important}
+.zenai-home .signal-list>div{border-radius:13px!important;transition:background .25s ease,transform .25s ease!important}.zenai-home .signal-list>div:hover{background:#f8fbff!important;transform:translateX(4px)}
+
+/* ---------- Method ---------- */
+.zenai-home .home-method{padding-top:125px!important;padding-bottom:135px!important}
+.zenai-home .method-grid{border-radius:22px!important;overflow:hidden;background:rgba(255,255,255,.62)!important;box-shadow:var(--z2-shadow)}
+.zenai-home .method-grid article{min-height:250px!important;padding:32px!important;transition:background .3s ease,transform .35s ease!important}.zenai-home .method-grid article:hover{background:#fff!important;transform:translateY(-4px)}
+.zenai-home .method-grid article>span{color:#2563eb!important;font-size:12px!important}
+.zenai-home .method-grid h3{font-size:22px!important;letter-spacing:-.7px!important}
+
+/* ---------- Feature mosaic ---------- */
+.zenai-home .home-features{padding:135px clamp(20px,5vw,76px)!important;background:linear-gradient(180deg,#f0f5fa,#f7f9fc)!important}
+.zenai-home-dark .home-features{background:linear-gradient(180deg,#0a1320,#07101c)!important}
+.zenai-home .feature-lead{max-width:760px;margin-bottom:55px!important}.zenai-home .feature-mosaic{gap:16px!important}
+.zenai-home .feature-mosaic article{border-radius:20px!important;padding:30px!important;background:rgba(255,255,255,.82)!important;border-color:#dfe7ef!important;box-shadow:0 10px 35px rgba(15,23,42,.045)!important;transition:transform .4s cubic-bezier(.2,.8,.2,1),box-shadow .4s ease,border-color .3s ease!important}
+.zenai-home .feature-mosaic article:hover{transform:translateY(-7px)!important;box-shadow:0 25px 60px rgba(15,23,42,.11)!important;border-color:#c8d7e7!important}
+.zenai-home .feature-mosaic .feature-big{background:linear-gradient(145deg,#0a1628,#102541)!important;border-color:#102541!important;box-shadow:0 28px 70px rgba(10,22,40,.18)!important}
+.zenai-home .feature-mosaic .feature-big:hover{box-shadow:0 36px 85px rgba(10,22,40,.25)!important}
+.zenai-home .feature-mosaic article>div>span{border-radius:12px!important;background:#eff6ff!important;color:#2563eb!important}.zenai-home .feature-mosaic .feature-big>div>span{background:#18304e!important;color:#7dd3fc!important}
+.zenai-home .mini-bars i{animation:z2Bar 2.4s ease-in-out infinite alternate}.zenai-home .mini-bars i:nth-child(2){animation-delay:.15s}.zenai-home .mini-bars i:nth-child(3){animation-delay:.3s}.zenai-home .mini-bars i:nth-child(4){animation-delay:.45s}.zenai-home .mini-bars i:nth-child(5){animation-delay:.6s}
+
+/* ---------- Personas / CTA ---------- */
+.zenai-home .home-personas{padding-top:130px!important;padding-bottom:130px!important}
+.zenai-home .persona-list>div{border-color:#e1e8ef!important;background:rgba(255,255,255,.58)!important;border-radius:16px!important;margin-bottom:10px!important;padding:22px 24px!important;transition:transform .3s ease,background .3s ease,box-shadow .3s ease!important}
+.zenai-home .persona-list>div:hover{transform:translateX(7px);background:#fff!important;box-shadow:0 15px 35px rgba(15,23,42,.07)}
+.zenai-home .home-final{margin:0 clamp(18px,5vw,76px) 55px!important;max-width:none!important;border-radius:28px!important;padding:65px clamp(28px,6vw,90px)!important;background:linear-gradient(135deg,#071426,#102b4d 60%,#123c55)!important;box-shadow:0 35px 90px rgba(7,20,38,.22)!important;position:relative;overflow:hidden}
+.zenai-home .home-final:before{content:"";position:absolute;width:500px;height:500px;border-radius:50%;right:-180px;top:-260px;background:rgba(37,99,235,.2);filter:blur(5px)}
+.zenai-home .home-final h2{position:relative;font-size:clamp(38px,4.5vw,64px)!important;letter-spacing:-3.5px!important;line-height:1!important}.zenai-home .home-final p{position:relative;color:#b9c8d8!important;max-width:680px!important}.zenai-home .home-final .home-primary{position:relative;background:#fff!important;color:#0b1627!important;box-shadow:0 15px 35px rgba(0,0,0,.16)!important}.zenai-home .home-final .home-primary:hover{box-shadow:0 20px 42px rgba(0,0,0,.24)!important}
+.zenai-home .final-mark{opacity:.7!important;font-size:100px!important}
+.zenai-home .home-footer{max-width:none!important;padding:30px clamp(20px,5vw,76px)!important;border-color:#e1e8ef!important}
+
+/* ---------- App shell transitions ---------- */
+.zenai-content{animation:z2AppEnter .45s cubic-bezier(.2,.8,.2,1) both}
+.zenai-content > *{animation:z2SectionEnter .38s cubic-bezier(.2,.8,.2,1) both}
+.zenai-sidebar button{transition:transform .2s ease,background .2s ease,border-color .2s ease,box-shadow .2s ease,color .2s ease!important}
+.zenai-sidebar button:hover{transform:translateX(2px)}
+.zenai-sidebar button:active{transform:scale(.985)}
+
+/* ---------- Auth modal ---------- */
+.zenai-home + * .zenai-auth-modal,
+.zenai-auth-modal{animation:z2ModalIn .35s cubic-bezier(.2,.8,.2,1) both}
+
+/* ---------- Dark mode ---------- */
+.zenai-home-dark .home-hero-copy>p,.zenai-home-dark .home-text-link{color:#a5b3c3!important}
+.zenai-home-dark .home-nav-links a,.zenai-home-dark .home-nav-actions>button:first-child{color:#a5b3c3!important}
+.zenai-home-dark .home-signal{background:rgba(7,16,28,.5)!important}.zenai-home-dark .home-signal b{color:#dbe5ef!important}
+.zenai-home-dark .story-card,.zenai-home-dark .signal-board,.zenai-home-dark .method-grid,.zenai-home-dark .persona-list>div{background:rgba(13,23,38,.78)!important;border-color:#25364b!important}
+.zenai-home-dark .story-card.story-ai,.zenai-home-dark .feature-mosaic .feature-big{background:linear-gradient(145deg,#071221,#0d2038)!important}
+.zenai-home-dark .story-card.story-result{background:linear-gradient(145deg,#0d2335,#102b42)!important}
+.zenai-home-dark .feature-mosaic article{background:rgba(13,23,38,.82)!important;border-color:#25364b!important}
+.zenai-home-dark .metric-row>div,.zenai-home-dark .chart-box,.zenai-home-dark .priority-box{background:#0f1c2c!important;border-color:#25364b!important}
+.zenai-home-dark .insight-panel{background:linear-gradient(135deg,#0e263b,#102c46)!important;border-color:#214b6c!important}
+.zenai-home-dark .home-primary{background:linear-gradient(135deg,#3b82f6,#2563eb)!important}
+
+/* ---------- Responsive ---------- */
+@media(max-width:1100px){
+  .zenai-home .home-hero{grid-template-columns:1fr!important;min-height:auto!important;padding-top:75px!important}
+  .zenai-home .home-command{max-width:900px;width:100%;margin:auto}
+  .zenai-home .story-intro{grid-template-columns:1fr 1fr!important}.zenai-home .story-intro p{grid-column:2}
+}
+@media(max-width:720px){
+  .zenai-home .home-nav{height:68px!important;padding:0 18px!important}.zenai-home .home-nav-links{display:none!important}
+  .zenai-home .home-nav-actions{gap:8px!important}.zenai-home .home-nav-actions>button:first-child{display:none}
+  .zenai-home .home-nav-cta{padding:10px 13px!important}
+  .zenai-home .home-hero{padding:60px 18px 80px!important;gap:45px!important}.zenai-home .home-hero h1{font-size:clamp(46px,13vw,62px)!important;letter-spacing:-3.5px!important}
+  .zenai-home .home-hero-copy>p{font-size:14px!important}.zenai-home .home-hero-actions{align-items:flex-start!important}
+  .zenai-home .command-window{transform:none!important;border-radius:18px!important}.zenai-home .command-main{padding:20px 15px!important}.zenai-home .command-body{min-height:360px!important}
+  .zenai-home .home-signal{overflow-x:auto!important}.zenai-home .home-product-story,.zenai-home .home-diagnosis,.zenai-home .home-method,.zenai-home .home-personas{padding-top:85px!important;padding-bottom:85px!important}
+  .zenai-home .story-intro{grid-template-columns:1fr!important;gap:22px!important}.zenai-home .story-intro p{grid-column:auto!important}
+  .zenai-home .story-intro h2,.zenai-home .method-head h2,.zenai-home .feature-lead h2,.zenai-home .persona-copy h2{font-size:clamp(38px,11vw,52px)!important;letter-spacing:-2.5px!important}
+  .zenai-home .home-diagnosis{grid-template-columns:1fr!important;gap:45px!important}.zenai-home .diagnosis-copy h2{font-size:clamp(38px,11vw,52px)!important;letter-spacing:-2.5px!important}
+  .zenai-home .home-features{padding:85px 18px!important}.zenai-home .home-final{margin:0 18px 30px!important;border-radius:22px!important;padding:45px 24px!important}.zenai-home .home-final h2{font-size:clamp(36px,10vw,50px)!important;letter-spacing:-2.5px!important}
+}
+
+/* ---------- Keyframes ---------- */
+@keyframes z2HeroCopy{from{opacity:0;transform:translateY(24px);filter:blur(6px)}to{opacity:1;transform:none;filter:none}}
+@keyframes z2HeroCommand{from{opacity:0;transform:translateY(30px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes z2AppEnter{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+@keyframes z2SectionEnter{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes z2ModalIn{from{opacity:0;transform:translateY(10px) scale(.97);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
+@keyframes z2Pulse{0%,100%{opacity:.65;transform:scale(1)}50%{opacity:1;transform:scale(1.12)}}
+@keyframes z2Glow{0%,100%{transform:scale(.98);opacity:.7}50%{transform:scale(1.04);opacity:1}}
+@keyframes z2Arrow{0%,100%{transform:translateX(0);opacity:.65}50%{transform:translateX(5px);opacity:1}}
+@keyframes z2Bar{from{transform:scaleY(.82);transform-origin:bottom}to{transform:scaleY(1.06);transform-origin:bottom}}
+@keyframes z2Chart{from{transform:scaleY(.9);transform-origin:bottom}to{transform:scaleY(1.08);transform-origin:bottom}}
+
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto!important}
+  .zenai-home *, .zenai-content *, .zenai-sidebar *{animation:none!important;transition:none!important}
+}
