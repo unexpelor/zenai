@@ -1625,3 +1625,27 @@ button,a{transition:color .2s ease,background-color .2s ease,border-color .2s ea
   .zenai-app,.zenai-app.zenai-dark,.zenai-app.zenai-light,.zenai-content,.zenai-content>*{animation:none!important}
   .zenai-sidebar button,.zenai-content button,.zenai-content section,.zenai-content article{transition:none!important}
 }
+
+/* =========================================================
+   ZENAI — DASHBOARD STEP 2: active-nav animation + glass cards + ornaments
+   ========================================================= */
+.zenai-nav-item{position:relative;overflow:hidden}
+.zenai-nav-item::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.2) 50%,transparent 60%);transform:translateX(-120%);pointer-events:none}
+.zenai-nav-item.is-active::after{animation:zdfShimmer 3.2s ease-in-out infinite}
+@keyframes zdfShimmer{0%,55%{transform:translateX(-120%)}90%,100%{transform:translateX(120%)}}
+.zenai-nav-item.is-active::before{content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:62%;border-radius:3px;background:linear-gradient(180deg,#818CF8,#22D3EE);box-shadow:0 0 12px rgba(99,102,241,.9)}
+.zenai-nav-item.is-active{animation:zdfActiveGlow 2.6s ease-in-out infinite!important}
+.zenai-dark .zenai-nav-item.is-active{background:linear-gradient(120deg,rgba(99,102,241,.26),rgba(6,182,212,.16))!important;border-color:rgba(129,140,248,.55)!important;color:#E0E7FF!important}
+.zenai-light .zenai-nav-item.is-active{background:linear-gradient(120deg,rgba(99,102,241,.15),rgba(6,182,212,.11))!important;border-color:rgba(99,102,241,.42)!important;color:#312E81!important}
+@keyframes zdfActiveGlow{0%,100%{box-shadow:0 0 0 1px rgba(129,140,248,.32),0 6px 22px rgba(99,102,241,.3)}50%{box-shadow:0 0 0 1px rgba(34,211,238,.5),0 8px 32px rgba(34,211,238,.4)}}
+.zenai-nav-item.is-active .zenai-nav-icon{color:#A5B4FC!important;animation:zdfIconFloat 2s ease-in-out infinite}
+.zenai-light .zenai-nav-item.is-active .zenai-nav-icon{color:#4F46E5!important}
+@keyframes zdfIconFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+
+/* glass cards — attribute selectors match React-serialized inline hex */
+.zenai-dark .zenai-content [style*="background:#111827"]:not(.zenai-page-header):not(input):not(textarea):not(select):not(button){background:rgba(20,28,46,.62)!important;border-color:rgba(148,163,184,.16)!important}
+.zenai-light .zenai-content [style*="background:#FFFFFF"]:not(.zenai-page-header):not(input):not(textarea):not(select):not(button){background:rgba(255,255,255,.72)!important;border-color:rgba(15,23,42,.1)!important}
+
+@media(prefers-reduced-motion:reduce){
+  .zenai-nav-item.is-active::after,.zenai-nav-item.is-active,.zenai-nav-item.is-active .zenai-nav-icon{animation:none!important}
+}
