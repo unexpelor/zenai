@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 /* ZENAI — Sleek landing (CoreShift-inspired).
    Markup only. Styles in app/globals.css under the `cs-*` namespace.
    Supports light + dark via `darkMode` prop. */
@@ -29,18 +31,20 @@ function Moon() {
   );
 }
 
-const MENU = [
-  ["▦", "Dashboard"],
-  ["▤", "Ceritakan Usaha"],
-  ["◔", "Kondisi Usaha"],
-  ["◉", "Diagnosis"],
-  ["◈", "Perspektif Bisnis"],
-  ["⇢", "Strategi & Tindakan"],
-  ["▧", "Laporan Keuangan"],
-  ["✦", "Analisis Lanjutan"],
-];
-
 export default function ZenLanding({ darkMode = false, onToggleTheme, onLogin, onSignup }) {
+  const t = useTranslations("landing");
+
+  const MENU = [
+    ["▦", t("fDashboard")],
+    ["▤", t("fCapture")],
+    ["◔", t("fPulse")],
+    ["◉", t("fDiagnosis")],
+    ["◈", t("fMarket")],
+    ["⇢", t("fStrategy")],
+    ["▧", t("fFinance")],
+    ["✦", t("fAdvanced")],
+  ];
+
   return (
     <div className={`cs${darkMode ? "" : " light"}`}>
       <div className="cs-glow cs-glow-a" aria-hidden="true" />
@@ -54,35 +58,32 @@ export default function ZenLanding({ darkMode = false, onToggleTheme, onLogin, o
           <span className="cs-word">ZENAI</span>
         </a>
         <nav className="cs-links">
-          <a href="#cs-features">Fitur</a>
-          <a href="#cs-flow">Cara Kerja</a>
-          <a href="#cs-why">Prinsip</a>
+          <a href="#cs-features">{t("navFeatures")}</a>
+          <a href="#cs-flow">{t("navHow")}</a>
+          <a href="#cs-why">{t("navWhy")}</a>
         </nav>
         <div className="cs-nav-cta">
           <button className="cs-theme" onClick={onToggleTheme} aria-label="Ubah tema terang atau gelap" title="Ubah tema">
             {darkMode ? <Sun /> : <Moon />}
           </button>
-          <button className="cs-btn cs-btn-ghost" onClick={onLogin}>Masuk</button>
-          <button className="cs-btn cs-btn-grad" onClick={onSignup}>Mulai Gratis <Arrow /></button>
+          <button className="cs-btn cs-btn-ghost" onClick={onLogin}>{t("login")}</button>
+          <button className="cs-btn cs-btn-grad" onClick={onSignup}>{t("startFree")} <Arrow /></button>
         </div>
       </header>
 
       {/* HERO */}
       <section id="top" className="cs-hero">
-        <div className="cs-badge"><i />Dibangun untuk pemilik usaha</div>
-        <h1>Pahami. Putuskan.<br /><em>Tumbuh.</em></h1>
-        <p className="cs-sub">
-          ZENAI membantu Anda membaca kondisi usaha dengan jelas, memilih langkah yang
-          masuk akal, dan menindaklanjutinya sampai terlihat hasilnya.
-        </p>
+        <div className="cs-badge"><i />{t("badge")}</div>
+        <h1>{t("heroUnderstand")}<br /><em>{t("heroGrow")}</em></h1>
+        <p className="cs-sub">{t("heroSub")}</p>
         <div className="cs-ctas">
-          <button className="cs-btn cs-btn-grad cs-btn-lg" onClick={onSignup}>Mulai Sekarang <Arrow size={17} /></button>
-          <a className="cs-more" href="#cs-flow">Lihat cara kerjanya <Arrow /></a>
+          <button className="cs-btn cs-btn-grad cs-btn-lg" onClick={onSignup}>{t("startNow")} <Arrow size={17} /></button>
+          <a className="cs-more" href="#cs-flow">{t("seeHow")} <Arrow /></a>
         </div>
 
         {/* MOCK — meniru dashboard ZENAI sesungguhnya */}
         <div className="cs-mock" aria-hidden="true">
-          <div className="cs-mock-bar"><span /><span /><span /><em>zenai · dashboard</em></div>
+          <div className="cs-mock-bar"><span /><span /><span /><em>{t("mockTag")}</em></div>
           <div className="cs-mock-body">
             <div className="cs-mock-side">
               <div className="cs-mock-logo"><b>Z</b><span>ZENAI</span></div>
@@ -98,17 +99,17 @@ export default function ZenLanding({ darkMode = false, onToggleTheme, onLogin, o
             </div>
             <div className="cs-mock-main">
               <div className="cs-mock-head">
-                <div><small>DASHBOARD USAHA</small><strong>Selamat datang kembali</strong></div>
-                <span className="cs-pill"><i />Sehat</span>
+                <div><small>{t("mockDashboard")}</small><strong>{t("mockWelcome")}</strong></div>
+                <span className="cs-pill"><i />{t("mockHealthy")}</span>
               </div>
               <div className="cs-mock-metrics">
-                <div><small>PENDAPATAN</small><b>Rp 42,8 jt</b><em>+12,4%</em></div>
-                <div><small>LABA BERSIH</small><b>Rp 8,1 jt</b><em>+6,8%</em></div>
-                <div><small>ARUS KAS</small><b>Rp 9,4 jt</b><em>Stabil</em></div>
+                <div><small>{t("mockRevenue")}</small><b>Rp 42,8 jt</b><em>+12,4%</em></div>
+                <div><small>{t("mockNetProfit")}</small><b>Rp 8,1 jt</b><em>+6,8%</em></div>
+                <div><small>{t("mockCashFlow")}</small><b>Rp 9,4 jt</b><em>Stabil</em></div>
               </div>
               <div className="cs-mock-insight">
-                <small>RINGKASAN HARI INI</small>
-                <p>Biaya operasional naik lebih cepat daripada pendapatan — cek margin sebelum menambah pengeluaran.</p>
+                <small>{t("mockToday")}</small>
+                <p>{t("mockInsight")}</p>
               </div>
               <div className="cs-mock-chart">
                 <i style={{ height: "38%" }} /><i style={{ height: "55%" }} /><i style={{ height: "46%" }} />
@@ -119,75 +120,73 @@ export default function ZenLanding({ darkMode = false, onToggleTheme, onLogin, o
         </div>
 
         <div className="cs-stats">
-          <div><b>8</b><span>modul dalam satu tempat</span></div>
-          <div><b>3</b><span>cara mulai: teks, foto, suara</span></div>
-          <div><b>7–30</b><span>hari rencana tindakan</span></div>
+          <div><b>8</b><span>{t("statModules")}</span></div>
+          <div><b>3</b><span>{t("statWays")}</span></div>
+          <div><b>7–30</b><span>{t("statDays")}</span></div>
         </div>
       </section>
 
       {/* FITUR */}
       <section id="cs-features" className="cs-sec">
         <div className="cs-sec-head">
-          <span>FITUR</span>
-          <h2>Satu tempat.<br />Semua jawaban usaha Anda.</h2>
+          <span>{t("featuresKicker")}</span>
+          <h2>{t("featuresTitle1")}<br />{t("featuresTitle2")}</h2>
         </div>
         <div className="cs-grid">
           <article className="cs-card cs-card-wide">
             <div className="cs-ic">▦</div>
-            <h3>Dashboard</h3>
-            <p>Semua kondisi usaha Anda dalam satu layar — tanpa perlu membuka banyak laporan.</p>
+            <h3>{t("fDashboard")}</h3>
+            <p>{t("fDashboardDesc")}</p>
             <div className="cs-spark"><i style={{ height: "40%" }} /><i style={{ height: "58%" }} /><i style={{ height: "44%" }} /><i style={{ height: "70%" }} /><i style={{ height: "88%" }} /></div>
           </article>
-          <article className="cs-card"><div className="cs-ic">▤</div><h3>Ceritakan Usaha</h3><p>Mulai dari cerita Anda — teks, foto, atau suara. Tanpa format khusus.</p></article>
-          <article className="cs-card"><div className="cs-ic">◔</div><h3>Kondisi Usaha</h3><p>Kabar terbaru usaha Anda, ringkas dan jelas.</p></article>
-          <article className="cs-card"><div className="cs-ic">◉</div><h3>Diagnosis</h3><p>Temukan hal yang perlu diperhatikan lebih dulu.</p></article>
-          <article className="cs-card"><div className="cs-ic">◈</div><h3>Perspektif Bisnis</h3><p>Lihat usaha Anda dari sudut pasar.</p></article>
-          <article className="cs-card"><div className="cs-ic">⇢</div><h3>Strategi & Tindakan</h3><p>Dari rencana menjadi langkah nyata.</p></article>
-          <article className="cs-card"><div className="cs-ic">▧</div><h3>Laporan Keuangan</h3><p>Angka yang mudah dipahami.</p></article>
-          <article className="cs-card cs-card-wide"><div className="cs-ic">✦</div><h3>Analisis Lanjutan</h3><p>Uji keputusan sebelum dijalankan — lihat dampaknya ke laba dan kas lebih dulu.</p></article>
+          <article className="cs-card"><div className="cs-ic">▤</div><h3>{t("fCapture")}</h3><p>{t("fCaptureDesc")}</p></article>
+          <article className="cs-card"><div className="cs-ic">◔</div><h3>{t("fPulse")}</h3><p>{t("fPulseDesc")}</p></article>
+          <article className="cs-card"><div className="cs-ic">◉</div><h3>{t("fDiagnosis")}</h3><p>{t("fDiagnosisDesc")}</p></article>
+          <article className="cs-card"><div className="cs-ic">◈</div><h3>{t("fMarket")}</h3><p>{t("fMarketDesc")}</p></article>
+          <article className="cs-card"><div className="cs-ic">⇢</div><h3>{t("fStrategy")}</h3><p>{t("fStrategyDesc")}</p></article>
+          <article className="cs-card"><div className="cs-ic">▧</div><h3>{t("fFinance")}</h3><p>{t("fFinanceDesc")}</p></article>
+          <article className="cs-card cs-card-wide"><div className="cs-ic">✦</div><h3>{t("fAdvanced")}</h3><p>{t("fAdvancedDesc")}</p></article>
         </div>
       </section>
 
       {/* CARA KERJA */}
       <section id="cs-flow" className="cs-sec">
         <div className="cs-sec-head">
-          <span>CARA KERJA</span>
-          <h2>Empat langkah, dari cerita sampai hasil.</h2>
+          <span>{t("howKicker")}</span>
+          <h2>{t("howTitle")}</h2>
         </div>
         <ol className="cs-flow">
-          <li><em>01</em><h3>Ceritakan</h3><p>Tulis, unggah foto, atau rekam suara.</p></li>
-          <li><em>02</em><h3>Analisis</h3><p>ZENAI merangkai kondisi usaha Anda.</p></li>
-          <li><em>03</em><h3>Putuskan</h3><p>Pilih langkah yang paling masuk akal.</p></li>
-          <li><em>04</em><h3>Tindak Lanjut</h3><p>Jalankan, tandai selesai, dan evaluasi.</p></li>
+          <li><em>01</em><h3>{t("how1Title")}</h3><p>{t("how1Desc")}</p></li>
+          <li><em>02</em><h3>{t("how2Title")}</h3><p>{t("how2Desc")}</p></li>
+          <li><em>03</em><h3>{t("how3Title")}</h3><p>{t("how3Desc")}</p></li>
+          <li><em>04</em><h3>{t("how4Title")}</h3><p>{t("how4Desc")}</p></li>
         </ol>
       </section>
 
       {/* PRINSIP */}
       <section id="cs-why" className="cs-why">
-        <p className="cs-quote">Keputusan yang baik<br />tidak datang dari tebakan.</p>
-        <p className="cs-why-sub">
-          Tiga prinsip yang menjaga setiap jawaban ZENAI tetap jujur dan bisa ditindaklanjuti.
-        </p>
+        <p className="cs-quote">{t("whyQuote1")}<br />{t("whyQuote2")}</p>
+        <p className="cs-why-sub">{t("whySub")}</p>
         <div className="cs-principles">
-          <div><b>Baca dulu</b><span>baru simpulkan — dari cerita Anda, bukan asumsi.</span></div>
-          <div><b>Uji dengan angka</b><span>bukan perkiraan — sebelum bertindak.</span></div>
-          <div><b>Berakhir pada langkah</b><span>bukan sekadar wacana.</span></div>
+          <div><b>{t("why1Title")}</b><span>{t("why1Desc")}</span></div>
+          <div><b>{t("why2Title")}</b><span>{t("why2Desc")}</span></div>
+          <div><b>{t("why3Title")}</b><span>{t("why3Desc")}</span></div>
         </div>
       </section>
 
       {/* CTA AKHIR */}
       <section className="cs-final">
         <div className="cs-final-card">
-          <h2>Siap melihat usaha Anda<br />dengan lebih jernih?</h2>
-          <p>Mulai dari kondisi usaha hari ini. Pahami, putuskan, lalu tumbuh.</p>
-          <button className="cs-btn cs-btn-grad cs-btn-lg" onClick={onSignup}>Coba ZENAI Sekarang <Arrow size={17} /></button>
+          <h2>{t("finalTitle1")}<br />{t("finalTitle2")}</h2>
+          <p>{t("finalSub")}</p>
+          <button className="cs-btn cs-btn-grad cs-btn-lg" onClick={onSignup}>{t("finalCta")} <Arrow size={17} /></button>
         </div>
       </section>
 
       {/* FOOTER */}
       <footer className="cs-foot">
         <div className="cs-fbrand"><span className="cs-mark">Z</span>ZENAI</div>
-        <span>Pahami. Putuskan. Tumbuh.</span>
+        <span>{t("tagline")}</span>
         <span>© 2026 ZENAI</span>
       </footer>
     </div>
