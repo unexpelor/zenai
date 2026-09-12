@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { createClient } from "../lib/supabase/client";
+import idMessages from "../messages/id.json";
+import enMessages from "../messages/en.json";
 import BusinessGrowthLoop from "../components/BusinessGrowthLoop";
 import ZenLanding from "../components/ZenLanding";
 function ZenIcon({ name, size = 18, strokeWidth = 1.9 }) {
@@ -29,6 +31,236 @@ export default function Home() {
   const t = useTranslations();
   const locale = useLocale();
   const uiText = (id, en) => (locale === "en" ? en : id);
+
+  // Fallback translator for legacy hardcoded UI text. This keeps every visible
+  // label/paragraph synchronized with the selected locale, including child
+  // components that still contain legacy literal strings.
+  useEffect(() => {
+    const flatten = (obj, out = {}) => {
+      Object.values(obj || {}).forEach((value) => {
+        if (value && typeof value === "object") flatten(value, out);
+        else if (typeof value === "string") out[value] = value;
+      });
+      return out;
+    };
+
+    const collectPairs = (idObj, enObj, pairs = {}) => {
+      const keys = new Set([
+        ...Object.keys(idObj || {}),
+        ...Object.keys(enObj || {}),
+      ]);
+      keys.forEach((key) => {
+        const idValue = idObj?.[key];
+        const enValue = enObj?.[key];
+        if (idValue && enValue && typeof idValue === "object" && typeof enValue === "object") {
+          collectPairs(idValue, enValue, pairs);
+        } else if (typeof idValue === "string" && typeof enValue === "string" && idValue !== enValue) {
+          pairs[idValue] = enValue;
+        }
+      });
+      return pairs;
+    };
+
+    const extraPairs = {
+      "Ceritakan usaha Anda kepada ZENAI. Anda bisa menulis, mengirim gambar, atau menggunakan rekaman suara.": "Tell ZENAI about your business. You can write, send an image, or use a voice recording.",
+      "ZENAI akan membaca kondisi usaha Anda dan menunjukkan hal yang berjalan baik, hal yang perlu diperhatikan, serta langkah prioritas.": "ZENAI will read your business condition and show what is working, what needs attention, and the priority steps.",
+      "Analisis Kondisi Usaha": "Analyze Business Condition",
+      "Analisis Usaha Saya": "Analyze My Business",
+      "Mulai Kenali Usaha Anda": "Start by Telling Your Business",
+      "PROFIL USAHA": "BUSINESS PROFILE",
+      "Profil usaha telah dianalisis oleh ZENAI.": "Your business profile has been analyzed by ZENAI.",
+      "Aktivitas Analisis": "Analysis Activity",
+      "Contoh: Saya memiliki usaha kuliner di Pekalongan. Saya menjual ayam geprek dan minuman. Penjualan akhir-akhir ini menurun, terutama pada hari kerja...": "Example: I run a culinary business in Pekalongan. I sell smashed fried chicken and drinks. Sales have recently declined, especially on weekdays...",
+      "Preview usaha": "Business preview",
+      "Hapus Foto": "Remove Photo",
+      "Ceritakan dengan suara": "Tell it by voice",
+      "Mulai Rekam": "Start Recording",
+      "Hapus Audio": "Remove Audio",
+      "KONDISI SAAT INI": "CURRENT CONDITION",
+      "Analisis kondisi usaha telah selesai.": "Business condition analysis is complete.",
+      "Prioritas Sekarang": "Current Priority",
+      "Ada perubahan pada usaha?": "Any changes in the business?",
+      "Contoh: Penjualan minggu ini turun, saya baru menaikkan harga, ada pesaing baru, atau saya menambah produk...": "Example: Sales dropped this week, I just raised prices, there is a new competitor, or I added a product...",
+      "Perbarui Analisis →": "Update Analysis →",
+      "Riwayat Pembaruan": "Update History",
+      "ZENAI akan menganalisis kekuatan, masalah, peluang, dan risiko usaha Anda untuk menentukan area yang paling perlu diperbaiki.": "ZENAI will analyze your business strengths, problems, opportunities, and risks to identify the areas that need the most improvement.",
+      "ZENAI sedang mendiagnosis...": "ZENAI is diagnosing...",
+      "HASIL DIAGNOSIS": "DIAGNOSIS RESULTS",
+      "Diagnosis usaha telah selesai.": "Business diagnosis is complete.",
+      "Kekuatan Usaha": "Business Strengths",
+      "Masalah yang Ditemukan": "Problems Found",
+      "Peluang yang Bisa Dimanfaatkan": "Opportunities to Leverage",
+      "Rekomendasi Prioritas": "Priority Recommendations",
+      "Analisis Ulang": "Reanalyze",
+      "Buat Strategi & Tindakan": "Create Strategy & Actions",
+      "ZenAI menggabungkan kondisi usaha Anda dengan informasi pasar terbaru untuk menghasilkan perspektif, peluang, risiko, dan implikasi strategis yang relevan.": "ZenAI combines your business condition with the latest market information to produce relevant perspectives, opportunities, risks, and strategic implications.",
+      "Analisis Perspektif Bisnis": "Analyze Business Perspective",
+      "Informasi eksternal digunakan sebagai bahan analisis, bukan sekadar daftar hasil pencarian.": "External information is used as analytical input, not merely as a list of search results.",
+      "ZENAI sedang menyusun perspektif bisnis...": "ZENAI is building the business perspective...",
+      "ZENAI mengumpulkan informasi eksternal, menyaring sumber, lalu menghubungkannya dengan konteks usaha Anda.": "ZENAI gathers external information, filters sources, and connects them to your business context.",
+      "Perspektif Bisnis belum dapat diperbarui": "Business Perspective cannot be updated yet",
+      "Insight pasar yang sudah dianalisis dan dikaitkan dengan usaha Anda.": "Market insights already analyzed and connected to your business.",
+      "Risiko Utama": "Main Risks",
+      "Buat Strategi untuk Usaha Anda": "Create a Strategy for Your Business",
+      "ZENAI akan mengubah kondisi dan diagnosis usaha menjadi langkah nyata yang bisa Anda prioritaskan.": "ZENAI will turn your business condition and diagnosis into concrete steps you can prioritize.",
+      "ZENAI sedang membuat strategi...": "ZENAI is creating a strategy...",
+      "Buat Strategi": "Create Strategy",
+      "STRATEGI USAHA": "BUSINESS STRATEGY",
+      "Prioritas Tindakan": "Action Priority",
+      "ZENAI telah membuat strategi berdasarkan kondisi usaha Anda.": "ZENAI has created a strategy based on your business condition.",
+      "Langkah Prioritas": "Priority Steps",
+      "Hal yang Perlu Diwaspadai": "Things to Watch",
+      "Buat Ulang Strategi": "Regenerate Strategy",
+      "Ceritakan usaha Anda, unggah gambar, atau kirim rekaman suara terlebih dahulu.": "Tell us about your business, upload an image, or send a voice recording first.",
+      "Analisis usaha terlebih dahulu.": "Analyze your business first.",
+      "Ceritakan usaha terlebih dahulu.": "Tell us about your business first.",
+      "Masukkan pembaruan usaha terlebih dahulu.": "Enter a business update first.",
+      "Lihat Kondisi Usaha": "View Business Condition",
+      "Lihat Kondisi Usaha Anda": "View Your Business Condition",
+      "Buka Ceritakan Usaha": "Open Tell Your Business",
+      "Buka Kondisi Usaha": "Open Business Condition",
+      "Buka Strategi & Tindakan": "Open Strategy & Actions",
+      "Buka Laporan Keuangan": "Open Financial Report",
+      "Bingung harus mulai dari mana?": "Not sure where to start?",
+      "Jika Anda bingung": "If you're unsure",
+      "Sistem terasa bermasalah": "The system seems to have a problem",
+      "Mulai dari Ceritakan Usaha. Masukkan konteks usaha terlebih dahulu agar analisis berikutnya memiliki dasar.": "Start with Tell Your Business. Enter your business context first so the next analyses have a foundation.",
+      "Saya sudah punya profil usaha, lalu apa?": "I already have a business profile. What's next?",
+      "Jalankan Kondisi Usaha untuk melihat gambaran dan prioritas, lalu lanjutkan ke Diagnosis.": "Run Business Condition to see the overview and priorities, then continue to Diagnosis.",
+      "Saya sudah mendapat strategi, lalu bagaimana?": "I already have a strategy. What next?",
+      "Jadikan strategi sebagai tindakan dan lanjutkan ke Growth Loop untuk menjalankan serta mengevaluasi hasilnya.": "Turn the strategy into actions and continue to Growth Loop to execute and evaluate the results.",
+      "Saya ingin melihat atau mencatat keuangan": "I want to view or record finances",
+      "Buka Laporan Keuangan untuk mencatat transaksi dan melihat ringkasan keuangan.": "Open Financial Report to record transactions and view the financial summary.",
+      "Gunakan Business Pulse untuk melihat gambaran kondisi dan prioritas usaha berdasarkan konteks yang sudah diberikan.": "Use Business Condition to see your business overview and priorities based on the context provided.",
+      "Gunakan Diagnosis untuk memahami masalah, kekuatan, peluang, rekomendasi, dan langkah berikutnya.": "Use Diagnosis to understand problems, strengths, opportunities, recommendations, and next steps.",
+      "Ubah hasil analisis menjadi strategi dan tindakan yang dapat dijalankan. Pilih durasi yang sesuai dengan kebutuhan usaha.": "Turn analysis results into actionable strategies and actions. Choose the duration that fits your business needs.",
+      "Jadikan strategi sebagai tindakan, mulai, selesaikan, catat hasil, dan evaluasi. Hasil evaluasi digunakan sebagai konteks untuk analisis berikutnya.": "Turn the strategy into actions, start, complete, record results, and evaluate. Evaluation results are used as context for the next analysis.",
+      "Catat transaksi dan gunakan ringkasan keuangan untuk memahami pendapatan, HPP, biaya, laba, arus kas, dan posisi keuangan.": "Record transactions and use the financial summary to understand revenue, COGS, expenses, profit, cash flow, and financial position.",
+      "Tidak pasti": "Uncertain",
+      "Tidak tersedia": "Not available",
+      "Belum tersedia.": "Not available yet.",
+      "Perubahan Utama": "Key Changes",
+      "Keterkaitan Analisis Bisnis": "Business Analysis Connection",
+      "Cetak / Simpan sebagai PDF": "Print / Save as PDF",
+      "Laporan Kondisi Usaha": "Business Condition Report",
+      "Laporan Diagnosis Usaha": "Business Diagnosis Report",
+      "Laporan Perspektif Bisnis": "Business Perspective Report",
+      "Rencana Strategi dan Tindakan": "Strategy and Action Plan",
+      "Strategi Utama": "Main Strategy",
+      "Analisis Keuangan ZENAI": "ZENAI Financial Analysis",
+      "Perubahan Kas Bersih": "Net Cash Change",
+      "Harga Pokok Penjualan": "Cost of Goods Sold",
+      "Piutang Usaha": "Accounts Receivable",
+      "Perubahan harga": "Price Change",
+      "Perubahan penjualan": "Sales Change",
+      "Uji dampak kenaikan atau penurunan volume penjualan terhadap laba dan kas.": "Test the impact of increasing or decreasing sales volume on profit and cash.",
+      "Uji seberapa besar perubahan HPP dan beban dapat ditanggung oleh struktur usaha saat ini.": "Test how much change in COGS and expenses the current business structure can absorb.",
+      "Pengeluaran atau investasi": "Expense or Investment",
+      "Uji apakah uang yang dikeluarkan dapat ditutup oleh pendapatan tambahan yang diharapkan.": "Test whether the spending can be covered by the expected additional revenue.",
+      "Uji perubahan pendapatan, HPP, dan beban yang Anda tentukan sendiri.": "Test your own changes to revenue, COGS, and expenses.",
+      "Tentukan perubahan yang ingin diuji.": "Define the change you want to test.",
+      "Harga saat ini": "Current Price",
+      "Harga rencana": "Planned Price",
+      "Perubahan volume penjualan": "Sales Volume Change",
+      "Perubahan HPP per unit": "Unit COGS Change",
+      "Perubahan beban operasional": "Operating Expense Change",
+      "Perubahan HPP": "COGS Change",
+      "Perubahan beban": "Expense Change",
+      "Perubahan pendapatan": "Revenue Change",
+      "Nilai investasi / pengeluaran": "Investment / Expense Amount",
+      "Tambahan pendapatan yang diharapkan": "Expected Additional Revenue",
+      "Beban tambahan": "Additional Expenses",
+      "ANALISIS LANJUTAN": "ADVANCED ANALYSIS",
+      "DATA YANG MENJADI DASAR": "BASELINE DATA",
+      "INPUT DATA": "INPUT DATA",
+      "Periode Dasar": "Baseline Period",
+      "Periode Pembanding": "Comparison Period",
+      "KEPUTUSAN YANG DIUJI": "DECISION BEING TESTED",
+      "Perubahan biaya / HPP": "Cost / COGS Change",
+      "ASUMSI YANG DIUJI": "ASSUMPTIONS BEING TESTED",
+      "Perubahan volume": "Volume Change",
+      "Investasi/pengeluaran": "Investment/Expense",
+      "Pendapatan tambahan": "Additional Revenue",
+      "DAMPAK TERHADAP KEUANGAN": "FINANCIAL IMPACT",
+      "Perubahan laba:": "Profit change:",
+      "Perubahan kas:": "Cash change:",
+      "KONTEKS PERIODE": "PERIOD CONTEXT",
+      "Konteks usaha yang digunakan": "Business Context Used",
+      "Perubahan Asumsi": "Assumption Changes",
+      "Belum ada hasil simulasi.": "No simulation results yet.",
+      "Dari Strategi Menjadi Tindakan": "From Strategy to Action",
+      "Pilih tindakan, jalankan, lalu beri hasil sederhana.": "Choose an action, execute it, then provide a simple result.",
+      "ZenAI akan menggunakan hasil tersebut untuk membuat evaluasi dan strategi berikutnya.": "ZenAI will use the result to create the next evaluation and strategy.",
+      "Strategi yang tersedia": "Available Strategies",
+      "Tindakan Aktif": "Active Actions",
+      "Belum ada tindakan aktif.": "No active actions yet.",
+      "Aktifkan strategi untuk mulai menjalankan Growth Loop.": "Activate a strategy to start the Growth Loop.",
+      "Saya sudah mulai menjalankan tindakan": "I have started this action",
+      "Saya sudah menyelesaikan tindakan": "I have completed this action",
+      "Tindakan selesai.": "Action completed.",
+      "Beri tahu ZenAI hasilnya agar analisis berikutnya tidak hanya mengulang rekomendasi lama.": "Tell ZenAI the result so the next analysis does not simply repeat old recommendations.",
+      "Evaluasi Hasil": "Evaluate Result",
+      "Hasil tindakan": "Action Result",
+      "Kondisi setelah tindakan": "Condition after action",
+      "Belum terlihat perubahan": "No change observed yet",
+      "Catatan hasil (opsional)": "Result note (optional)",
+      "Evaluasi tersimpan. ZenAI dapat menggunakan hasil ini pada analisis berikutnya.": "Evaluation saved. ZenAI can use this result in the next analysis.",
+      "Hasil:": "Result:",
+      "Gagal mengakses mikrofon:": "Failed to access microphone:",
+      "Mikrofon tidak dapat diakses. Pastikan izin mikrofon sudah diberikan.": "Microphone cannot be accessed. Make sure microphone permission has been granted.",
+      "Gagal menghentikan rekaman:": "Failed to stop recording:",
+      "Gagal menghapus audio:": "Failed to delete audio:",
+      "File yang dipilih harus berupa audio.": "The selected file must be an audio file.",
+      "File yang dipilih harus berupa gambar.": "The selected file must be an image file.",
+      "Gagal menghubungi AI.": "Failed to contact AI.",
+      "AI tidak mengembalikan data.": "AI returned no data.",
+      "Respons AI tidak dalam format JSON yang valid.": "AI response is not valid JSON.",
+    };
+
+    const pairs = collectPairs(idMessages, enMessages, { ...extraPairs });
+    const reverse = {};
+    Object.entries(pairs).forEach(([id, en]) => { reverse[en] = id; });
+    const map = locale === "en" ? pairs : reverse;
+
+    const normalize = (value) => String(value || "").replace(/\s+/g, " ").trim();
+
+    const translateTree = (root) => {
+      if (!root) return;
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      const nodes = [];
+      let node;
+      while ((node = walker.nextNode())) nodes.push(node);
+      nodes.forEach((textNode) => {
+        const parent = textNode.parentElement;
+        if (!parent || ["SCRIPT", "STYLE", "NOSCRIPT", "TEXTAREA"].includes(parent.tagName)) return;
+        const original = normalize(textNode.nodeValue);
+        if (!original || !map[original]) return;
+        const leading = String(textNode.nodeValue).match(/^\s*/)?.[0] || "";
+        const trailing = String(textNode.nodeValue).match(/\s*$/)?.[0] || "";
+        textNode.nodeValue = `${leading}${map[original]}${trailing}`;
+      });
+
+      root.querySelectorAll?.("input[placeholder], textarea[placeholder], [title]").forEach((el) => {
+        ["placeholder", "title"].forEach((attr) => {
+          const value = el.getAttribute(attr);
+          const key = normalize(value);
+          if (value && map[key]) el.setAttribute(attr, map[key]);
+        });
+      });
+    };
+
+    let translating = false;
+    const run = () => {
+      if (translating) return;
+      translating = true;
+      try { translateTree(document.body); } finally { translating = false; }
+    };
+
+    const observer = new MutationObserver(() => run());
+    run();
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    return () => observer.disconnect();
+  }, [locale]);
   const supabase = createClient();
   const [authReady, setAuthReady] = useState(false);
   const [session, setSession] = useState(null);
