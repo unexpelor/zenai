@@ -1053,6 +1053,60 @@ button,a{transition:color .2s ease,background-color .2s ease,border-color .2s ea
 }
 
 /* =========================================================
+   ZENAI 3.5 — REFERENCE-GRADE POLISH LAYER
+   Detail-level refinements over v3. CSS-only.
+   ========================================================= */
+.zenai-home{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;font-feature-settings:"cv02","cv03","cv04","cv11"}
+.zenai-home ::selection{background:rgba(46,91,255,.16);color:inherit}
+.zenai-home-dark ::selection{background:rgba(124,155,255,.28)}
+
+/* ---------- Nav: refined underline + CTA shine ---------- */
+.zenai-home .home-nav-links a{font-size:13.5px!important;transition:color .2s ease!important}
+.zenai-home .home-nav-links a:after{height:1.5px!important;bottom:-6px!important;background:var(--z3-ink)!important;transition:right .3s cubic-bezier(.2,.8,.2,1)!important}
+.zenai-home .home-nav-links a:hover:after{background:var(--z3-ink)!important}
+.zenai-home .home-nav-cta{position:relative;overflow:hidden}
+.zenai-home .home-nav-cta:after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,rgba(255,255,255,.22) 50%,transparent 60%);transform:translateX(-120%);transition:transform .6s ease}
+.zenai-home .home-nav-cta:hover:after{transform:translateX(120%)}
+.zenai-home .home-nav-cta svg{transition:transform .3s cubic-bezier(.2,.8,.2,1)!important}
+.zenai-home .home-nav-cta:hover svg{transform:translateX(3px)}
+
+/* ---------- Hero: gradient headline + refined spacing ---------- */
+.zenai-home .home-hero{align-items:center!important}
+.zenai-home .home-hero h1{margin:26px 0 28px!important}
+.zenai-home .home-hero h1 span{
+  background:linear-gradient(92deg,var(--z3-ink) 20%,var(--z3-accent) 55%,var(--z3-ink) 90%);
+  background-size:220% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;
+  animation:z3Grad 7s ease-in-out infinite;
+}
+@keyframes z3Grad{0%,100%{background-position:0% 0}50%{background-position:100% 0}}
+.zenai-home .home-primary{position:relative;overflow:hidden;transition:transform .28s cubic-bezier(.2,.8,.2,1),box-shadow .28s ease!important}
+.zenai-home .home-primary svg{transition:transform .3s cubic-bezier(.2,.8,.2,1)!important}
+.zenai-home .home-primary:hover svg{transform:translateX(4px)}
+.zenai-home .home-primary:active{transform:translateY(0) scale(.98)!important}
+.zenai-home .home-text-link span{display:inline-block;transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+.zenai-home .home-text-link:hover span{transform:translateY(3px)}
+.zenai-home .home-mini-proof span{transition:color .25s ease}
+.zenai-home .home-mini-proof span:hover{color:var(--z3-ink)}
+
+/* ---------- Product visual: layered depth + staggered entrance ---------- */
+.zenai-home .command-window{transition:transform .5s cubic-bezier(.2,.8,.2,1),box-shadow .5s ease!important}
+.zenai-home .command-window:before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:1;background:linear-gradient(180deg,rgba(255,255,255,.5),transparent 18%);opacity:.5}
+.zenai-home-dark .command-window:before{background:linear-gradient(180deg,rgba(255,255,255,.06),transparent 18%)}
+.zenai-home .metric-row>div{transition:transform .3s cubic-bezier(.2,.8,.2,1),border-color .3s ease!important}
+.zenai-home .metric-row>div:hover{transform:translateY(-2px)!important;border-color:rgba(46,91,255,.35)!important}
+.zenai-home-dark .metric-row>div:hover{border-color:rgba(124,155,255,.4)!important}
+.zenai-home .insight-panel h4{letter-spacing:-.3px}
+.zenai-home .chart-box,.zenai-home .priority-box{transition:border-color .3s ease!important}
+.zenai-home .command-bottom:hover .chart-box{border-color:rgba(46,91,255,.28)!important}
+@media(prefers-reduced-motion:no-preference){
+  .zenai-home .command-head{animation:z3Stagger .6s .15s cubic-bezier(.2,.8,.2,1) both;animation-timeline:unset}
+  .zenai-home .metric-row{animation:z3Stagger .6s .25s cubic-bezier(.2,.8,.2,1) both}
+  .zenai-home .insight-panel{animation:z3Stagger .6s .38s cubic-bezier(.2,.8,.2,1) both}
+  .zenai-home .command-bottom{animation:z3Stagger .6s .5s cubic-bezier(.2,.8,.2,1) both}
+  @keyframes z3Stagger{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+}
+
+/* =========================================================
    ZENAI 3.0 — CALM PREMIUM LANDING REDESIGN
    Editorial, restrained, decision-first. UI-only.
    ========================================================= */
@@ -1235,6 +1289,58 @@ button,a{transition:color .2s ease,background-color .2s ease,border-color .2s ea
     .zenai-home .problem-flow li:nth-child(5){animation-range:entry 18% entry 40%}
   }
   @keyframes z3Reveal{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+}
+
+/* ---------- Sections: kicker consistency + heading balance ---------- */
+.zenai-home .home-section-no{font-size:10px!important;letter-spacing:1.8px!important}
+.zenai-home .problem-intro h2,.zenai-home .philosophy-copy h2{text-wrap:balance}
+.zenai-home .feature-lead h2,.zenai-home .method-head h2{text-wrap:balance}
+
+/* ---------- Problem flow: hover slide ---------- */
+.zenai-home .problem-flow li{transition:padding-left .3s cubic-bezier(.2,.8,.2,1)}
+.zenai-home .problem-flow li:hover{padding-left:6px}
+.zenai-home .problem-flow li:hover b{color:var(--z3-accent)}
+.zenai-home .problem-flow b{transition:color .25s ease}
+
+/* ---------- Feature story rows: index number + smooth hover ---------- */
+.zenai-home .story-row{position:relative;transition:padding-left .35s cubic-bezier(.2,.8,.2,1)}
+.zenai-home .story-row:before{content:"0" counter(z3row) ".";counter-increment:z3row;position:absolute;left:-46px;top:58px;font-size:11px;font-weight:800;letter-spacing:1px;color:var(--z3-faint);opacity:0;transition:opacity .3s ease,transform .3s ease;transform:translateX(6px)}
+.zenai-home .story-row:hover:before{opacity:1;transform:none}
+.zenai-home .feature-story{counter-reset:z3row}
+.zenai-home .story-kicker{transition:letter-spacing .3s ease}
+.zenai-home .story-row:hover .story-kicker{letter-spacing:2.2px}
+.zenai-home .story-copy h3{transition:color .25s ease}
+.zenai-home .story-row:hover .story-copy h3{color:var(--z3-accent)}
+
+/* ---------- Method timeline: dot pulse on hover ---------- */
+.zenai-home .method-grid article:before{transition:transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s ease}
+.zenai-home .method-grid article:hover:before{transform:scale(1.6);box-shadow:0 0 0 5px rgba(46,91,255,.14)}
+.zenai-home .method-grid h3{transition:color .25s ease}
+.zenai-home .method-grid article:hover h3{color:var(--z3-accent)}
+
+/* ---------- Philosophy list: arrow reveal ---------- */
+.zenai-home .philosophy-list li{position:relative;padding-right:30px}
+.zenai-home .philosophy-list li:after{content:"→";position:absolute;right:0;top:19px;color:var(--z3-accent);opacity:0;transform:translateX(-8px);transition:opacity .3s ease,transform .3s ease;font-size:14px}
+.zenai-home .philosophy-list li:hover:after{opacity:1;transform:none}
+.zenai-home .philosophy-list b{transition:color .25s ease}
+.zenai-home .philosophy-list li:hover b{color:var(--z3-accent)}
+
+/* ---------- Final CTA: spotlight + button glow ---------- */
+.zenai-home .home-final{overflow:hidden}
+.zenai-home .home-final:after{content:"";position:absolute;inset:-40% -20%;background:radial-gradient(600px 400px at 75% 30%,rgba(46,91,255,.16),transparent 65%);pointer-events:none}
+.zenai-home .home-final .home-primary{position:relative;z-index:1}
+.zenai-home .home-final h2,.zenai-home .home-final p{position:relative;z-index:1}
+.zenai-home .final-mark{position:relative;z-index:1}
+
+/* ---------- Footer ---------- */
+.zenai-home .footer-brand img{opacity:.9;transition:opacity .3s ease,transform .3s ease}
+.zenai-home .footer-brand:hover img{opacity:1;transform:rotate(-4deg)}
+
+@media(max-width:1200px){
+  .zenai-home .story-row:before{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+  .zenai-home .home-hero h1 span{animation:none!important}
 }
 
 /* ---------- Responsive ---------- */
