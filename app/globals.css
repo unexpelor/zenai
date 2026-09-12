@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
 
 
 * {
@@ -1545,4 +1545,83 @@ button,a{transition:color .2s ease,background-color .2s ease,border-color .2s ea
   .cs-stats>div{border-left:0;padding:0;text-align:center}
   .cs-stats span{max-width:none}
   .cs-principles{grid-template-columns:1fr}
+}
+
+/* =========================================================
+   ZENAI — FUTURISTIC DASHBOARD REDESIGN (design-only)
+   Overrides inline styles via !important. No logic touched.
+   ========================================================= */
+.zenai-app{position:relative;font-family:"Inter",ui-sans-serif,system-ui,sans-serif!important;-webkit-font-smoothing:antialiased}
+.zenai-app h1,.zenai-app h2,.zenai-app h3,.zenai-app h4,.zenai-app h5{font-family:"Space Grotesk","Inter",sans-serif!important;letter-spacing:-0.02em}
+
+/* aurora background (animated) */
+.zenai-app.zenai-dark{
+  background:
+    radial-gradient(900px 520px at 86% -8%, rgba(99,102,241,.20), transparent 60%),
+    radial-gradient(720px 460px at -8% 22%, rgba(6,182,212,.15), transparent 60%),
+    linear-gradient(120deg, #05070E, #0A1226, #06080F)!important;
+  background-size: 100% 100%, 100% 100%, 320% 320%!important;
+  animation: zdfBg 18s ease-in-out infinite!important;
+}
+.zenai-app.zenai-light{
+  background:
+    radial-gradient(820px 500px at 90% -10%, rgba(99,102,241,.12), transparent 60%),
+    radial-gradient(660px 440px at -6% 18%, rgba(6,182,212,.10), transparent 60%),
+    linear-gradient(120deg, #F5F6FB, #EFF1FF, #F6F7FC)!important;
+  background-size: 100% 100%, 100% 100%, 320% 320%!important;
+  animation: zdfBg 20s ease-in-out infinite!important;
+}
+@keyframes zdfBg{0%,100%{background-position:0% 0%,0% 0%,0% 50%}50%{background-position:0% 0%,0% 0%,100% 50%}}
+
+/* sidebar */
+.zenai-sidebar{position:relative}
+.zenai-sidebar::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,#818CF8,#22D3EE,#8B5CF6);z-index:2;opacity:.9}
+.zenai-dark .zenai-sidebar{box-shadow:10px 0 44px rgba(0,0,0,.32)!important}
+.zenai-light .zenai-sidebar{box-shadow:10px 0 44px rgba(15,23,42,.07)!important}
+.zenai-sidebar button{transition:transform .22s cubic-bezier(.2,.8,.2,1),box-shadow .22s ease,filter .22s ease!important;position:relative}
+.zenai-sidebar button:hover{transform:translateX(3px)!important}
+.zenai-sidebar button::before{content:"";position:absolute;left:0;top:50%;width:3px;height:0;border-radius:3px;background:linear-gradient(180deg,#818CF8,#22D3EE);transform:translateY(-50%);transition:height .25s cubic-bezier(.2,.8,.2,1)}
+.zenai-sidebar button:hover::before{height:56%}
+.zenai-sidebar button:hover .zenai-nav-icon{color:#818CF8}
+.zenai-nav-icon{transition:color .2s ease,transform .2s ease}
+.zenai-sidebar button:hover .zenai-nav-icon{transform:scale(1.12)}
+.zenai-sidebar-nav::-webkit-scrollbar{width:5px}
+.zenai-sidebar-nav::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#818CF8,#22D3EE);border-radius:99px}
+
+/* header — glass card */
+.zenai-page-header{border-radius:24px!important;padding:24px 28px!important;backdrop-filter:blur(18px) saturate(140%);-webkit-backdrop-filter:blur(18px) saturate(140%)}
+.zenai-dark .zenai-page-header{background:rgba(15,23,42,.55)!important;border:1px solid rgba(148,163,184,.14)!important;box-shadow:0 12px 44px rgba(0,0,0,.28)}
+.zenai-light .zenai-page-header{background:rgba(255,255,255,.72)!important;border:1px solid rgba(15,23,42,.08)!important;box-shadow:0 12px 44px rgba(15,23,42,.07)}
+.zenai-page-header h2{background:linear-gradient(92deg,#6366F1,#22D3EE)!important;-webkit-background-clip:text!important;background-clip:text!important;-webkit-text-fill-color:transparent!important;color:transparent!important}
+.zenai-page-header p{opacity:.85}
+
+/* content transition on tab switch */
+.zenai-content{animation:zdfFade .45s cubic-bezier(.2,.8,.2,1) both}
+.zenai-content>*{animation:zdfFade .4s cubic-bezier(.2,.8,.2,1) both}
+.zenai-content>*:nth-child(2){animation-delay:.06s}
+@keyframes zdfFade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* cards / sections / articles */
+.zenai-content section,.zenai-content article{border-radius:18px!important;transition:transform .3s cubic-bezier(.2,.8,.2,1),box-shadow .3s ease,border-color .3s ease!important}
+.zenai-content section:hover,.zenai-content article:hover{transform:translateY(-3px)!important;box-shadow:0 18px 44px rgba(15,23,42,.12)!important}
+.zenai-dark .zenai-content section:hover,.zenai-dark .zenai-content article:hover{box-shadow:0 18px 44px rgba(0,0,0,.4)!important}
+
+/* buttons in content */
+.zenai-content button{transition:transform .2s cubic-bezier(.2,.8,.2,1),box-shadow .2s ease,filter .2s ease!important}
+.zenai-content button:hover:not(:disabled){transform:translateY(-2px)!important}
+.zenai-content button:active:not(:disabled){transform:translateY(0) scale(.98)!important}
+
+/* inputs */
+.zenai-content input,.zenai-content textarea,.zenai-content select{border-radius:12px!important;transition:border-color .2s ease,box-shadow .2s ease!important}
+.zenai-content input:focus,.zenai-content textarea:focus,.zenai-content select:focus{outline:none!important;box-shadow:0 0 0 3px rgba(99,102,241,.22)!important;border-color:#818CF8!important}
+
+/* scrollbar */
+.zenai-app ::-webkit-scrollbar{width:9px;height:9px}
+.zenai-app ::-webkit-scrollbar-thumb{background:rgba(99,102,241,.35);border-radius:99px}
+.zenai-app ::-webkit-scrollbar-thumb:hover{background:rgba(99,102,241,.55)}
+.zenai-app ::-webkit-scrollbar-track{background:transparent}
+
+@media(prefers-reduced-motion:reduce){
+  .zenai-app,.zenai-app.zenai-dark,.zenai-app.zenai-light,.zenai-content,.zenai-content>*{animation:none!important}
+  .zenai-sidebar button,.zenai-content button,.zenai-content section,.zenai-content article{transition:none!important}
 }
