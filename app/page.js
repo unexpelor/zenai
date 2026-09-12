@@ -3556,6 +3556,7 @@ padding: isMobile ? "16px 12px" : "32px",
           if (isMobile) setSidebarOpen(false);
         }}
         title={sidebarOpen ? "" : label}
+        className={tab === key ? "zenai-nav-item is-active" : "zenai-nav-item"}
         style={{
           width: "100%",
           minHeight: "43px",
@@ -3607,6 +3608,7 @@ padding: isMobile ? "16px 12px" : "32px",
         onClick={() => { setTab("guide"); if (isMobile) setSidebarOpen(false); }}
         title={sidebarOpen ? "" : "Panduan"}
         aria-label="Panduan"
+        className={tab === "guide" ? "zenai-nav-item is-active" : "zenai-nav-item"}
         style={{
           width: "100%",
           minHeight: "41px",
@@ -3635,6 +3637,7 @@ padding: isMobile ? "16px 12px" : "32px",
         onClick={() => { setTab("settings"); if (isMobile) setSidebarOpen(false); }}
         title={sidebarOpen ? "" : "Pengaturan"}
         aria-label="Pengaturan"
+        className={tab === "settings" ? "zenai-nav-item is-active" : "zenai-nav-item"}
         style={{
           width: "100%",
           minHeight: "41px",
