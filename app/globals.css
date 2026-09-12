@@ -1654,20 +1654,20 @@ button,a{transition:color .2s ease,background-color .2s ease,border-color .2s ea
    ZENAI — EDITORIAL DASHBOARD (Linear / Stripe / Attio)
    Overrides the futuristic layer. Design-only, no logic.
    ========================================================= */
-.zenai-app{--zink:#1A1D23;--zmut:#6B7280;--zline:#E7E5E4;--zcard:#FFFFFF;--zacc:#4F46E5;--zacc-soft:#EEEDFB}
-.zenai-app.zenai-dark{--zink:#EDEFF2;--zmut:#9BA1AA;--zline:#23262B;--zcard:#14161A;--zacc:#7C8AFF;--zacc-soft:#1C1E26}
+.zenai-app{--zink:#16181B;--zmut:#6A7078;--zline:#E9E7E2;--zcard:#FFFFFF;--zcard2:#F7F6F3;--zacc:#4F46E5;--zacc-soft:#EFEEFC;--zr:14px}
+.zenai-app.zenai-dark{--zink:#F6F6F4;--zmut:#A6ABB3;--zline:#26272B;--zcard:#1A1B1F;--zcard2:#1E1F23;--zacc:#8B8BF7;--zacc-soft:#20212B}
 
 /* neutral, still background — kill animated aurora + neon */
-.zenai-app.zenai-dark{background:#0D0F12!important;animation:none!important}
-.zenai-app.zenai-light{background:#FAFAF9!important;animation:none!important}
+.zenai-app.zenai-dark{background:#101113!important;animation:none!important}
+.zenai-app.zenai-light{background:#F5F4F1!important;animation:none!important}
 
-/* content — generous whitespace */
-.zenai-content{padding:40px 36px!important}
+/* content — spacious layout */
+.zenai-content{padding:44px 44px!important}
 @media(max-width:768px){.zenai-content{padding:24px 16px!important}}
 
-/* sidebar — minimal, refined */
+/* sidebar — slim, minimal, refined */
 .zenai-sidebar::before{display:none!important}
-.zenai-dark .zenai-sidebar{background:#121419!important;border-right:1px solid #23262B!important;box-shadow:none!important}
+.zenai-dark .zenai-sidebar{background:#151619!important;border-right:1px solid #26272B!important;box-shadow:none!important}
 .zenai-light .zenai-sidebar{background:#FFFFFF!important;border-right:1px solid #ECEAE6!important;box-shadow:none!important}
 .zenai-sidebar button::before{display:none!important}
 .zenai-sidebar button:hover{transform:none!important}
@@ -1677,27 +1677,37 @@ button,a{transition:color .2s ease,background-color .2s ease,border-color .2s ea
 /* active nav — refined tint only, no glow / shimmer / neon bar */
 .zenai-nav-item.is-active{animation:none!important}
 .zenai-nav-item.is-active::before,.zenai-nav-item.is-active::after{display:none!important}
-.zenai-dark .zenai-nav-item.is-active{background:var(--zacc-soft)!important;border-color:#2A2D35!important;color:var(--zink)!important;box-shadow:none!important}
+.zenai-dark .zenai-nav-item.is-active{background:var(--zacc-soft)!important;border-color:#2E2F40!important;color:var(--zink)!important;box-shadow:none!important}
 .zenai-light .zenai-nav-item.is-active{background:var(--zacc-soft)!important;border-color:#E0DEF7!important;color:#4338CA!important;box-shadow:none!important}
 .zenai-nav-item.is-active .zenai-nav-icon{animation:none!important;color:inherit!important}
 
 /* header — editorial title block, no card / gradient */
-.zenai-page-header{background:transparent!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;padding:0 0 26px!important;margin-bottom:8px!important}
-.zenai-page-header h2{background:none!important;-webkit-background-clip:initial!important;background-clip:initial!important;-webkit-text-fill-color:currentColor!important;color:var(--zink)!important;font-size:27px!important;font-weight:700!important;letter-spacing:-0.025em!important}
+.zenai-page-header{background:transparent!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;padding:0 0 28px!important;margin-bottom:8px!important}
+.zenai-page-header h2{background:none!important;-webkit-background-clip:initial!important;background-clip:initial!important;-webkit-text-fill-color:currentColor!important;color:var(--zink)!important;font-size:29px!important;font-weight:700!important;letter-spacing:-0.03em!important}
 
-/* refined solid cards — undo glass translucency */
-.zenai-dark .zenai-content [style*="background:#111827"]:not(.zenai-page-header):not(input):not(textarea):not(select):not(button){background:var(--zcard)!important;border-color:#23262B!important}
-.zenai-light .zenai-content [style*="background:#FFFFFF"]:not(.zenai-page-header):not(input):not(textarea):not(select):not(button){background:#FFFFFF!important;border-color:#ECEAE6!important}
+/* refined solid cards — rounded + hairline border + soft shadow */
+.zenai-dark .zenai-content [style*="background:#111827"]:not(.zenai-page-header):not(input):not(textarea):not(select):not(button),
+.zenai-dark .zenai-content [style*="background:#0F172A"]:not(.zenai-page-header):not(input):not(textarea):not(select):not(button),
+.zenai-dark .zenai-content [style*="background:#0B1120"]:not(.zenai-page-header):not(input):not(textarea):not(select):not(button),
+.zenai-dark .zenai-content [style*="background:#172033"]:not(.zenai-page-header):not(input):not(textarea):not(select):not(button){background:var(--zcard)!important;border-color:#26272B!important;border-radius:var(--zr)!important;box-shadow:0 1px 2px rgba(0,0,0,.35),0 14px 40px rgba(0,0,0,.25)!important}
+.zenai-light .zenai-content [style*="background:#FFFFFF"]:not(.zenai-page-header):not(input):not(textarea):not(select):not(button){background:#FFFFFF!important;border-color:#E9E7E2!important;border-radius:var(--zr)!important;box-shadow:0 1px 2px rgba(15,23,42,.04),0 14px 40px rgba(15,23,42,.06)!important}
+
+/* unify radius + hairline border on inner surfaces */
+.zenai-content [style*="borderRadius:\"18px\""],.zenai-content [style*="borderRadius:\"20px\""],.zenai-content [style*="borderRadius:\"22px\""],.zenai-content [style*="borderRadius:\"24px\""]{border-radius:var(--zr)!important}
+.zenai-content [style*="borderRadius:\"10px\""],.zenai-content [style*="borderRadius:\"11px\""],.zenai-content [style*="borderRadius:\"12px\""]{border-radius:10px!important}
+
+/* strong typography */
+.zenai-content h2,.zenai-content h3,.zenai-content h4{letter-spacing:-0.02em!important}
 
 /* subtle micro-interactions */
 .zenai-content section,.zenai-content article{transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease!important}
 .zenai-content section:hover,.zenai-content article:hover{transform:translateY(-2px)!important}
-.zenai-dark .zenai-content section:hover,.zenai-dark .zenai-content article:hover{box-shadow:0 12px 32px rgba(0,0,0,.35)!important}
-.zenai-light .zenai-content section:hover,.zenai-light .zenai-content article:hover{box-shadow:0 12px 32px rgba(15,23,42,.08)!important}
+.zenai-dark .zenai-content section:hover,.zenai-dark .zenai-content article:hover{box-shadow:0 16px 40px rgba(0,0,0,.4)!important}
+.zenai-light .zenai-content section:hover,.zenai-light .zenai-content article:hover{box-shadow:0 16px 40px rgba(15,23,42,.09)!important}
 .zenai-content button{transition:transform .15s ease,box-shadow .15s ease,filter .15s ease!important}
 .zenai-content button:hover:not(:disabled){transform:translateY(-1px)!important}
 .zenai-content button:active:not(:disabled){transform:translateY(0)!important}
-.zenai-content input:focus,.zenai-content textarea:focus,.zenai-content select:focus{box-shadow:0 0 0 2px rgba(79,70,229,.15)!important;border-color:var(--zacc)!important}
+.zenai-content input:focus,.zenai-content textarea:focus,.zenai-content select:focus{box-shadow:0 0 0 3px rgba(79,70,229,.14)!important;border-color:var(--zacc)!important}
 
 /* neutral scrollbar */
 .zenai-app ::-webkit-scrollbar-thumb{background:rgba(120,120,130,.32)!important}
