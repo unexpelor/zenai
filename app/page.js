@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "../lib/supabase/client";
 import BusinessGrowthLoop from "../components/BusinessGrowthLoop";
 import ZenLanding from "../components/ZenLanding";
@@ -25,6 +26,7 @@ function ZenIcon({ name, size = 18, strokeWidth = 1.9 }) {
   return <svg {...common}>{paths[name] || paths.dashboard}</svg>;
 }
 export default function Home() {
+  const t = useTranslations();
   const supabase = createClient();
   const [authReady, setAuthReady] = useState(false);
   const [session, setSession] = useState(null);
@@ -3540,14 +3542,14 @@ padding: isMobile ? "16px 12px" : "32px",
     }}
   >
     {[
-      ["home", "dashboard", "Dashboard"],
-      ["capture", "capture", "Ceritakan Usaha"],
-      ["pulse", "activity", "Kondisi Usaha"],
-      ["diagnosis", "diagnosis", "Diagnosis"],
-      ["market", "perspective", "Perspektif Bisnis"],
-      ["autopilot", "strategy", "Strategi & Tindakan"],
-      ["finance", "finance", "Laporan Keuangan"],
-      ["advancedAnalysis", "intelligence", "Analisis Lanjutan"],
+      ["home", "dashboard", t("nav.dashboard")],
+      ["capture", "capture", t("nav.capture")],
+      ["pulse", "activity", t("nav.pulse")],
+      ["diagnosis", "diagnosis", t("nav.diagnosis")],
+      ["market", "perspective", t("nav.perspective")],
+      ["autopilot", "strategy", t("nav.strategy")],
+      ["finance", "finance", t("nav.finance")],
+      ["advancedAnalysis", "intelligence", t("nav.advanced")],
     ].map(([key, icon, label]) => (
       <button
         key={key}
@@ -3629,7 +3631,7 @@ padding: isMobile ? "16px 12px" : "32px",
         }}
       >
         <span className="zenai-nav-icon"><ZenIcon name="guide" size={17} /></span>
-        {sidebarOpen && <span>Panduan</span>}
+        {sidebarOpen && <span>{t("nav.guide")}</span>}
       </button>
 
       <button
@@ -3658,7 +3660,7 @@ padding: isMobile ? "16px 12px" : "32px",
         }}
       >
         <span className="zenai-nav-icon"><ZenIcon name="settings" size={17} /></span>
-        {sidebarOpen && <span>Pengaturan</span>}
+        {sidebarOpen && <span>{t("nav.settings")}</span>}
       </button>
     </div>
 
@@ -3691,7 +3693,7 @@ padding: isMobile ? "16px 12px" : "32px",
         }}
       >
         <span className="zenai-nav-icon"><ZenIcon name="logout" size={17} /></span>
-        {sidebarOpen && <span>Keluar</span>}
+        {sidebarOpen && <span>{t("nav.logout")}</span>}
       </button>
     </div>
 </aside>
@@ -3743,32 +3745,32 @@ padding: isMobile ? "16px 12px" : "32px",
               }}
             >
               {tab === "home" &&
-                "Dashboard Usaha"}
+                t("nav.dashboard")}
 
               {tab === "capture" &&
-                "Ceritakan Usaha Anda"}
+                t("nav.capture")}
 
               {tab === "pulse" &&
-                "Kondisi Usaha"}
+                t("nav.pulse")}
 
               {tab === "diagnosis" &&
-                "Diagnosis Usaha"}
+                t("nav.diagnosis")}
 
               {tab === "autopilot" &&
-                "Strategi & Tindakan"}
+                t("nav.strategy")}
 
-              {tab === "guide" && "Panduan ZenAI"}
+              {tab === "guide" && t("nav.guide")}
 
-              {tab === "settings" && "Pengaturan"}
+              {tab === "settings" && t("nav.settings")}
 
               {tab === "finance" &&
-                "Laporan Keuangan"}
+                t("nav.finance")}
 
 {tab === "market" &&
-  "Perspektif Bisnis"}
+  t("nav.perspective")}
 
               {tab === "advancedAnalysis" &&
-                "Analisis Lanjutan"}
+                t("nav.advanced")}
             </h2>
 
             <p
