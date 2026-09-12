@@ -85,7 +85,7 @@ export default function ZenLanding({ darkMode = false, onToggleTheme, onLogin, o
           <div className="cs-mock-bar"><span /><span /><span /><em>zenai · dashboard</em></div>
           <div className="cs-mock-body">
             <div className="cs-mock-side">
-              <div className="cs-mock-logo"><b>Z</b>ZENAI</div>
+              <div className="cs-mock-logo"><b>Z</b><span>ZENAI</span></div>
               <nav className="cs-mock-menu">
                 {MENU.map(([g, label], i) => (
                   <span key={label} className={i === 0 ? "on" : ""}>{g}<em>{label}</em></span>
