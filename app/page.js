@@ -213,7 +213,7 @@ const [marketError, setMarketError] =
     useState("summary");
 
   // =========================
-  // ZENAI ANALISIS LANJUTAN
+  // ZENAI {t("ui.advancedKicker")}
   // Modul untuk mengevaluasi kondisi, risiko, skenario, dan keputusan bisnis secara terukur.
   // =========================
   const [decisionText, setDecisionText] = useState("");
@@ -242,7 +242,7 @@ const [marketError, setMarketError] =
     : "Mode tanpa Supabase: data keuangan hanya tersimpan selama sesi ini dan tidak disimpan ke browser.";
 
   const financeTypes = [
-    { value: "income", label: "Penjualan / Pendapatan" },
+    { value: "income", label: "Penjualan / {t("ui.incomeLabel")}" },
     { value: "expense", label: "Biaya Usaha" },
     { value: "hpp", label: "Pembelian / HPP" },
     { value: "capital", label: "Modal Masuk" },
@@ -870,13 +870,13 @@ const [marketError, setMarketError] =
 
     if (incomeChange !== null && incomeChange !== 0) {
       points.push(
-        `Pendapatan ${incomeChange > 0 ? "naik" : "turun"} ${Math.abs(incomeChange).toFixed(1)}% menjadi ${formatRupiah(current.income)}.`
+        `{t("ui.incomeLabel")} ${incomeChange > 0 ? "naik" : "turun"} ${Math.abs(incomeChange).toFixed(1)}% menjadi ${formatRupiah(current.income)}.`
       );
     }
 
     if (hppChange !== null && hppChange !== 0) {
       points.push(
-        `HPP ${hppChange > 0 ? "naik" : "turun"} ${Math.abs(hppChange).toFixed(1)}% menjadi ${formatRupiah(current.hpp)}. ${hppChange > 0 && incomeChange !== null && hppChange > incomeChange ? "Kenaikan HPP lebih cepat daripada pertumbuhan pendapatan, sehingga margin perlu diwaspadai." : "Perubahan HPP masih perlu dibandingkan dengan perubahan pendapatan."}`
+        `HPP ${hppChange > 0 ? "naik" : "turun"} ${Math.abs(hppChange).toFixed(1)}% menjadi ${formatRupiah(current.hpp)}. ${hppChange > 0 && incomeChange !== null && hppChange > incomeChange ? "Kenaikan HPP lebih cepat daripada pertumbuhan pendapatan, sehingga margin perlu diwaspadai." : "{t("ui.hppChangeLabel")} masih perlu dibandingkan dengan perubahan pendapatan."}`
       );
     }
 
@@ -1017,15 +1017,15 @@ const [marketError, setMarketError] =
     };
 
     if (assumptions.volumeChange <= -100 || assumptions.revenueChange <= -100) {
-      setFinanceMessage("Perubahan volume atau pendapatan tidak boleh mencapai -100% atau lebih rendah.");
+      setFinanceMessage("{t("ui.volumeChangeLabel")} atau pendapatan tidak boleh mencapai -100% atau lebih rendah.");
       return null;
     }
     if (type === "pricing" && assumptions.currentPrice <= 0) {
-      setFinanceMessage("Harga saat ini harus lebih besar dari nol.");
+      setFinanceMessage("{t("ui.currentPriceLabel")} harus lebih besar dari nol.");
       return null;
     }
     if (type === "pricing" && assumptions.plannedPrice <= 0) {
-      setFinanceMessage("Harga rencana harus lebih besar dari nol.");
+      setFinanceMessage("{t("ui.plannedPriceLabel")} harus lebih besar dari nol.");
       return null;
     }
     if (type === "investment" && assumptions.investmentAmount < 0) {
@@ -1051,7 +1051,7 @@ const [marketError, setMarketError] =
         simulatedIncome = income * priceFactor * volumeFactor;
         simulatedHpp = hpp * volumeFactor * (1 + assumptions.hppChange / 100);
         simulatedExpense = expense * (1 + assumptions.expenseChange / 100);
-        modelExplanation = `Pendapatan diproyeksikan dari perubahan harga ${((priceFactor - 1) * 100).toFixed(1)}% dan perubahan volume ${assumptions.volumeChange.toFixed(1)}%. HPP mengikuti perubahan volume dan asumsi perubahan HPP.`;
+        modelExplanation = `{t("ui.incomeLabel")} diproyeksikan dari perubahan harga ${((priceFactor - 1) * 100).toFixed(1)}% dan perubahan volume ${assumptions.volumeChange.toFixed(1)}%. HPP mengikuti perubahan volume dan asumsi perubahan HPP.`;
         keyVariable = "volumeChange";
         keyVariableValue = assumptions.volumeChange;
       } else if (type === "sales") {
@@ -1059,7 +1059,7 @@ const [marketError, setMarketError] =
         simulatedIncome = income * volumeFactor;
         simulatedHpp = hpp * volumeFactor * (1 + assumptions.hppChange / 100);
         simulatedExpense = expense * (1 + assumptions.expenseChange / 100);
-        modelExplanation = `Pendapatan mengikuti perubahan volume ${assumptions.volumeChange.toFixed(1)}%. HPP mengikuti volume dan perubahan HPP ${assumptions.hppChange.toFixed(1)}%, sedangkan beban mengikuti perubahan ${assumptions.expenseChange.toFixed(1)}%.`;
+        modelExplanation = `{t("ui.incomeLabel")} mengikuti perubahan volume ${assumptions.volumeChange.toFixed(1)}%. HPP mengikuti volume dan perubahan HPP ${assumptions.hppChange.toFixed(1)}%, sedangkan beban mengikuti perubahan ${assumptions.expenseChange.toFixed(1)}%.`;
         keyVariable = "volumeChange";
         keyVariableValue = assumptions.volumeChange;
       } else if (type === "cost") {
@@ -1074,14 +1074,14 @@ const [marketError, setMarketError] =
         simulatedHpp = hpp + (assumptions.expectedRevenue * assumptions.incrementalHppRate / 100);
         simulatedExpense = expense + assumptions.incrementalExpense;
         directCashAdjustment -= assumptions.investmentAmount;
-        modelExplanation = `Investasi/pengeluaran sebesar ${formatRupiah(assumptions.investmentAmount)} dibandingkan dengan tambahan pendapatan ${formatRupiah(assumptions.expectedRevenue)}, HPP tambahan ${assumptions.incrementalHppRate.toFixed(1)}% atas pendapatan tambahan, dan beban tambahan ${formatRupiah(assumptions.incrementalExpense)}.`;
+        modelExplanation = `{t("ui.investmentLabel")} sebesar ${formatRupiah(assumptions.investmentAmount)} dibandingkan dengan tambahan pendapatan ${formatRupiah(assumptions.expectedRevenue)}, {t("ui.additionalHppLabel")} ${assumptions.incrementalHppRate.toFixed(1)}% atas pendapatan tambahan, dan beban tambahan ${formatRupiah(assumptions.incrementalExpense)}.`;
         keyVariable = "expectedRevenue";
         keyVariableValue = assumptions.expectedRevenue;
       } else {
         simulatedIncome = income * (1 + assumptions.revenueChange / 100);
         simulatedHpp = hpp * (1 + assumptions.hppChange / 100);
         simulatedExpense = expense * (1 + assumptions.expenseChange / 100);
-        modelExplanation = `Skenario khusus mengubah pendapatan ${assumptions.revenueChange.toFixed(1)}%, HPP ${assumptions.hppChange.toFixed(1)}%, dan beban ${assumptions.expenseChange.toFixed(1)}%.`;
+        modelExplanation = `{t("ui.customScenario")} mengubah pendapatan ${assumptions.revenueChange.toFixed(1)}%, HPP ${assumptions.hppChange.toFixed(1)}%, dan beban ${assumptions.expenseChange.toFixed(1)}%.`;
         keyVariable = "revenueChange";
         keyVariableValue = assumptions.revenueChange;
       }
@@ -1222,7 +1222,7 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
       setDecisionResult(result);
       return result;
     } catch (error) {
-      console.error("ANALISIS LANJUTAN ERROR:", error);
+      console.error("{t("ui.advancedKicker")} ERROR:", error);
       alert(formatError(error));
       return null;
     } finally {
@@ -2453,7 +2453,7 @@ Aturan:
 
   const resetCompanyTotal = async () => {
     const firstConfirm = window.confirm(
-      "Reset Perusahaan Total? Semua profil, analisis, pembaruan usaha, periode, dan laporan keuangan akan dihapus."
+      "{t("ui.resetCompany")}? Semua profil, analisis, pembaruan usaha, periode, dan laporan keuangan akan dihapus."
     );
 
     if (!firstConfirm) return;
@@ -2823,7 +2823,7 @@ Aturan:
       "Reason": "Alasan",
       "Market Condition": "Kondisi Pasar",
       "Demand Signal": "Sinyal Permintaan",
-      "Business Perspective": "Perspektif Bisnis",
+      "Business Perspective": "{t("ui.businessPerspective")}",
       "External Factors": "Faktor Eksternal",
       "Risks": "Risiko",
       "Competition Insight": "Wawasan Persaingan",
@@ -2835,7 +2835,7 @@ Aturan:
       "Limitations": "Keterbatasan",
       "DemandSignal": "Sinyal Permintaan",
       "MarketCondition": "Kondisi Pasar",
-      "BusinessPerspective": "Perspektif Bisnis",
+      "BusinessPerspective": "{t("ui.businessPerspective")}",
       "ExternalFactors": "Faktor Eksternal",
       "CompetitionInsight": "Wawasan Persaingan",
       "StrategicImplication": "Implikasi Strategis",
@@ -2846,7 +2846,7 @@ Aturan:
       "cashOut": "Kas Keluar",
       "cashChange": "Perubahan Kas Bersih",
       "cashTotal": "Saldo Kas dan Bank",
-      "income": "Pendapatan",
+      "income": "{t("ui.incomeLabel")}",
       "hpp": "Harga Pokok Penjualan",
       "grossProfit": "Laba Kotor",
       "expense": "Beban Operasional",
@@ -2861,7 +2861,7 @@ Aturan:
       "totalEquity": "Total Ekuitas",
       "ASET": "ASET",
       "LIABILITAS DAN EKUITAS": "LIABILITAS DAN EKUITAS",
-      "Pendapatan": "Pendapatan",
+      "{t("ui.incomeLabel")}": "{t("ui.incomeLabel")}",
       "Harga Pokok Penjualan": "Harga Pokok Penjualan",
       "Laba Kotor": "Laba Kotor",
       "Beban Operasional": "Beban Operasional",
@@ -2912,7 +2912,7 @@ Aturan:
       "reason": "Alasan", "impact": "Dampak", "potential": "Potensi",
       "description": "Deskripsi", "title": "Judul", "date": "Tanggal",
       "type": "Jenis", "amount": "Jumlah", "market condition": "Kondisi Pasar",
-      "demand signal": "Sinyal Permintaan", "business perspective": "Perspektif Bisnis",
+      "demand signal": "Sinyal Permintaan", "business perspective": "{t("ui.businessPerspective")}",
       "external factors": "Faktor Eksternal", "risks": "Risiko",
       "competition insight": "Wawasan Persaingan", "scenarios": "Skenario",
       "optimistic": "Optimistis", "realistic": "Realistis",
@@ -2921,7 +2921,7 @@ Aturan:
       "market insight": "Wawasan Pasar",
       "market condition": "Kondisi Pasar",
       "demand signal": "Sinyal Permintaan",
-      "business perspective": "Perspektif Bisnis",
+      "business perspective": "{t("ui.businessPerspective")}",
       "external factors": "Faktor Eksternal",
       "competition insight": "Wawasan Persaingan",
       "strategic implication": "Implikasi Strategis",
@@ -2942,7 +2942,7 @@ Aturan:
     if (value === null || value === undefined) return value;
     const replacements = [
       [/\bMarket Insight\b/gi, "Wawasan Pasar"],
-      [/\bBusiness Perspective\b/gi, "Perspektif Bisnis"],
+      [/\bBusiness Perspective\b/gi, "{t("ui.businessPerspective")}"],
       [/\bMarket Condition\b/gi, "Kondisi Pasar"],
       [/\bDemand Signal\b/gi, "Sinyal Permintaan"],
       [/\bExternal Factors\b/gi, "Faktor Eksternal"],
@@ -2962,7 +2962,7 @@ Aturan:
       [/\bLimitations\b/gi, "Keterbatasan"],
       [/\bDemandSignal\b/gi, "Sinyal Permintaan"],
       [/\bMarketCondition\b/gi, "Kondisi Pasar"],
-      [/\bBusinessPerspective\b/gi, "Perspektif Bisnis"],
+      [/\bBusinessPerspective\b/gi, "{t("ui.businessPerspective")}"],
       [/\bExternalFactors\b/gi, "Faktor Eksternal"],
       [/\bCompetitionInsight\b/gi, "Wawasan Persaingan"],
       [/\bStrategicImplication\b/gi, "Implikasi Strategis"],
@@ -3048,19 +3048,19 @@ Aturan:
 </style>
 </head>
 <body>
-<div class="print-actions"><button onclick="window.print()">Cetak / Simpan sebagai PDF</button></div>
+<div class="print-actions"><button onclick="window.print()">${t("ui.printPdf")}</button></div>
 <header class="pdf-header">
   <img class="pdf-logo" src="${window.location.origin}/zenai-logo.png" alt="ZenAI Logo" onerror="this.style.display='none'" />
   <div>
     <div class="brand">ZENAI</div>
-    <div class="subtitle">Pendamping Bisnis Berbasis AI</div>
+    <div class="subtitle">${t("ui.aiBusinessAssistant")}</div>
   </div>
 </header>
 <h1 class="report-title">${escapePdfHtml(title)}</h1>
-<p class="business">Usaha: ${escapePdfHtml(businessName)}</p>
-<p class="meta">Dibuat: ${escapePdfHtml(generatedAt)}</p>
+<p class="business">${t("ui.business")}: ${escapePdfHtml(businessName)}</p>
+<p class="meta">${t("ui.created")}: ${escapePdfHtml(generatedAt)}</p>
 ${sectionHtml}
-<div class="pdf-footer">ZENAI — AI BUSINESS ASSISTANT · Pahami. Putuskan. Tumbuh.</div>
+<div class="pdf-footer">${t("ui.taglinePdf")}</div>
 </body>
 </html>`);
     reportWindow.document.close();
@@ -3085,7 +3085,7 @@ ${sectionHtml}
         }))
       : [];
 
-    return exportReportPdf("Laporan Perspektif Bisnis", [
+    return exportReportPdf("Laporan {t("ui.businessPerspective")}", [
       {
         title: "Ringkasan",
         value: analysis.summary || "Belum tersedia."
@@ -3099,7 +3099,7 @@ ${sectionHtml}
         value: analysis.demandSignal || "Belum tersedia."
       },
       {
-        title: "Perspektif Bisnis",
+        title: "{t("ui.businessPerspective")}",
         value: analysis.businessPerspective || "Belum tersedia."
       },
       {
@@ -3165,7 +3165,7 @@ ${sectionHtml}
       {
         title: "Laporan Laba Rugi",
         value: {
-          "Pendapatan": formatRupiah(current.income),
+          "{t("ui.incomeLabel")}": formatRupiah(current.income),
           "Harga Pokok Penjualan": formatRupiah(current.hpp),
           "Laba Kotor": formatRupiah(current.grossProfit),
           "Beban Operasional": formatRupiah(current.expense),
@@ -3227,7 +3227,7 @@ ${sectionHtml}
           fontFamily: "Inter, Arial, sans-serif"
         }}
       >
-        <div style={{ color: darkMode ? "#CBD5E1" : "#64748B" }}>Memuat ZenAI...</div>
+        <div style={{ color: darkMode ? "#CBD5E1" : "#64748B" }}>{t("ui.loadingZenai")}</div>
       </main>
     );
   }
@@ -3306,7 +3306,7 @@ ${sectionHtml}
             >
               Know More Grow More
             </div>
-            <button type="button" onClick={() => setShowAuth(false)} style={{ marginTop: "14px", background: "transparent", color: darkMode ? "#93C5FD" : "#2563EB", fontWeight: "700", cursor: "pointer" }}>← Kembali ke beranda</button>
+            <button type="button" onClick={() => setShowAuth(false)} style={{ marginTop: "14px", background: "transparent", color: darkMode ? "#93C5FD" : "#2563EB", fontWeight: "700", cursor: "pointer" }}>{t("ui.backHome")}</button>
           </div>
 
           <div
@@ -3819,7 +3819,7 @@ padding: isMobile ? "16px 12px" : "32px",
               }}
             >
               <div style={{ fontSize: "20px", fontWeight: "800", color: darkMode ? "#F8FAFC" : "#0F172A" }}>
-                ️ Pengaturan ZenAI
+                ️ {t("ui.settingsTitle")}
               </div>
               <div style={{ marginTop: "6px", color: darkMode ? "#CBD5E1" : "#64748B", fontSize: "14px", lineHeight: 1.5 }}>
                 Kelola pengaturan dan preferensi ZenAI di sini.
@@ -3836,9 +3836,9 @@ padding: isMobile ? "16px 12px" : "32px",
             >
               <div style={{ display: "flex", justifyContent: "space-between", gap: "14px", alignItems: "center", flexWrap: "wrap" }}>
                 <div>
-                  <div style={{ fontSize: "20px", fontWeight: "800", color: darkMode ? "#F8FAFC" : "#0F172A" }}> System Health</div>
+                  <div style={{ fontSize: "20px", fontWeight: "800", color: darkMode ? "#F8FAFC" : "#0F172A" }}> {t("ui.systemHealth")}</div>
                   <div style={{ marginTop: "6px", color: darkMode ? "#CBD5E1" : "#1D4ED8", fontSize: "14px", lineHeight: 1.5 }}>
-                    Periksa kondisi layanan ZenAI dan koneksi AI secara langsung.
+                    {t("ui.healthDesc")}
                   </div>
                 </div>
                 <button type="button" onClick={runLiveHealthCheck} disabled={healthLoading} style={{ border: "none", borderRadius: "10px", padding: "11px 16px", background: "#2563EB", color: "#FFFFFF", fontWeight: "800", cursor: healthLoading ? "wait" : "pointer" }}>
@@ -3865,18 +3865,18 @@ padding: isMobile ? "16px 12px" : "32px",
                         </span>
                       </div>
                       <div style={{ marginTop: "8px", color: darkMode ? "#CBD5E1" : "#64748B", fontSize: "13px", lineHeight: 1.5 }}>{service.detail}</div>
-                      {service.latencyMs != null && <div style={{ marginTop: "8px", fontSize: "12px", color: darkMode ? "#94A3B8" : "#64748B" }}>Latency: {service.latencyMs} ms</div>}
+                      {service.latencyMs != null && <div style={{ marginTop: "8px", fontSize: "12px", color: darkMode ? "#94A3B8" : "#64748B" }}>{t("ui.latency")}: {service.latencyMs} ms</div>}
                     </div>
                   ))}
                 </div>
                 {healthData.liveAiSmokeTest && (
                   <div style={{ padding: "18px", borderRadius: "14px", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}`, background: darkMode ? "#111827" : "#FFFFFF" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between" }}><strong>Live AI Smoke Test</strong><span style={{ color: darkMode ? "#60A5FA" : "#2563EB", fontWeight: "800" }}> OPERATIONAL</span></div>
-                    <div style={{ marginTop: "8px", fontSize: "13px", color: darkMode ? "#CBD5E1" : "#64748B" }}>Provider: {healthData.liveAiSmokeTest.provider} · Latency: {healthData.liveAiSmokeTest.latencyMs} ms · Response: {healthData.liveAiSmokeTest.response || "—"}</div>
+                    <div style={{ display: "flex", justifyContent: "space-between" }}><strong>{t("ui.liveAiSmoke")}</strong><span style={{ color: darkMode ? "#60A5FA" : "#2563EB", fontWeight: "800" }}> OPERATIONAL</span></div>
+                    <div style={{ marginTop: "8px", fontSize: "13px", color: darkMode ? "#CBD5E1" : "#64748B" }}>{t("ui.provider")}: {healthData.liveAiSmokeTest.provider} · {t("ui.latency")}: {healthData.liveAiSmokeTest.latencyMs} ms · {t("ui.response")}: {healthData.liveAiSmokeTest.response || "—"}</div>
                   </div>
                 )}
                 <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", alignItems: "center", flexWrap: "wrap", padding: "16px", borderRadius: "14px", background: darkMode ? "#0F172A" : "#F8FAFC" }}>
-                  <div><strong>{healthData.summary?.operational ?? 0}/{healthData.summary?.total ?? 0} layanan operational</strong><div style={{ marginTop: "4px", fontSize: "12px", color: darkMode ? "#94A3B8" : "#64748B" }}>Checked: {healthData.checkedAt ? new Date(healthData.checkedAt).toLocaleString("id-ID") : "—"}</div></div>
+                  <div><strong>{healthData.summary?.operational ?? 0}/{healthData.summary?.total ?? 0} layanan operational</strong><div style={{ marginTop: "4px", fontSize: "12px", color: darkMode ? "#94A3B8" : "#64748B" }}>{t("ui.checked")}: {healthData.checkedAt ? new Date(healthData.checkedAt).toLocaleString() : "—"}</div></div>
                   <button type="button" onClick={runLiveAiSmokeTest} disabled={healthLoading} style={{ border: `1px solid ${darkMode ? "#475569" : "#CBD5E1"}`, borderRadius: "10px", padding: "10px 14px", background: darkMode ? "#111827" : "#FFFFFF", color: darkMode ? "#F8FAFC" : "#0F172A", fontWeight: "700", cursor: healthLoading ? "wait" : "pointer" }}>{healthLoading ? "Menguji AI..." : "Run AI Smoke Test"}</button>
                 </div>
               </div>
@@ -3885,18 +3885,18 @@ padding: isMobile ? "16px 12px" : "32px",
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, minmax(0, 1fr))", gap: "18px" }}>
               <div style={{ padding: "20px", borderRadius: "18px", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}`, background: darkMode ? "#111827" : "#FFFFFF" }}>
                 <div style={{ fontSize: "17px", fontWeight: "800", color: darkMode ? "#F8FAFC" : "#0F172A" }}> Tampilan</div>
-                <div style={{ marginTop: "6px", color: darkMode ? "#CBD5E1" : "#64748B", fontSize: "13px", lineHeight: 1.5 }}>Atur tema antarmuka ZenAI.</div>
+                <div style={{ marginTop: "6px", color: darkMode ? "#CBD5E1" : "#64748B", fontSize: "13px", lineHeight: 1.5 }}>{t("ui.themeDesc")}</div>
                 <button type="button" onClick={() => setDarkMode((current) => !current)} style={{ marginTop: "14px", width: "100%", minHeight: "43px", border: `1px solid ${darkMode ? "#475569" : "#CBD5E1"}`, background: darkMode ? "#0F172A" : "#F8FAFC", color: darkMode ? "#F8FAFC" : "#0F172A", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}>
                   {darkMode ? "️ Gunakan Tema Terang" : " Gunakan Tema Gelap"}
                 </button>
               </div>
 
               <div style={{ padding: "20px", borderRadius: "18px", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}`, background: darkMode ? "#111827" : "#FFFFFF" }}>
-                <div style={{ fontSize: "17px", fontWeight: "800", color: darkMode ? "#F8FAFC" : "#0F172A" }}>️ Data & Reset</div>
-                <div style={{ marginTop: "6px", color: darkMode ? "#CBD5E1" : "#64748B", fontSize: "13px", lineHeight: 1.5 }}>Reset analisis atau hapus seluruh data perusahaan.</div>
+                <div style={{ fontSize: "17px", fontWeight: "800", color: darkMode ? "#F8FAFC" : "#0F172A" }}>{t("ui.dataReset")}</div>
+                <div style={{ marginTop: "6px", color: darkMode ? "#CBD5E1" : "#64748B", fontSize: "13px", lineHeight: 1.5 }}>{t("ui.dataResetDesc")}</div>
                 <div style={{ display: "grid", gap: "9px", marginTop: "14px" }}>
-                  <button type="button" disabled={!business} onClick={() => { const ok = window.confirm("Reset Analisis? Profil perusahaan dan laporan keuangan tetap disimpan."); if (ok) resetAnalysis(); }} style={{ width: "100%", minHeight: "43px", border: "1px solid #FDA4AF", background: darkMode ? "#3B121D" : "#FFF1F2", color: darkMode ? "#FDA4AF" : "#9F1239", padding: "10px 14px", borderRadius: "10px", cursor: business ? "pointer" : "not-allowed", fontWeight: "700", opacity: business ? 1 : 0.55 }}> Reset Analisis</button>
-                  <button type="button" disabled={!business} onClick={resetCompanyTotal} style={{ width: "100%", minHeight: "43px", border: "1px solid #FDA4AF", background: darkMode ? "#3B121D" : "#FFF1F2", color: darkMode ? "#FDA4AF" : "#9F1239", padding: "10px 14px", borderRadius: "10px", cursor: business ? "pointer" : "not-allowed", fontWeight: "700", opacity: business ? 1 : 0.55 }}> Reset Perusahaan Total</button>
+                  <button type="button" disabled={!business} onClick={() => { const ok = window.confirm("{t("ui.resetAnalysisConfirm")}"); if (ok) resetAnalysis(); }} style={{ width: "100%", minHeight: "43px", border: "1px solid #FDA4AF", background: darkMode ? "#3B121D" : "#FFF1F2", color: darkMode ? "#FDA4AF" : "#9F1239", padding: "10px 14px", borderRadius: "10px", cursor: business ? "pointer" : "not-allowed", fontWeight: "700", opacity: business ? 1 : 0.55 }}> Reset Analisis</button>
+                  <button type="button" disabled={!business} onClick={resetCompanyTotal} style={{ width: "100%", minHeight: "43px", border: "1px solid #FDA4AF", background: darkMode ? "#3B121D" : "#FFF1F2", color: darkMode ? "#FDA4AF" : "#9F1239", padding: "10px 14px", borderRadius: "10px", cursor: business ? "pointer" : "not-allowed", fontWeight: "700", opacity: business ? 1 : 0.55 }}> {t("ui.resetCompany")}</button>
                 </div>
               </div>
             </div>
@@ -3945,11 +3945,11 @@ padding: isMobile ? "16px 12px" : "32px",
             },
             {
               key: "market",
-              title: "Perspektif Bisnis",
+              title: "{t("ui.businessPerspective")}",
               icon: "",
               done: hasMarket,
               text: "ZenAI memperkaya analisis dengan informasi eksternal yang relevan. Tavily bekerja di belakang layar sebagai sumber informasi, kemudian AI mengolahnya menjadi perspektif bisnis.",
-              action: "Buka Perspektif Bisnis",
+              action: "Buka {t("ui.businessPerspective")}",
               canOpen: hasBusiness
             },
             {
@@ -4140,10 +4140,10 @@ padding: isMobile ? "16px 12px" : "32px",
                   {[
                     ["Saya baru pertama kali menggunakan ZenAI", "Mulai dari Ceritakan Usaha. Masukkan konteks usaha terlebih dahulu agar analisis berikutnya memiliki dasar.", "capture"],
                     ["Saya sudah punya profil usaha, lalu apa?", "Jalankan Kondisi Usaha untuk melihat gambaran dan prioritas, lalu lanjutkan ke Diagnosis.", "pulse"],
-                    ["Apa fungsi Perspektif Bisnis?", "Fitur ini memperkaya analisis dengan informasi eksternal yang relevan. Tavily hanya menjadi sumber di belakang layar.", "market"],
+                    ["Apa fungsi {t("ui.businessPerspective")}?", "Fitur ini memperkaya analisis dengan informasi eksternal yang relevan. Tavily hanya menjadi sumber di belakang layar.", "market"],
                     ["Saya sudah mendapat strategi, lalu bagaimana?", "Jadikan strategi sebagai tindakan dan lanjutkan ke Growth Loop untuk menjalankan serta mengevaluasi hasilnya.", "autopilot"],
                     ["Saya ingin melihat atau mencatat keuangan", "Buka Laporan Keuangan untuk mencatat transaksi dan melihat ringkasan keuangan.", "finance"],
-                    ["Sistem terasa bermasalah", "Buka System Health untuk memeriksa layanan dan menjalankan pemeriksaan sistem/AI.", "health"]
+                    ["Sistem terasa bermasalah", "Buka {t("ui.systemHealth")} untuk memeriksa layanan dan menjalankan pemeriksaan sistem/AI.", "health"]
                   ].map(([question, answer, target]) => (
                     <button
                       key={question}
@@ -5007,7 +5007,7 @@ padding: isMobile ? "16px 12px" : "32px",
           >
             {pulseData && (
               <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "14px" }}>
-                <button type="button" onClick={exportPulsePdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}> Ekspor PDF</button>
+                <button type="button" onClick={exportPulsePdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}> {t("ui.exportPdf")}</button>
               </div>
             )}
             {!pulseData ? (
@@ -5616,7 +5616,7 @@ padding: isMobile ? "16px 12px" : "32px",
           >
             {diagnosis && (
               <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "14px" }}>
-                <button type="button" onClick={exportDiagnosisPdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}> Ekspor PDF</button>
+                <button type="button" onClick={exportDiagnosisPdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}> {t("ui.exportPdf")}</button>
               </div>
             )}
             {!diagnosis ? (
@@ -6265,7 +6265,7 @@ padding: isMobile ? "16px 12px" : "32px",
   <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
     {marketData && (
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "14px" }}>
-        <button type="button" onClick={exportMarketPdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}> Ekspor PDF</button>
+        <button type="button" onClick={exportMarketPdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}> {t("ui.exportPdf")}</button>
       </div>
     )}
     {!marketData && !marketLoading && !marketError && (
@@ -6280,7 +6280,7 @@ padding: isMobile ? "16px 12px" : "32px",
         }}
       >
         <div style={{ fontSize: "48px", marginBottom: "12px" }}></div>
-        <h3 style={{ margin: 0, fontSize: "26px" }}>Perspektif Bisnis</h3>
+        <h3 style={{ margin: 0, fontSize: "26px" }}>{t("ui.businessPerspective")}</h3>
         <p
           style={{
             color: darkMode ? "#CBD5E1" : "#64748B",
@@ -6304,7 +6304,7 @@ padding: isMobile ? "16px 12px" : "32px",
             fontWeight: "700"
           }}
         >
-           Analisis Perspektif Bisnis
+           Analisis {t("ui.businessPerspective")}
         </button>
         <div
           style={{
@@ -6329,7 +6329,7 @@ padding: isMobile ? "16px 12px" : "32px",
         }}
       >
         <div style={{ fontSize: "42px", marginBottom: "14px" }}></div>
-        <h3 style={{ margin: "0 0 8px" }}>ZenAI sedang menyusun perspektif bisnis...</h3>
+        <h3 style={{ margin: "0 0 8px" }}>{t("ui.marketLoading")}</h3>
         <p style={{ color: darkMode ? "#CBD5E1" : "#64748B", lineHeight: "1.6", margin: 0 }}>
           ZenAI mengumpulkan informasi eksternal, menyaring sumber, lalu menghubungkannya dengan konteks usaha Anda.
         </p>
@@ -6345,7 +6345,7 @@ padding: isMobile ? "16px 12px" : "32px",
           padding: "28px"
         }}
       >
-        <h3 style={{ marginTop: 0, color: "#9f1239" }}>Perspektif Bisnis belum dapat diperbarui</h3>
+        <h3 style={{ marginTop: 0, color: "#9f1239" }}>{t("ui.businessPerspective")} belum dapat diperbarui</h3>
         <p style={{ color: "#9f1239", lineHeight: "1.6" }}>{marketError}</p>
         <button
           onClick={runMarketInsight}
@@ -6372,7 +6372,7 @@ padding: isMobile ? "16px 12px" : "32px",
             <div style={{ fontSize: "12px", fontWeight: "800", color: darkMode ? "#60A5FA" : "#2563EB", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "5px" }}>
               Business Intelligence
             </div>
-            <h3 style={{ margin: 0, fontSize: "24px" }}> Perspektif Bisnis</h3>
+            <h3 style={{ margin: 0, fontSize: "24px" }}> {t("ui.businessPerspective")}</h3>
             <p style={{ margin: "6px 0 0", color: darkMode ? "#CBD5E1" : "#64748B", lineHeight: "1.5" }}>
               Insight pasar yang sudah dianalisis dan dikaitkan dengan usaha Anda.
             </p>
@@ -6686,7 +6686,7 @@ padding: isMobile ? "16px 12px" : "32px",
         {tab === "finance" && (
           <div>
             <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "14px" }}>
-              <button type="button" onClick={exportFinancePdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}> Ekspor PDF</button>
+              <button type="button" onClick={exportFinancePdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}> {t("ui.exportPdf")}</button>
             </div>
             <div
               style={{
@@ -6811,7 +6811,7 @@ padding: isMobile ? "16px 12px" : "32px",
                 <div className="finance-cards">
                   {[
                     [
-                      "Pendapatan",
+                      "{t("ui.incomeLabel")}",
                       financeCurrentTotals.income,
                       financeChange(
                         financeCurrentTotals.income,
@@ -6941,7 +6941,7 @@ padding: isMobile ? "16px 12px" : "32px",
                         border: `1px solid ${darkMode ? "#1D4ED8" : "#BFDBFE"}`
                       }}
                     >
-                      <strong> Terhubung dengan Analisis ZENAI</strong>
+                      <strong> {t("ui.linkedAnalysis")}</strong>
                       <div style={{ display: "grid", gap: "8px", marginTop: "10px" }}>
                         {financeInsight.linkedAnalysis.map((item, index) => (
                           <div key={index} style={{ fontSize: "14px", lineHeight: "1.6", color: darkMode ? "#DBEAFE" : "#1E3A8A" }}>
@@ -7358,7 +7358,7 @@ padding: isMobile ? "16px 12px" : "32px",
                     </thead>
                     <tbody>
                       {[
-                        ["Pendapatan", financeCurrentTotals.income, financePreviousTotals.income, false],
+                        ["{t("ui.incomeLabel")}", financeCurrentTotals.income, financePreviousTotals.income, false],
                         ["HPP", financeCurrentTotals.hpp, financePreviousTotals.hpp, true],
                         ["Laba Kotor", financeCurrentTotals.grossProfit, financePreviousTotals.grossProfit, false],
                         ["Beban Operasional", financeCurrentTotals.expense, financePreviousTotals.expense, true],
@@ -7383,7 +7383,7 @@ padding: isMobile ? "16px 12px" : "32px",
                 </div>
 
                 <div style={{ marginTop: "18px", padding: "16px", borderRadius: "14px", background: darkMode ? "#0B1120" : "#F8FAFC" }}>
-                  <strong> Cara membaca periode ini</strong>
+                  <strong> {t("ui.readPeriod")}</strong>
                   <p style={{ margin: "8px 0 0", color: darkMode ? "#CBD5E1" : "#475569", lineHeight: "1.7" }}>
                     {financeChangeLabel(financeCurrentTotals.netProfit, financePreviousTotals.netProfit)}
                     {" "}Laba bersih periode ini sebesar {formatRupiah(financeCurrentTotals.netProfit)} setelah memperhitungkan HPP {formatRupiah(financeCurrentTotals.hpp)} dan beban operasional {formatRupiah(financeCurrentTotals.expense)}.
@@ -7437,7 +7437,7 @@ padding: isMobile ? "16px 12px" : "32px",
                   </table>
                 </div>
                 <div style={{ marginTop: "18px", padding: "16px", borderRadius: "14px", background: darkMode ? "#0B1120" : "#F8FAFC" }}>
-                  <strong> Analisis arus kas</strong>
+                  <strong> {t("ui.cashFlowAnalysis")}</strong>
                   <p style={{ margin: "8px 0 0", color: darkMode ? "#CBD5E1" : "#475569", lineHeight: "1.7" }}>
                     Kas masuk {financeCurrentTotals.cashIn >= financePreviousTotals.cashIn ? "lebih tinggi" : "lebih rendah"} dibanding periode sebelumnya, sementara kas keluar {financeCurrentTotals.cashOut >= financePreviousTotals.cashOut ? "lebih tinggi" : "lebih rendah"}. Saldo kas dan bank saat ini {formatRupiah(financeCurrentTotals.cashTotal)}.
                   </p>
@@ -7467,7 +7467,7 @@ padding: isMobile ? "16px 12px" : "32px",
                   }}
                 >
                   <div>
-                    <h4>Yang Dimiliki</h4>
+                    <h4>{t("ui.assetsOwned")}</h4>
                     {[
                       ["Kas & Bank", financeCurrentTotals.cashTotal],
                       ["Piutang", financeCurrentTotals.receivable],
@@ -7506,7 +7506,7 @@ padding: isMobile ? "16px 12px" : "32px",
                   </div>
 
                   <div>
-                    <h4>Utang & Modal</h4>
+                    <h4>{t("ui.debtCapital")}</h4>
 
                     {[
                       ["Liabilitas", financeCurrentTotals.debt],
@@ -7557,7 +7557,7 @@ padding: isMobile ? "16px 12px" : "32px",
                     background: darkMode ? "#0B1120" : "#F8FAFC"
                   }}
                 >
-                  <strong> Perubahan posisi keuangan</strong>
+                  <strong> {t("ui.positionChange")}</strong>
                   <div style={{ display: "grid", gap: "8px", marginTop: "10px" }}>
                     {[
                       ["Total Aset", financeCurrentTotals.totalAssets, financePreviousTotals.totalAssets],
@@ -7645,35 +7645,35 @@ padding: isMobile ? "16px 12px" : "32px",
           );
 
           const typeInfo = {
-            pricing: { title: "Perubahan harga", description: "Uji apakah perubahan harga tetap layak ketika volume penjualan ikut berubah." },
-            sales: { title: "Perubahan penjualan", description: "Uji dampak kenaikan atau penurunan volume penjualan terhadap laba dan kas." },
+            pricing: { title: "{t("ui.priceChange")}", description: "Uji apakah perubahan harga tetap layak ketika volume penjualan ikut berubah." },
+            sales: { title: "{t("ui.salesChange")}", description: "Uji dampak kenaikan atau penurunan volume penjualan terhadap laba dan kas." },
             cost: { title: "Perubahan biaya", description: "Uji seberapa besar perubahan HPP dan beban dapat ditanggung oleh struktur usaha saat ini." },
-            investment: { title: "Pengeluaran atau investasi", description: "Uji apakah uang yang dikeluarkan dapat ditutup oleh pendapatan tambahan yang diharapkan." },
-            custom: { title: "Skenario khusus", description: "Uji perubahan pendapatan, HPP, dan beban yang Anda tentukan sendiri." }
-          }[decisionType] || { title: "Skenario khusus", description: "Tentukan perubahan yang ingin diuji." };
+            investment: { title: "{t("ui.investmentSpend")}", description: "Uji apakah uang yang dikeluarkan dapat ditutup oleh pendapatan tambahan yang diharapkan." },
+            custom: { title: "{t("ui.customScenario")}", description: "Uji perubahan pendapatan, HPP, dan beban yang Anda tentukan sendiri." }
+          }[decisionType] || { title: "{t("ui.customScenario")}", description: "Tentukan perubahan yang ingin diuji." };
 
           const renderAssumptionFields = () => {
             if (decisionType === "pricing") return (
               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)", gap: "13px" }}>
-                {field("currentPrice", "Harga saat ini", "Rp", "Contoh: 25000")}
-                {field("plannedPrice", "Harga rencana", "Rp", "Contoh: 28000")}
-                {field("volumeChange", "Perubahan volume penjualan", "%", "Contoh: -10")}
-                {field("hppChange", "Perubahan HPP per unit", "%", "Contoh: 0")}
-                {field("expenseChange", "Perubahan beban operasional", "%", "Contoh: 0")}
+                {field("currentPrice", "{t("ui.currentPriceLabel")}", "Rp", "Contoh: 25000")}
+                {field("plannedPrice", "{t("ui.plannedPriceLabel")}", "Rp", "Contoh: 28000")}
+                {field("volumeChange", "{t("ui.volumeChangeLabel")} penjualan", "%", "Contoh: -10")}
+                {field("hppChange", "{t("ui.hppChangeLabel")} per unit", "%", "Contoh: 0")}
+                {field("expenseChange", "{t("ui.expenseChangeLabel")} operasional", "%", "Contoh: 0")}
               </div>
             );
             if (decisionType === "sales") return (
               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: "13px" }}>
-                {field("volumeChange", "Perubahan volume penjualan", "%", "Contoh: 15")}
-                {field("hppChange", "Perubahan HPP", "%", "Contoh: 5")}
-                {field("expenseChange", "Perubahan beban", "%", "Contoh: 3")}
+                {field("volumeChange", "{t("ui.volumeChangeLabel")} penjualan", "%", "Contoh: 15")}
+                {field("hppChange", "{t("ui.hppChangeLabel")}", "%", "Contoh: 5")}
+                {field("expenseChange", "{t("ui.expenseChangeLabel")}", "%", "Contoh: 3")}
               </div>
             );
             if (decisionType === "cost") return (
               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: "13px" }}>
-                {field("revenueChange", "Perubahan pendapatan", "%", "Contoh: 0")}
-                {field("hppChange", "Perubahan HPP", "%", "Contoh: 8")}
-                {field("expenseChange", "Perubahan beban", "%", "Contoh: 5")}
+                {field("revenueChange", "{t("ui.revenueChangeLabel")}", "%", "Contoh: 0")}
+                {field("hppChange", "{t("ui.hppChangeLabel")}", "%", "Contoh: 8")}
+                {field("expenseChange", "{t("ui.expenseChangeLabel")}", "%", "Contoh: 5")}
               </div>
             );
             if (decisionType === "investment") return (
@@ -7681,14 +7681,14 @@ padding: isMobile ? "16px 12px" : "32px",
                 {field("investmentAmount", "Nilai investasi / pengeluaran", "Rp", "Contoh: 5000000")}
                 {field("expectedRevenue", "Tambahan pendapatan yang diharapkan", "Rp", "Contoh: 8000000")}
                 {field("incrementalHppRate", "HPP atas tambahan penjualan", "%", "Contoh: 40")}
-                {field("incrementalExpense", "Beban tambahan", "Rp", "Contoh: 500000")}
+                {field("incrementalExpense", "{t("ui.additionalExpenseLabel")}", "Rp", "Contoh: 500000")}
               </div>
             );
             return (
               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: "13px" }}>
-                {field("revenueChange", "Perubahan pendapatan", "%", "Contoh: -15")}
-                {field("hppChange", "Perubahan HPP", "%", "Contoh: 5")}
-                {field("expenseChange", "Perubahan beban", "%", "Contoh: 3")}
+                {field("revenueChange", "{t("ui.revenueChangeLabel")}", "%", "Contoh: -15")}
+                {field("hppChange", "{t("ui.hppChangeLabel")}", "%", "Contoh: 5")}
+                {field("expenseChange", "{t("ui.expenseChangeLabel")}", "%", "Contoh: 3")}
               </div>
             );
           };
@@ -7697,15 +7697,15 @@ padding: isMobile ? "16px 12px" : "32px",
             <div style={{ maxWidth: "1040px", margin: "0 auto", width: "100%" }}>
               <section style={{ background: darkMode ? "#0F172A" : "#FFFFFF", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}`, borderRadius: "22px", padding: isMobile ? "18px" : "30px", boxShadow: "0 12px 35px rgba(15,23,42,0.06)" }}>
                 <div style={{ maxWidth: "780px" }}>
-                  <div style={{ fontSize: "12px", fontWeight: "800", letterSpacing: "1.4px", color: darkMode ? "#93C5FD" : "#2563EB", marginBottom: "8px" }}>ANALISIS LANJUTAN</div>
-                  <h2 style={{ margin: 0, fontSize: isMobile ? "26px" : "36px", lineHeight: 1.12 }}>Uji keputusan sebelum diterapkan.</h2>
+                  <div style={{ fontSize: "12px", fontWeight: "800", letterSpacing: "1.4px", color: darkMode ? "#93C5FD" : "#2563EB", marginBottom: "8px" }}>{t("ui.advancedKicker")}</div>
+                  <h2 style={{ margin: 0, fontSize: isMobile ? "26px" : "36px", lineHeight: 1.12 }}>{t("ui.advancedHeadline")}</h2>
                   <p style={{ margin: "11px 0 0", color: darkMode ? "#CBD5E1" : "#64748B", lineHeight: 1.65 }}>
                     Pilih satu keputusan nyata yang sedang dipertimbangkan. ZENAI menghitung konsekuensinya menggunakan data keuangan periode dasar, bukan sekadar memberikan rekomendasi umum.
                   </p>
                 </div>
 
                 <div style={{ marginTop: "24px", padding: "18px", borderRadius: "18px", background: darkMode ? "#111827" : "#F8FAFC", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
-                  <div style={{ fontSize: "12px", fontWeight: "800", letterSpacing: "0.5px", marginBottom: "12px" }}>DATA YANG MENJADI DASAR</div>
+                  <div style={{ fontSize: "12px", fontWeight: "800", letterSpacing: "0.5px", marginBottom: "12px" }}>{t("ui.baselineData")}</div>
                   <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "12px" }}>
                     <label style={{ fontSize: "12px", fontWeight: "800" }}>Periode Dasar<input type="month" value={financePeriod} onChange={(event) => { setFinancePeriod(event.target.value); setDecisionResult(null); }} style={inputStyle} /></label>
                     <label style={{ fontSize: "12px", fontWeight: "800" }}>Periode Pembanding<input type="month" value={financeComparisonPeriod} onChange={(event) => { setFinanceComparisonPeriod(event.target.value); setDecisionResult(null); }} style={inputStyle} /></label>
@@ -7716,17 +7716,17 @@ padding: isMobile ? "16px 12px" : "32px",
                 </div>
 
                 <div style={{ marginTop: "20px", padding: "18px", borderRadius: "18px", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
-                  <div style={{ fontSize: "12px", fontWeight: "800", marginBottom: "10px" }}>KEPUTUSAN YANG DIUJI</div>
+                  <div style={{ fontSize: "12px", fontWeight: "800", marginBottom: "10px" }}>{t("ui.decisionTested")}</div>
                   <textarea value={decisionText} onChange={(event) => { setDecisionText(event.target.value); setDecisionResult(null); }} placeholder="Contoh: Saya ingin menaikkan harga produk dari Rp25.000 menjadi Rp28.000 karena biaya bahan meningkat." rows={3} style={{ width: "100%", resize: "vertical", minHeight: "82px", boxSizing: "border-box", border: `1px solid ${darkMode ? "#475569" : "#CBD5E1"}`, borderRadius: "12px", padding: "12px 13px", background: darkMode ? "#0F172A" : "#FFFFFF", color: darkMode ? "#F8FAFC" : "#0F172A", lineHeight: 1.5 }} />
 
                   <div style={{ marginTop: "14px", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "12px", alignItems: "end" }}>
                     <label style={{ fontSize: "12px", fontWeight: "800" }}>Jenis Keputusan
                       <select value={decisionType} onChange={(event) => { setDecisionType(event.target.value); setDecisionResult(null); }} style={inputStyle}>
-                        <option value="pricing">Perubahan harga</option>
-                        <option value="sales">Perubahan penjualan</option>
-                        <option value="cost">Perubahan biaya / HPP</option>
-                        <option value="investment">Pengeluaran atau investasi</option>
-                        <option value="custom">Skenario khusus</option>
+                        <option value="pricing">{t("ui.priceChange")}</option>
+                        <option value="sales">{t("ui.salesChange")}</option>
+                        <option value="cost">{t("ui.costChange")}</option>
+                        <option value="investment">{t("ui.investmentSpend")}</option>
+                        <option value="custom">{t("ui.customScenario")}</option>
                       </select>
                     </label>
                     <div style={{ padding: "11px 13px", borderRadius: "10px", background: darkMode ? "#172033" : "#F8FAFC", color: darkMode ? "#CBD5E1" : "#475569", fontSize: "11px", lineHeight: 1.55 }}>
@@ -7736,8 +7736,8 @@ padding: isMobile ? "16px 12px" : "32px",
                 </div>
 
                 <div style={{ marginTop: "16px", padding: "18px", borderRadius: "18px", background: darkMode ? "#111827" : "#FAFAFA", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
-                  <div style={{ fontSize: "12px", fontWeight: "800", marginBottom: "4px" }}>ASUMSI KEPUTUSAN</div>
-                  <div style={{ fontSize: "11px", color: darkMode ? "#94A3B8" : "#64748B", marginBottom: "14px" }}>Isi asumsi yang benar-benar Anda perkirakan. Tidak ada skenario angka yang dipilih otomatis oleh ZENAI.</div>
+                  <div style={{ fontSize: "12px", fontWeight: "800", marginBottom: "4px" }}>{t("ui.decisionAssumptions")}</div>
+                  <div style={{ fontSize: "11px", color: darkMode ? "#94A3B8" : "#64748B", marginBottom: "14px" }}>{t("ui.assumptionHelp")}</div>
                   {renderAssumptionFields()}
                 </div>
 
@@ -7753,16 +7753,16 @@ padding: isMobile ? "16px 12px" : "32px",
                 {decisionResult && (
                   <div style={{ marginTop: "26px", display: "grid", gap: "14px" }}>
                     <section style={{ padding: "21px", borderRadius: "18px", background: darkMode ? "#111827" : "#FFFFFF", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
-                      <div style={{ fontSize: "11px", fontWeight: "800", letterSpacing: "1px", color: darkMode ? "#93C5FD" : "#2563EB" }}>KEPUTUSAN YANG DIUJI</div>
+                      <div style={{ fontSize: "11px", fontWeight: "800", letterSpacing: "1px", color: darkMode ? "#93C5FD" : "#2563EB" }}>{t("ui.decisionTested")}</div>
                       <h3 style={{ margin: "8px 0 7px", fontSize: "21px" }}>{decisionResult.decision}</h3>
                       <div style={{ fontSize: "12px", color: darkMode ? "#94A3B8" : "#64748B" }}>{decisionResult.basePeriod} dibandingkan dengan {decisionResult.comparisonPeriod}</div>
                     </section>
 
                     <section style={{ padding: "18px", borderRadius: "18px", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
-                      <div style={{ fontSize: "12px", fontWeight: "800", marginBottom: "12px" }}>ASUMSI YANG DIUJI</div>
+                      <div style={{ fontSize: "12px", fontWeight: "800", marginBottom: "12px" }}>{t("ui.testedAssumptions")}</div>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
                         {Object.entries(decisionResult.assumptions).filter(([, value]) => value !== null && value !== 0).map(([key, value]) => {
-                          const labels = { currentPrice: "Harga saat ini", plannedPrice: "Harga rencana", volumeChange: "Perubahan volume", hppChange: "Perubahan HPP", expenseChange: "Perubahan beban", investmentAmount: "Investasi/pengeluaran", expectedRevenue: "Pendapatan tambahan", incrementalHppRate: "HPP tambahan", incrementalExpense: "Beban tambahan", revenueChange: "Perubahan pendapatan", cashImpact: "Penyesuaian kas" };
+                          const labels = { currentPrice: "{t("ui.currentPriceLabel")}", plannedPrice: "{t("ui.plannedPriceLabel")}", volumeChange: "{t("ui.volumeChangeLabel")}", hppChange: "{t("ui.hppChangeLabel")}", expenseChange: "{t("ui.expenseChangeLabel")}", investmentAmount: "{t("ui.investmentLabel")}", expectedRevenue: "{t("ui.additionalRevenueLabel")}", incrementalHppRate: "{t("ui.additionalHppLabel")}", incrementalExpense: "{t("ui.additionalExpenseLabel")}", revenueChange: "{t("ui.revenueChangeLabel")}", cashImpact: "{t("ui.cashAdjustmentLabel")}" };
                           const isPercent = ["volumeChange", "hppChange", "expenseChange", "incrementalHppRate", "revenueChange"].includes(key);
                           return <div key={key} style={{ padding: "8px 10px", borderRadius: "9px", background: darkMode ? "#172033" : "#F8FAFC", fontSize: "11px" }}><strong>{labels[key]}</strong>: {isPercent ? `${Number(value).toFixed(1)}%` : formatRupiah(value)}</div>;
                         })}
@@ -7771,9 +7771,9 @@ padding: isMobile ? "16px 12px" : "32px",
                     </section>
 
                     <section style={{ padding: "18px", borderRadius: "18px", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
-                      <div style={{ fontSize: "12px", fontWeight: "800", marginBottom: "12px" }}>DAMPAK TERHADAP KEUANGAN</div>
+                      <div style={{ fontSize: "12px", fontWeight: "800", marginBottom: "12px" }}>{t("ui.financialImpact")}</div>
                       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: "10px" }}>
-                        {[ ["Pendapatan", decisionResult.baseline.income, decisionResult.simulated.income], ["HPP", decisionResult.baseline.hpp, decisionResult.simulated.hpp], ["Laba Bersih", decisionResult.baseline.profit, decisionResult.simulated.profit], ["Kas", decisionResult.baseline.cash, decisionResult.simulated.cash] ].map(([label, before, after]) => (
+                        {[ ["{t("ui.incomeLabel")}", decisionResult.baseline.income, decisionResult.simulated.income], ["HPP", decisionResult.baseline.hpp, decisionResult.simulated.hpp], ["Laba Bersih", decisionResult.baseline.profit, decisionResult.simulated.profit], ["Kas", decisionResult.baseline.cash, decisionResult.simulated.cash] ].map(([label, before, after]) => (
                           <div key={label} style={{ padding: "13px", borderRadius: "12px", background: darkMode ? "#111827" : "#F8FAFC" }}>
                             <div style={{ fontSize: "11px", color: darkMode ? "#94A3B8" : "#64748B" }}>{label}</div>
                             <div style={{ marginTop: "5px", fontWeight: "800", fontSize: "15px" }}>{formatRupiah(after)}</div>
@@ -7782,41 +7782,41 @@ padding: isMobile ? "16px 12px" : "32px",
                         ))}
                       </div>
                       <div style={{ marginTop: "13px", padding: "12px", borderRadius: "11px", background: darkMode ? "#172033" : "#F8FAFC", fontSize: "12px", lineHeight: 1.8 }}>
-                        Perubahan laba: <strong>{decisionResult.deltas.profit >= 0 ? "+" : "-"}{formatRupiah(Math.abs(decisionResult.deltas.profit))}</strong> · Perubahan kas: <strong>{decisionResult.deltas.cash >= 0 ? "+" : "-"}{formatRupiah(Math.abs(decisionResult.deltas.cash))}</strong> · Margin: <strong>{decisionResult.baseline.margin.toFixed(1)}% → {decisionResult.simulated.margin.toFixed(1)}%</strong>
+                        {t("ui.profitChange")}: <strong>{decisionResult.deltas.profit >= 0 ? "+" : "-"}{formatRupiah(Math.abs(decisionResult.deltas.profit))}</strong> · {t("ui.cashChangeText")}: <strong>{decisionResult.deltas.cash >= 0 ? "+" : "-"}{formatRupiah(Math.abs(decisionResult.deltas.cash))}</strong> · {t("ui.margin")}: <strong>{decisionResult.baseline.margin.toFixed(1)}% → {decisionResult.simulated.margin.toFixed(1)}%</strong>
                       </div>
                     </section>
 
                     <section style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: "14px" }}>
                       <div style={{ padding: "18px", borderRadius: "18px", background: darkMode ? "#111827" : "#FFFFFF", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
-                        <div style={{ fontSize: "11px", fontWeight: "800", color: darkMode ? "#93C5FD" : "#2563EB", letterSpacing: "0.7px" }}>PENILAIAN</div>
+                        <div style={{ fontSize: "11px", fontWeight: "800", color: darkMode ? "#93C5FD" : "#2563EB", letterSpacing: "0.7px" }}>{t("ui.assessment")}</div>
                         <div style={{ marginTop: "7px", fontSize: "25px", fontWeight: "850" }}>{decisionResult.assessment}</div>
                         <p style={{ margin: "10px 0 0", color: darkMode ? "#CBD5E1" : "#475569", lineHeight: 1.7, fontSize: "13px" }}>{decisionResult.interpretation}</p>
                       </div>
                       <div style={{ padding: "18px", borderRadius: "18px", background: darkMode ? "#111827" : "#FFFFFF", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
-                        <div style={{ fontSize: "11px", fontWeight: "800", color: darkMode ? "#93C5FD" : "#2563EB", letterSpacing: "0.7px" }}>BATAS KEPUTUSAN</div>
+                        <div style={{ fontSize: "11px", fontWeight: "800", color: darkMode ? "#93C5FD" : "#2563EB", letterSpacing: "0.7px" }}>{t("ui.decisionBoundary")}</div>
                         {decisionResult.boundary.value !== null ? <>
                           <div style={{ marginTop: "8px", fontSize: "18px", fontWeight: "800" }}>{decisionResult.boundary.label}: {decisionResult.boundary.unit === "Rp" ? formatRupiah(decisionResult.boundary.value) : `${decisionResult.boundary.value.toFixed(1)}%`}</div>
                           <p style={{ margin: "9px 0 0", color: darkMode ? "#CBD5E1" : "#475569", lineHeight: 1.65, fontSize: "12px" }}>{decisionResult.boundary.explanation}</p>
-                        </> : <p style={{ margin: "9px 0 0", color: darkMode ? "#CBD5E1" : "#475569", lineHeight: 1.65, fontSize: "12px" }}>Batas keputusan belum dapat dihitung dari struktur data yang tersedia.</p>}
+                        </> : <p style={{ margin: "9px 0 0", color: darkMode ? "#CBD5E1" : "#475569", lineHeight: 1.65, fontSize: "12px" }}>{t("ui.boundaryUnavailable")}</p>}
                       </div>
                     </section>
 
                     <section style={{ padding: "18px", borderRadius: "18px", background: darkMode ? "#0F172A" : "#F8FAFC", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
-                      <div style={{ fontSize: "11px", fontWeight: "800", marginBottom: "7px" }}>KONTEKS PERIODE</div>
+                      <div style={{ fontSize: "11px", fontWeight: "800", marginBottom: "7px" }}>{t("ui.periodContext")}</div>
                       <div style={{ fontSize: "12px", color: darkMode ? "#CBD5E1" : "#475569", lineHeight: 1.65 }}>{decisionResult.comparisonText}</div>
                     </section>
 
-                    {decisionResult.linked.length > 0 && <details style={{ padding: "15px 18px", borderRadius: "16px", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}><summary style={{ cursor: "pointer", fontWeight: "800", fontSize: "12px" }}>Konteks usaha yang digunakan</summary><div style={{ marginTop: "10px", fontSize: "11px", lineHeight: 1.6, color: darkMode ? "#CBD5E1" : "#475569" }}>{decisionResult.linked.map((item) => <div key={item} style={{ marginTop: "5px" }}>{item}</div>)}</div></details>}
+                    {decisionResult.linked.length > 0 && <details style={{ padding: "15px 18px", borderRadius: "16px", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}><summary style={{ cursor: "pointer", fontWeight: "800", fontSize: "12px" }}>{t("ui.businessContext")}</summary><div style={{ marginTop: "10px", fontSize: "11px", lineHeight: 1.6, color: darkMode ? "#CBD5E1" : "#475569" }}>{decisionResult.linked.map((item) => <div key={item} style={{ marginTop: "5px" }}>{item}</div>)}</div></details>}
 
                     <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                      <button type="button" onClick={() => setDecisionResult(null)} style={{ border: `1px solid ${darkMode ? "#475569" : "#CBD5E1"}`, background: darkMode ? "#111827" : "#FFFFFF", color: darkMode ? "#F8FAFC" : "#0F172A", padding: "10px 15px", borderRadius: "10px", fontWeight: "800", cursor: "pointer" }}>Perubahan Asumsi</button>
+                      <button type="button" onClick={() => setDecisionResult(null)} style={{ border: `1px solid ${darkMode ? "#475569" : "#CBD5E1"}`, background: darkMode ? "#111827" : "#FFFFFF", color: darkMode ? "#F8FAFC" : "#0F172A", padding: "10px 15px", borderRadius: "10px", fontWeight: "800", cursor: "pointer" }}>{t("ui.changeAssumptions")}</button>
                     </div>
                   </div>
                 )}
 
                 {!decisionResult && <div style={{ marginTop: "20px", padding: "22px", textAlign: "center", borderRadius: "18px", border: `1px dashed ${darkMode ? "#475569" : "#CBD5E1"}`, color: darkMode ? "#CBD5E1" : "#64748B" }}>
-                  <strong style={{ display: "block", color: darkMode ? "#F8FAFC" : "#0F172A" }}>Belum ada hasil simulasi.</strong>
-                  <span style={{ display: "block", marginTop: "5px", fontSize: "12px" }}>Tentukan keputusan dan asumsi spesifiknya, lalu ZENAI akan menghitung konsekuensinya.</span>
+                  <strong style={{ display: "block", color: darkMode ? "#F8FAFC" : "#0F172A" }}>{t("ui.noSimulation")}</strong>
+                  <span style={{ display: "block", marginTop: "5px", fontSize: "12px" }}>{t("ui.simulationHelp")}</span>
                 </div>}
               </section>
             </div>
@@ -7831,7 +7831,7 @@ padding: isMobile ? "16px 12px" : "32px",
           >
             {autopilotData && (
               <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "14px" }}>
-                <button type="button" onClick={exportAutopilotPdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}> Ekspor PDF</button>
+                <button type="button" onClick={exportAutopilotPdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}> {t("ui.exportPdf")}</button>
               </div>
             )}
             {!autopilotData ? (
