@@ -1490,3 +1490,40 @@ button,a{transition:color .2s ease,background-color .2s ease,border-color .2s ea
 @media(max-width:920px){.cs-links{display:none}.cs-grid{grid-template-columns:1fr 1fr}.cs-card-wide{grid-column:span 2}.cs-flow{grid-template-columns:1fr 1fr}.cs-flow li:nth-child(2):after{display:none}}
 @media(max-width:600px){.cs-nav{padding:14px 18px}.cs-hero{padding-top:64px}.cs-stats>div{padding:0 18px}.cs-grid{grid-template-columns:1fr}.cs-card-wide{grid-column:span 1;grid-template-columns:1fr}.cs-flow{grid-template-columns:1fr}.cs-flow li:after{display:none}.cs-mock-body{grid-template-columns:42px 1fr}.cs-mock-main{padding:18px 16px}.cs-sec{padding-top:76px}.cs-why,.cs-final{margin-top:76px}}
 @media(prefers-reduced-motion:reduce){.cs *{animation:none!important;transition:none!important}}
+
+/* ---------- THEME TOGGLE ---------- */
+.cs-theme{width:36px;height:36px;display:grid;place-items:center;border-radius:10px;border:1px solid var(--line);background:var(--surf);color:var(--mut);transition:color .2s ease,transform .2s ease,border-color .2s ease}
+.cs-theme:hover{color:var(--ink);border-color:rgba(139,92,246,.4);transform:translateY(-1px)}
+
+/* ---------- MOCK — sidebar persis menu dashboard ---------- */
+.cs{--side:rgba(0,0,0,.28);--menuOn:rgba(79,124,255,.18)}
+.cs-mock-body{grid-template-columns:200px 1fr}
+.cs-mock-side{background:var(--side);display:flex;flex-direction:column;align-items:stretch;padding:16px 12px;gap:14px;border-right:1px solid var(--line)}
+.cs-mock-logo{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;letter-spacing:.6px}
+.cs-mock-logo b{width:24px;height:24px;border-radius:8px;background:linear-gradient(135deg,var(--b1),var(--b2));color:#fff;display:grid;place-items:center;font-size:11px}
+.cs-mock-menu{display:flex;flex-direction:column;gap:2px}
+.cs-mock-menu span{display:flex;align-items:center;gap:9px;font-size:10.5px;font-weight:600;color:var(--mut);padding:6.5px 9px;border-radius:8px;white-space:nowrap;overflow:hidden}
+.cs-mock-menu span em{font-style:normal;overflow:hidden;text-overflow:ellipsis}
+.cs-mock-menu span.on{background:var(--menuOn);color:var(--ink)}
+.cs-mock-menu-sub{margin-top:auto;border-top:1px solid var(--line);padding-top:10px;opacity:.8}
+
+/* ---------- PRINSIP ---------- */
+.cs-principles{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;max-width:780px;margin:46px auto 0;text-align:left}
+.cs-principles>div{border:1px solid var(--line);background:var(--surf);border-radius:14px;padding:20px}
+.cs-principles b{display:block;font-size:14.5px;letter-spacing:-.2px;margin-bottom:6px}
+.cs-principles span{font-size:12.5px;line-height:1.6;color:var(--mut)}
+
+/* ---------- LIGHT MODE ---------- */
+.cs.light{--bg:#F7F8FB;--surf:#FFFFFF;--surf2:#EEF1F6;--line:rgba(15,23,42,.1);--ink:#0E1420;--mut:#5A6474;--b1:#4F7CFF;--b2:#7C3AED;--b3:#0891B2;--side:rgba(15,23,42,.05);--menuOn:rgba(79,124,255,.14)}
+.cs.light .cs-glow-a{background:radial-gradient(circle,rgba(79,124,255,.16),transparent 65%)}
+.cs.light .cs-glow-b{background:radial-gradient(circle,rgba(124,58,237,.13),transparent 65%)}
+.cs.light .cs-grid-bg{background-image:linear-gradient(rgba(15,23,42,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(15,23,42,.045) 1px,transparent 1px)}
+.cs.light .cs-nav{background:rgba(247,248,251,.72)}
+.cs.light .cs-mock{background:linear-gradient(180deg,#FFFFFF,rgba(255,255,255,.62));box-shadow:0 24px 70px rgba(15,23,42,.14),inset 0 1px 0 rgba(255,255,255,.9)}
+.cs.light .cs-mock-bar span{background:rgba(15,23,42,.18)}
+.cs.light .cs-mock-insight{background:linear-gradient(135deg,rgba(79,124,255,.08),rgba(124,58,237,.07))}
+.cs.light .cs-final-card{background:linear-gradient(135deg,rgba(79,124,255,.12),rgba(124,58,237,.14));box-shadow:0 24px 70px rgba(15,23,42,.12),inset 0 1px 0 rgba(255,255,255,.7)}
+.cs.light .cs-final-card:after{background:radial-gradient(circle,rgba(8,145,178,.12),transparent 65%)}
+.cs.light .cs-card:hover{box-shadow:0 20px 50px rgba(15,23,42,.12)}
+
+@media(max-width:600px){.cs-mock-body{grid-template-columns:150px 1fr}.cs-principles{grid-template-columns:1fr}}
