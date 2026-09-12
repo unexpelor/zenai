@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useLocale } from "next-intl";
 
 export default function BusinessGrowthLoop({
   strategies = [],
@@ -10,6 +11,8 @@ export default function BusinessGrowthLoop({
   evaluating = false,
   darkMode = false,
 }) {
+  const locale = useLocale();
+  const uiText = (id, en) => (locale === "en" ? en : id);
   const [evaluationOpen, setEvaluationOpen] = useState(null);
   const [outcome, setOutcome] = useState("membaik");
   const [note, setNote] = useState("");
@@ -27,7 +30,7 @@ export default function BusinessGrowthLoop({
       title:
         strategy?.title ||
         strategy?.action ||
-        "Tindakan Usaha",
+        uiText('Tindakan Usaha','Business Action'),
       description:
         strategy?.action ||
         strategy?.description ||
@@ -94,7 +97,7 @@ export default function BusinessGrowthLoop({
 
   function openEvaluation(item) {
     setOutcome(
-      item.evaluation?.outcome || "membaik"
+      item.evaluation?.outcome || uiText('membaik','improving')
     );
 
     setNote(
@@ -650,21 +653,15 @@ export default function BusinessGrowthLoop({
                             fontSize: 14,
                           }}
                         >
-                          <option value="membaik">
-                            Membaik
-                          </option>
+                          <option value="membaik">{uiText('Membaik','Improving')}</option>
 
                           <option value="tetap">
                             Belum terlihat perubahan
                           </option>
 
-                          <option value="memburuk">
-                            Memburuk
-                          </option>
+                          <option value="memburuk">{uiText('Memburuk','Worsening')}</option>
 
-                          <option value="belum_terukur">
-                            Belum dapat diukur
-                          </option>
+                          <option value="belum_terukur">{uiText('Belum dapat diukur','Not measurable yet')}</option>
                         </select>
                       </label>
 
@@ -677,16 +674,13 @@ export default function BusinessGrowthLoop({
     fontWeight: 700,
     color: darkMode ? "#E2E8F0" : "#334155",
   }}
->
-  Catatan hasil (opsional)
-
-  <textarea
+>{uiText('Catatan hasil (opsional)','Result note (optional)')}<textarea
     value={note}
     onChange={(event) =>
       setNote(event.target.value)
     }
     rows={3}
-    placeholder="Contoh: pelanggan mulai bertambah, tetapi belum stabil."
+    placeholder={uiText('Contoh: pelanggan mulai bertambah, tetapi belum stabil.','Example: customers are starting to grow, but not consistently yet.')}
     style={{
       width: "100%",
       boxSizing: "border-box",
@@ -794,13 +788,13 @@ export default function BusinessGrowthLoop({
       }}
     >
       Hasil:{" "}
-      {item.evaluation.outcome === "membaik"
-        ? "Membaik"
+      {item.evaluation.outcome === uiText('membaik','improving')
+        ? uiText('Membaik','Improving')
         : item.evaluation.outcome === "tetap"
           ? "Belum terlihat perubahan"
-          : item.evaluation.outcome === "memburuk"
-            ? "Memburuk"
-            : "Belum dapat diukur"}
+          : item.evaluation.outcome === uiText('memburuk','worsening')
+            ? uiText('Memburuk','Worsening')
+            : uiText('Belum dapat diukur','Not measurable yet')}
     </div>
 
     {item.evaluation.note && (
