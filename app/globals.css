@@ -1526,4 +1526,23 @@ button,a{transition:color .2s ease,background-color .2s ease,border-color .2s ea
 .cs.light .cs-final-card:after{background:radial-gradient(circle,rgba(8,145,178,.12),transparent 65%)}
 .cs.light .cs-card:hover{box-shadow:0 20px 50px rgba(15,23,42,.12)}
 
-@media(max-width:600px){.cs-mock-body{grid-template-columns:150px 1fr}.cs-principles{grid-template-columns:1fr}}
+@media(max-width:600px){
+  .cs-mock-body{grid-template-columns:44px 1fr}
+  .cs-mock-side{padding:12px 7px;gap:10px}
+  .cs-mock-logo{justify-content:center}
+  .cs-mock-logo span{display:none}
+  .cs-mock-menu span{justify-content:center;padding:7px 4px}
+  .cs-mock-menu span em{display:none}
+  .cs-mock-menu-sub{display:none}
+  .cs-mock-main{padding:16px 12px}
+  .cs-mock-head{flex-wrap:wrap}
+  .cs-mock-head strong{font-size:16px}
+  .cs-mock-metrics{grid-template-columns:1fr;gap:8px;margin-top:16px}
+  .cs-mock-metrics>div{padding:11px}
+  .cs-mock-insight{margin-top:10px}
+  .cs-mock-chart{height:56px;margin-top:10px}
+  .cs-stats{flex-direction:column;gap:14px}
+  .cs-stats>div{border-left:0;padding:0;text-align:center}
+  .cs-stats span{max-width:none}
+  .cs-principles{grid-template-columns:1fr}
+}
