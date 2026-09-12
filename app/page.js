@@ -3234,6 +3234,7 @@ ${sectionHtml}
     return (
       <ZenLanding
         darkMode={darkMode}
+        onToggleTheme={() => setDarkMode((d) => !d)}
         onLogin={() => { setAuthMode("login"); setShowAuth(true); }}
         onSignup={() => { setAuthMode("signup"); setShowAuth(true); }}
       />
