@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "../lib/supabase/client";
 import BusinessGrowthLoop from "../components/BusinessGrowthLoop";
+import ZenLanding from "../components/ZenLanding";
 function ZenIcon({ name, size = 18, strokeWidth = 1.9 }) {
   const common = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true };
   const paths = {
@@ -3231,148 +3232,13 @@ ${sectionHtml}
 
   if (supabase && !session && !showAuth) {
     return (
-      <main className={`zenai-home ${darkMode ? "zenai-home-dark" : ""}`}>
-        {/* ============ NAVBAR ============ */}
-        <nav className="home-nav">
-          <a className="home-brand" href="#top" aria-label="ZENAI home">
-            <img src="/zenai-logo.png" alt="ZENAI" />
-            <span><b>ZENAI</b><small>Business Decision Assistant</small></span>
-          </a>
-          <div className="home-nav-links">
-            <a href="#cara-kerja">Cara Kerja</a><a href="#fitur">Fitur</a><a href="#filosofi">Filosofi</a>
-          </div>
-          <div className="home-nav-actions">
-            <button onClick={() => { setAuthMode("login"); setShowAuth(true); }}>Masuk</button>
-            <button className="home-nav-cta" onClick={() => { setAuthMode("signup"); setShowAuth(true); }}>Mulai Sekarang <ZenIcon name="arrow" size={15}/></button>
-          </div>
-        </nav>
-
-        {/* ============ HERO ============ */}
-        <section id="top" className="home-hero">
-          <div className="home-hero-copy">
-            <div className="home-eyebrow"><span className="live-dot"></span> BUSINESS DECISION ASSISTANT</div>
-            <h1>Pahami bisnis Anda.<br/><span>Putuskan langkah</span> berikutnya.</h1>
-            <p>ZENAI membantu Anda memahami kondisi usaha, menemukan masalah yang paling perlu diperhatikan, melihat peluang, dan mengubah analisis menjadi tindakan.</p>
-            <div className="home-hero-actions">
-              <button className="home-primary" onClick={() => { setAuthMode("signup"); setShowAuth(true); }}>Mulai Sekarang <ZenIcon name="arrow" size={17}/></button>
-              <a className="home-text-link" href="#cara-kerja">Lihat Cara Kerja <span>↓</span></a>
-            </div>
-            <div className="home-mini-proof"><span><ZenIcon name="check" size={14}/> Diagnosis berbasis konteks</span><span><ZenIcon name="check" size={14}/> Rekomendasi tindakan</span><span><ZenIcon name="check" size={14}/> Terhubung ke kondisi keuangan</span></div>
-          </div>
-
-          {/* PRODUCT VISUALIZATION — representasi UI, bukan chatbot */}
-          <div className="home-command" aria-label="Preview antarmuka ZENAI">
-            <div className="command-glow"></div>
-            <div className="command-window">
-              <div className="command-bar"><div className="window-dots"><i></i><i></i><i></i></div><span>ZENAI / BUSINESS PULSE</span><b>OVERVIEW</b></div>
-              <div className="command-body">
-                <aside className="command-side"><div className="side-mark">Z</div><span className="side-active"></span><span></span><span></span><span></span><span></span></aside>
-                <div className="command-main">
-                  <div className="command-head"><div><small>KONDISI USAHA HARI INI</small><h3>Business Pulse</h3></div><div className="health-pill"><i></i> Sehat · 78</div></div>
-                  <div className="metric-row"><div><small>REVENUE</small><strong>↑ 12%</strong><em>vs bulan lalu</em></div><div><small>PRIORITY</small><strong>Margin</strong><em>Fokus saat ini</em></div><div><small>CASH</small><strong>Rp 9,4 jt</strong><em>Stabil</em></div></div>
-                  <div className="insight-panel"><div className="insight-label"><span><ZenIcon name="intelligence" size={15}/> DIAGNOSIS</span><b>Prioritas 01</b></div><h4>"Biaya operasional meningkat lebih cepat daripada pendapatan."</h4><p>Perubahan margin kotor mulai membatasi ruang keputusan dalam 2–4 minggu.</p></div>
-                  <div className="command-bottom">
-                    <div className="priority-box"><small>NEXT ACTION</small><strong>Evaluasi biaya operasional</strong><span>Rekomendasi ZENAI</span><div className="priority-line"><i></i><i></i><i></i></div></div>
-                    <div className="chart-box"><div className="chart-title"><span>Tren 30 hari</span><b>+18,2%</b></div><div className="chart"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><div className="chart-line"></div></div></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ============ PROBLEM → VALUE ============ */}
-        <section id="masalah" className="home-problem">
-          <div className="problem-intro">
-            <span className="home-section-no">01 / DATA → KEPUTUSAN</span>
-            <h2>Data memberi tahu apa yang terjadi.<br/><strong>Keputusan membutuhkan pemahaman.</strong></h2>
-          </div>
-          <ol className="problem-flow" aria-label="Alur dari kondisi ke tindakan">
-            <li><b>Kondisi</b><span>Apa yang sedang terjadi di usaha Anda</span></li>
-            <li><b>Diagnosis</b><span>Mengapa hal itu terjadi</span></li>
-            <li><b>Insight</b><span>Apa artinya bagi bisnis Anda</span></li>
-            <li><b>Keputusan</b><span>Langkah mana yang paling berdampak</span></li>
-            <li><b>Tindakan</b><span>Apa yang dijalankan dan dievaluasi</span></li>
-          </ol>
-        </section>
-
-        {/* ============ FEATURE STORY ============ */}
-        <section id="fitur" className="home-features">
-          <div className="feature-lead"><span className="home-section-no">02 / CARA ZENAI BEKERJA</span><h2>Lima sudut pandang.<br/><strong>Satu alur keputusan.</strong></h2><p>Setiap bagian ZENAI menjawab satu pertanyaan penting — bersama-sama membentuk pemahaman utuh sebelum Anda bertindak.</p></div>
-          <div className="feature-story">
-            <article className="story-row">
-              <div className="story-copy"><span className="story-kicker">BUSINESS PULSE</span><h3>Ketahui kondisi usaha dalam sekali pandang.</h3><p>Status, perubahan, dan prioritas usaha Anda dirangkum dari konteks yang Anda berikan — bukan dari asumsi.</p></div>
-              <div className="story-preview"><div className="mini-pulse"><span className="mini-label">BUSINESS HEALTH</span><strong>78</strong><div className="score-ring"><span></span></div><em>Perlu perhatian pada margin</em></div></div>
-            </article>
-            <article className="story-row">
-              <div className="story-copy"><span className="story-kicker">DIAGNOSIS</span><h3>Temukan masalah yang paling perlu diperhatikan.</h3><p>Bukan daftar masalah generik — setiap temuan disertai dampak dan alasan mengapa harus ditangani lebih dulu.</p></div>
-              <div className="story-preview"><div className="mini-diagnosis"><div><i className="signal-red"></i><span><b>Biaya operasional</b><small>Ningkat 18% vs pendapatan</small></span></div><div><i className="signal-amber"></i><span><b>Stok lambat</b><small>Modal kerja tertahan</small></span></div></div></div>
-            </article>
-            <article className="story-row">
-              <div className="story-copy"><span className="story-kicker">MARKET INSIGHT</span><h3>Lihat konteks pasar sebelum mengambil keputusan.</h3><p>Apa yang terjadi di luar usaha Anda — permintaan, kompetitor, dan tren — dibaca sebagai bagian dari analisis.</p></div>
-              <div className="story-preview"><div className="mini-market"><div className="mini-label">SINYAL PASAR</div><span>Permintaan kategori ↑</span><span>Kompetitor harga baru</span><span>Tren perilaku pelanggan</span></div></div>
-            </article>
-            <article className="story-row">
-              <div className="story-copy"><span className="story-kicker">BUSINESS AUTOPILOT</span><h3>Ubah strategi menjadi tindakan yang terukur.</h3><p>Strategi dipecah menjadi action plan 7, 14, atau 30 hari yang bisa dijalankan, ditandai selesai, lalu dievaluasi.</p></div>
-              <div className="story-preview"><div className="mini-autopilot"><span className="mini-label">ACTION PLAN · 14 HARI</span><div><b>01</b> Evaluasi biaya operasional</div><div><b>02</b> Uji harga pada segmen utama</div><div><b>03</b> Review SKU lambat</div></div></div>
-            </article>
-            <article className="story-row">
-              <div className="story-copy"><span className="story-kicker">LAPORAN KEUANGAN</span><h3>Hubungkan keputusan dengan kondisi keuangan.</h3><p>Setiap keputusan bisa diuji: dampaknya ke laba, kas, dan margin — sebelum dijalankan, bukan setelah.</p></div>
-              <div className="story-preview"><div className="mini-finance"><span className="mini-label">SIMULASI KEPUTUSAN</span><div><small>Margin saat ini</small><b>18,6%</b></div><div><small>Setelah simulasi</small><b>21,4%</b></div></div></div>
-            </article>
-          </div>
-        </section>
-
-        {/* ============ HOW IT WORKS ============ */}
-        <section id="cara-kerja" className="home-method">
-          <div className="method-head"><span className="home-section-no">03 / ALUR KERJA</span><h2>Dari cerita,<br/><span>menjadi keputusan.</span></h2></div>
-          <ol className="method-grid">
-            <article><span>01</span><h3>Ceritakan</h3><p>Ceritakan usaha Anda — teks, gambar, atau suara. Tidak perlu format khusus.</p></article>
-            <article><span>02</span><h3>Pahami</h3><p>ZENAI menyusun Business Pulse dan diagnosis dari konteks Anda.</p></article>
-            <article><span>03</span><h3>Putuskan</h3><p>Bandingkan prioritas dengan kondisi pasar dan keuangan sebelum memilih.</p></article>
-            <article><span>04</span><h3>Bertindak</h3><p>Jalankan action plan yang jelas — dengan langkah yang bisa ditandai selesai.</p></article>
-            <article><span>05</span><h3>Evaluasi</h3><p>Catat hasilnya. Evaluasi menjadi bagian dari analisis berikutnya.</p></article>
-          </ol>
-        </section>
-
-        {/* ============ PRODUCT PHILOSOPHY ============ */}
-        <section id="filosofi" className="home-philosophy">
-          <div className="philosophy-copy">
-            <span className="home-section-no">04 / FILOSOFI PRODUK</span>
-            <h2>ZENAI membantu Anda berpikir lebih jernih<br/><em>sebelum bertindak.</em></h2>
-            <p>ZENAI bukan sekadar chatbot. Setiap jawaban disusun melalui analisis terstruktur atas konteks usaha Anda.</p>
-          </div>
-          <ul className="philosophy-list">
-            <li><b>Structured analysis</b><span>Kondisi usaha dibaca sistematis, bukan sepotong-sepotong.</span></li>
-            <li><b>Business context</b><span>Cerita dan perkembangan usaha menjadi bagian dari analisis.</span></li>
-            <li><b>Financial context</b><span>Keputusan dihubungkan dengan laba, kas, dan margin.</span></li>
-            <li><b>Market perspective</b><span>Sinyal pasar menjadi pertimbangan, bukan derau.</span></li>
-            <li><b>Action planning</b><span>Analisis berakhir pada langkah yang bisa dijalankan.</span></li>
-            <li><b>History & evaluation</b><span>Hasil tindakan sebelumnya membentuk analisis berikutnya.</span></li>
-          </ul>
-        </section>
-
-        {/* ============ FINAL CTA ============ */}
-        <section className="home-final">
-          <div>
-            <span className="home-section-no">LANGKAH BERIKUTNYA</span>
-            <h2>Buat keputusan bisnis dengan lebih jelas.</h2>
-            <p>Mulai dari kondisi usaha Anda hari ini. Pahami, putuskan, lalu tumbuh.</p>
-            <button className="home-primary light" onClick={() => { setAuthMode("signup"); setShowAuth(true); }}>Mulai Menggunakan ZENAI <ZenIcon name="arrow" size={17}/></button>
-          </div>
-          <div className="final-mark">Z<br/><small>ZENAI</small></div>
-        </section>
-
-        {/* ============ FOOTER ============ */}
-        <footer className="home-footer">
-          <div className="footer-brand"><img src="/zenai-mark.png" alt=""/><div><b>ZENAI</b><span>Business Decision Assistant</span></div></div>
-          <span>Pahami. Putuskan. Tumbuh.</span>
-          <small>© 2026 ZENAI</small>
-        </footer>
-      </main>
+      <ZenLanding
+        darkMode={darkMode}
+        onLogin={() => { setAuthMode("login"); setShowAuth(true); }}
+        onSignup={() => { setAuthMode("signup"); setShowAuth(true); }}
+      />
     );
   }
-
   if (supabase && !session) {
   return (
     <main
