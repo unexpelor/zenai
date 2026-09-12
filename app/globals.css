@@ -1649,3 +1649,56 @@ button,a{transition:color .2s ease,background-color .2s ease,border-color .2s ea
 @media(prefers-reduced-motion:reduce){
   .zenai-nav-item.is-active::after,.zenai-nav-item.is-active,.zenai-nav-item.is-active .zenai-nav-icon{animation:none!important}
 }
+
+/* =========================================================
+   ZENAI — EDITORIAL DASHBOARD (Linear / Stripe / Attio)
+   Overrides the futuristic layer. Design-only, no logic.
+   ========================================================= */
+.zenai-app{--zink:#1A1D23;--zmut:#6B7280;--zline:#E7E5E4;--zcard:#FFFFFF;--zacc:#4F46E5;--zacc-soft:#EEEDFB}
+.zenai-app.zenai-dark{--zink:#EDEFF2;--zmut:#9BA1AA;--zline:#23262B;--zcard:#14161A;--zacc:#7C8AFF;--zacc-soft:#1C1E26}
+
+/* neutral, still background — kill animated aurora + neon */
+.zenai-app.zenai-dark{background:#0D0F12!important;animation:none!important}
+.zenai-app.zenai-light{background:#FAFAF9!important;animation:none!important}
+
+/* content — generous whitespace */
+.zenai-content{padding:40px 36px!important}
+@media(max-width:768px){.zenai-content{padding:24px 16px!important}}
+
+/* sidebar — minimal, refined */
+.zenai-sidebar::before{display:none!important}
+.zenai-dark .zenai-sidebar{background:#121419!important;border-right:1px solid #23262B!important;box-shadow:none!important}
+.zenai-light .zenai-sidebar{background:#FFFFFF!important;border-right:1px solid #ECEAE6!important;box-shadow:none!important}
+.zenai-sidebar button::before{display:none!important}
+.zenai-sidebar button:hover{transform:none!important}
+.zenai-sidebar button:hover .zenai-nav-icon{color:var(--zacc)!important;transform:none!important}
+.zenai-sidebar-nav::-webkit-scrollbar-thumb{background:rgba(120,120,130,.3)!important}
+
+/* active nav — refined tint only, no glow / shimmer / neon bar */
+.zenai-nav-item.is-active{animation:none!important}
+.zenai-nav-item.is-active::before,.zenai-nav-item.is-active::after{display:none!important}
+.zenai-dark .zenai-nav-item.is-active{background:var(--zacc-soft)!important;border-color:#2A2D35!important;color:var(--zink)!important;box-shadow:none!important}
+.zenai-light .zenai-nav-item.is-active{background:var(--zacc-soft)!important;border-color:#E0DEF7!important;color:#4338CA!important;box-shadow:none!important}
+.zenai-nav-item.is-active .zenai-nav-icon{animation:none!important;color:inherit!important}
+
+/* header — editorial title block, no card / gradient */
+.zenai-page-header{background:transparent!important;border:0!important;box-shadow:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;padding:0 0 26px!important;margin-bottom:8px!important}
+.zenai-page-header h2{background:none!important;-webkit-background-clip:initial!important;background-clip:initial!important;-webkit-text-fill-color:currentColor!important;color:var(--zink)!important;font-size:27px!important;font-weight:700!important;letter-spacing:-0.025em!important}
+
+/* refined solid cards — undo glass translucency */
+.zenai-dark .zenai-content [style*="background:#111827"]:not(.zenai-page-header):not(input):not(textarea):not(select):not(button){background:var(--zcard)!important;border-color:#23262B!important}
+.zenai-light .zenai-content [style*="background:#FFFFFF"]:not(.zenai-page-header):not(input):not(textarea):not(select):not(button){background:#FFFFFF!important;border-color:#ECEAE6!important}
+
+/* subtle micro-interactions */
+.zenai-content section,.zenai-content article{transition:transform .2s ease,box-shadow .2s ease,border-color .2s ease!important}
+.zenai-content section:hover,.zenai-content article:hover{transform:translateY(-2px)!important}
+.zenai-dark .zenai-content section:hover,.zenai-dark .zenai-content article:hover{box-shadow:0 12px 32px rgba(0,0,0,.35)!important}
+.zenai-light .zenai-content section:hover,.zenai-light .zenai-content article:hover{box-shadow:0 12px 32px rgba(15,23,42,.08)!important}
+.zenai-content button{transition:transform .15s ease,box-shadow .15s ease,filter .15s ease!important}
+.zenai-content button:hover:not(:disabled){transform:translateY(-1px)!important}
+.zenai-content button:active:not(:disabled){transform:translateY(0)!important}
+.zenai-content input:focus,.zenai-content textarea:focus,.zenai-content select:focus{box-shadow:0 0 0 2px rgba(79,70,229,.15)!important;border-color:var(--zacc)!important}
+
+/* neutral scrollbar */
+.zenai-app ::-webkit-scrollbar-thumb{background:rgba(120,120,130,.32)!important}
+.zenai-app ::-webkit-scrollbar-thumb:hover{background:rgba(120,120,130,.5)!important}
