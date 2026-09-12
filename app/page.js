@@ -8543,45 +8543,46 @@ darkMode={darkMode}
 
 
       <style>{`
-.zenai-dark { background:#0B1120 !important; color:#F8FAFC !important; color-scheme:dark; }
-.zenai-dark .zenai-content { background:#0B1120 !important; color:#F8FAFC !important; }
-.zenai-dark .zenai-sidebar { background:#111827 !important; border-color:#334155 !important; }
-.zenai-dark h1,.zenai-dark h2,.zenai-dark h3,.zenai-dark h4,.zenai-dark h5,.zenai-dark h6 { color:#F8FAFC !important; }
-.zenai-dark strong { color:#F8FAFC !important; }
-.zenai-dark p,.zenai-dark span,.zenai-dark label { color:#CBD5E1; }
-.zenai-dark input,.zenai-dark textarea,.zenai-dark select { background:#0F172A !important; color:#F8FAFC !important; border-color:#475569 !important; color-scheme:dark; }
-.zenai-dark input::placeholder,.zenai-dark textarea::placeholder { color:#94A3B8 !important; }
-.zenai-dark option { background:#0F172A; color:#F8FAFC; }
+.zenai-dark { background:#101113 !important; color:#F2F2F0 !important; color-scheme:dark; }
+.zenai-dark .zenai-content { background:#101113 !important; color:#F2F2F0 !important; }
+.zenai-dark .zenai-sidebar { background:#151619 !important; border-color:#26272B !important; }
+.zenai-dark h1,.zenai-dark h2,.zenai-dark h3,.zenai-dark h4,.zenai-dark h5,.zenai-dark h6 { color:#F6F6F4 !important; letter-spacing:-0.02em !important; }
+.zenai-dark strong { color:#F6F6F4 !important; }
+.zenai-dark p,.zenai-dark span,.zenai-dark label { color:#A6ABB3 !important; }
+.zenai-dark input,.zenai-dark textarea,.zenai-dark select { background:#1A1B20 !important; color:#F2F2F0 !important; border-color:#2C2D33 !important; color-scheme:dark; }
+.zenai-dark input::placeholder,.zenai-dark textarea::placeholder { color:#7A7F88 !important; }
+.zenai-dark option { background:#1A1B20; color:#F2F2F0; }
 
-/* Neutral surfaces */
-.zenai-dark [style*="#FFFFFF"] { background:#111827 !important; color:#F8FAFC !important; }
-.zenai-dark [style*="#F8FAFC"] { background:#0F172A !important; }
-.zenai-dark [style*="#F1F5F9"] { background:#172033 !important; }
+/* Neutral surfaces -> refined cards */
+.zenai-dark [style*="#FFFFFF"]:not(.zenai-sidebar) { background:#1A1B1F !important; color:#F2F2F0 !important; border-color:#27282D !important; }
+.zenai-dark [style*="#F8FAFC"] { background:#1E1F23 !important; }
+.zenai-dark [style*="#F1F5F9"] { background:#202127 !important; }
 
-/* Semantic surfaces: these rules come AFTER neutral rules so they cannot be overwritten. */
-.zenai-dark [style*="#EFF6FF"] { background:#172554 !important; color:#D1FAE5 !important; border-color:#166534 !important; }
-.zenai-dark [style*="#EFF6FF"] p,.zenai-dark [style*="#EFF6FF"] span,.zenai-dark [style*="#EFF6FF"] label { color:#D1FAE5 !important; }
-.zenai-dark [style*="#FFFFFF1f2"],.zenai-dark [style*="#FFFFFF1F2"] { background:#3B121D !important; color:#FFE4E6 !important; border-color:#9F1239 !important; }
-.zenai-dark [style*="#FFFFFF1f2"] p,.zenai-dark [style*="#FFFFFF1f2"] span,.zenai-dark [style*="#FFFFFF1f2"] label { color:#FECDD3 !important; }
-.zenai-dark [style*="#FFFFFFbeb"],.zenai-dark [style*="#FFFFFFBEB"] { background:#422006 !important; color:#FEF3C7 !important; border-color:#B45309 !important; }
-.zenai-dark [style*="#FFFFFFbeb"] p,.zenai-dark [style*="#FFFFFFbeb"] span,.zenai-dark [style*="#FFFFFFbeb"] label { color:#FDE68A !important; }
+/* Semantic surfaces: tinted, coherent, muted */
+.zenai-dark [style*="#EFF6FF"] { background:#1E1F2B !important; color:#D6DAFF !important; border-color:#2E2F40 !important; }
+.zenai-dark [style*="#EFF6FF"] p,.zenai-dark [style*="#EFF6FF"] span,.zenai-dark [style*="#EFF6FF"] label { color:#C2C7FF !important; }
+.zenai-dark [style*="#FFFFFF1f2"],.zenai-dark [style*="#FFFFFF1F2"] { background:#2A151B !important; color:#FFDADD !important; border-color:#43232B !important; }
+.zenai-dark [style*="#FFFFFF1f2"] p,.zenai-dark [style*="#FFFFFF1f2"] span,.zenai-dark [style*="#FFFFFF1f2"] label { color:#F2C2C8 !important; }
+.zenai-dark [style*="#FFFFFFbeb"],.zenai-dark [style*="#FFFFFFBEB"] { background:#2A2112 !important; color:#FBEECB !important; border-color:#45351A !important; }
+.zenai-dark [style*="#FFFFFFbeb"] p,.zenai-dark [style*="#FFFFFFbeb"] span,.zenai-dark [style*="#FFFFFFbeb"] label { color:#EBD9A6 !important; }
 
 /* Other common semantic light surfaces */
-.zenai-dark [style*="#FFF1F2"] { background:#3B121D !important; color:#FFE4E6 !important; border-color:#9F1239 !important; }
-.zenai-dark [style*="#F0FDF4"],.zenai-dark [style*="#F0FDF4"] { background:#172554 !important; color:#D1FAE5 !important; border-color:#166534 !important; }
-.zenai-dark [style*="#FFFBEB"],.zenai-dark [style*="#FFFBEB"] { background:#422006 !important; color:#FEF3C7 !important; border-color:#B45309 !important; }
+.zenai-dark [style*="#FFF1F2"] { background:#2A151B !important; color:#FFDADD !important; border-color:#43232B !important; }
+.zenai-dark [style*="#F0FDF4"],.zenai-dark [style*="#F0FDF4"] { background:#16241C !important; color:#CDEBD3 !important; border-color:#24402B !important; }
+.zenai-dark [style*="#FFFBEB"],.zenai-dark [style*="#FFFBEB"] { background:#2A2112 !important; color:#FBEECB !important; border-color:#45351A !important; }
 
 /* Semantic text colors */
-.zenai-dark [style*="#2563EB"],.zenai-dark [style*="#1D4ED8"],.zenai-dark [style*="#064e3b"] { color:#60A5FA !important; }
+.zenai-dark [style*="#2563EB"],.zenai-dark [style*="#1D4ED8"] { color:#8B8BF7 !important; }
+.zenai-dark [style*="#064e3b"] { color:#4ADE80 !important; }
 .zenai-dark [style*="#e11d48"],.zenai-dark [style*="#be123c"],.zenai-dark [style*="#9f1239"] { color:#FB7185 !important; }
 .zenai-dark [style*="#d97706"],.zenai-dark [style*="#b45309"],.zenai-dark [style*="#a16207"] { color:#FBBF24 !important; }
 .zenai-dark [style*="#0891B2"],.zenai-dark [style*="#0e7490"] { color:#22D3EE !important; }
 
-/* Borders */
-.zenai-dark [style*="#E2E8F0"],.zenai-dark [style*="#e8edf3"],.zenai-dark [style*="#CBD5E1"] { border-color:#334155 !important; }
+/* Accent: indigo primary actions */
+.zenai-dark [style*="background:#2563EB"] { background:#4F46E5 !important; border-color:#4F46E5 !important; }
 
-/* Active sidebar: emerald, never royal blue */
-.zenai-dark .zenai-sidebar button { }
+/* Borders */
+.zenai-dark [style*="#E2E8F0"],.zenai-dark [style*="#e8edf3"],.zenai-dark [style*="#CBD5E1"] { border-color:#2C2D33 !important; }
 
 /* Buttons remain readable */
 .zenai-dark button { color:#E5E7EB; }
