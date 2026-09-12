@@ -1051,3 +1051,208 @@ button,a{transition:color .2s ease,background-color .2s ease,border-color .2s ea
   html{scroll-behavior:auto!important}
   .zenai-home *, .zenai-content *, .zenai-sidebar *{animation:none!important;transition:none!important}
 }
+
+/* =========================================================
+   ZENAI 3.0 — CALM PREMIUM LANDING REDESIGN
+   Editorial, restrained, decision-first. UI-only.
+   ========================================================= */
+.zenai-home{
+  --z3-paper:#FAFAF8;
+  --z3-ink:#171B22;
+  --z3-muted:#5C6370;
+  --z3-faint:#8A909B;
+  --z3-line:#E7E5E0;
+  --z3-line-soft:rgba(23,27,34,.08);
+  --z3-surface:#FFFFFF;
+  --z3-surface-2:#F4F4F1;
+  --z3-accent:#2E5BFF;
+  --z3-accent-soft:#EEF2FF;
+}
+.zenai-home-dark{
+  --z3-paper:#0B0F16;
+  --z3-ink:#E9EDF3;
+  --z3-muted:#9AA3B2;
+  --z3-faint:#6B7484;
+  --z3-line:#222B38;
+  --z3-line-soft:rgba(233,237,243,.08);
+  --z3-surface:#111826;
+  --z3-surface-2:#151E2C;
+  --z3-accent:#7C9BFF;
+  --z3-accent-soft:#18233A;
+}
+.zenai-home{background:var(--z3-paper)!important;color:var(--z3-ink)!important}
+.zenai-home:before{display:none!important}
+
+/* ---------- Nav ---------- */
+.zenai-home .home-nav{background:rgba(250,250,248,.72)!important;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--z3-line-soft)!important}
+.zenai-home-dark .home-nav{background:rgba(11,15,22,.72)!important}
+.zenai-home .home-nav:after{display:none!important}
+.zenai-home .home-brand small{color:var(--z3-faint)!important}
+.zenai-home .home-nav-links a{color:var(--z3-muted)!important;font-weight:600!important}
+.zenai-home .home-nav-links a:hover{color:var(--z3-ink)!important}
+.zenai-home .home-nav-actions>button:first-child{color:var(--z3-muted)!important}
+.zenai-home .home-nav-cta{background:var(--z3-ink)!important;color:#fff!important;box-shadow:none!important;border-radius:10px!important;font-weight:700!important}
+.zenai-home .home-nav-cta:hover{transform:translateY(-1px)!important;box-shadow:0 6px 18px rgba(23,27,34,.14)!important}
+.zenai-home-dark .home-nav-cta{background:#F2F4F7!important;color:#10141C!important}
+
+/* ---------- Hero ---------- */
+.zenai-home .home-hero:before,.zenai-home .home-hero:after{display:none!important}
+.zenai-home .home-eyebrow{color:var(--z3-muted)!important;letter-spacing:1.6px!important}
+.zenai-home .live-dot{background:var(--z3-accent)!important;box-shadow:0 0 0 4px rgba(46,91,255,.12)!important;animation:none!important}
+.zenai-home .home-hero h1{letter-spacing:-3px!important;font-weight:740!important;color:var(--z3-ink)!important}
+.zenai-home .home-hero h1 span{color:var(--z3-faint)!important}
+.zenai-home .home-hero-copy>p{color:var(--z3-muted)!important}
+.zenai-home .home-primary{background:var(--z3-accent)!important;box-shadow:0 1px 2px rgba(16,24,40,.1),0 10px 28px rgba(46,91,255,.2)!important;border-radius:10px!important;font-weight:700!important}
+.zenai-home .home-primary:hover{transform:translateY(-2px)!important}
+.zenai-home .home-text-link{color:var(--z3-ink)!important}
+.zenai-home .home-mini-proof{color:var(--z3-faint)!important}
+.zenai-home .home-mini-proof svg{color:var(--z3-accent)!important}
+
+/* ---------- Hero product visual: calm, no glow, no tilt ---------- */
+.zenai-home .command-glow{display:none!important}
+.zenai-home .command-window{transform:none!important;border-radius:14px!important;border:1px solid var(--z3-line)!important;background:var(--z3-surface)!important;box-shadow:0 1px 2px rgba(16,24,40,.04),0 24px 60px rgba(16,24,40,.08)!important}
+.zenai-home .home-command:hover .command-window{transform:translateY(-4px)!important;box-shadow:0 1px 2px rgba(16,24,40,.04),0 32px 72px rgba(16,24,40,.12)!important}
+.zenai-home .command-bar{background:var(--z3-surface-2)!important;border-color:var(--z3-line)!important;color:var(--z3-faint)!important}
+.zenai-home .command-bar>b{animation:none!important;color:var(--z3-accent)!important;border:1px solid var(--z3-line)!important}
+.zenai-home .command-main{background:var(--z3-surface)!important}
+.zenai-home .command-head h3{color:var(--z3-ink)!important}
+.zenai-home .health-pill{background:var(--z3-surface)!important;border-color:var(--z3-line)!important;color:var(--z3-muted)!important}
+.zenai-home .metric-row>div{background:var(--z3-surface)!important;border-color:var(--z3-line)!important;border-radius:10px!important}
+.zenai-home .insight-panel{background:var(--z3-surface-2)!important;border-color:var(--z3-line)!important;box-shadow:none!important;border-radius:12px!important}
+.zenai-home .insight-panel:after{display:none!important}
+.zenai-home .chart-box,.zenai-home .priority-box{background:var(--z3-surface)!important;border-color:var(--z3-line)!important;border-radius:10px!important}
+.zenai-home .chart i{animation:none!important}
+.zenai-home .command-side{background:var(--z3-ink)!important}
+.zenai-home-dark .command-side{background:#0D1420!important}
+
+/* ---------- Problem → Value: editorial transition, no cards ---------- */
+.zenai-home .home-problem{max-width:1240px;margin:0 auto;padding:110px clamp(20px,5vw,64px);display:grid;grid-template-columns:1.05fr .95fr;gap:80px;align-items:start}
+.zenai-home .problem-intro h2{font-size:clamp(30px,3.6vw,46px);line-height:1.14;letter-spacing:-1.6px;margin:14px 0 0;color:var(--z3-ink)}
+.zenai-home .problem-intro h2 strong{font-weight:740;color:var(--z3-faint)}
+.zenai-home .problem-flow{list-style:none;margin:8px 0 0;padding:0 0 0 26px;border-left:1px solid var(--z3-line)}
+.zenai-home .problem-flow li{position:relative;padding:17px 0}
+.zenai-home .problem-flow li+li{border-top:1px solid var(--z3-line-soft)}
+.zenai-home .problem-flow li:before{content:"";position:absolute;left:-30px;top:26px;width:7px;height:7px;border-radius:50%;background:var(--z3-paper);border:1.5px solid var(--z3-faint)}
+.zenai-home .problem-flow li:first-child:before{background:var(--z3-accent);border-color:var(--z3-accent)}
+.zenai-home .problem-flow b{display:block;font-size:16px;letter-spacing:-.2px;color:var(--z3-ink)}
+.zenai-home .problem-flow span{display:block;margin-top:3px;font-size:12.5px;color:var(--z3-muted)}
+
+/* ---------- Feature story: stacked rows, alternating ---------- */
+.zenai-home .home-features{display:block!important;background:transparent!important;padding:110px clamp(20px,5vw,64px)!important;max-width:1240px!important;margin:0 auto!important}
+.zenai-home .feature-lead{max-width:640px!important;margin:0 0 26px!important}
+.zenai-home .feature-lead h2{color:var(--z3-ink)}
+.zenai-home .feature-lead h2 strong{color:var(--z3-faint)}
+.zenai-home .feature-lead p{color:var(--z3-muted);font-size:14px;line-height:1.75;max-width:520px;margin:14px 0 0}
+.zenai-home .feature-story{border-top:1px solid var(--z3-line)}
+.zenai-home .story-row{display:grid;grid-template-columns:1fr 400px;gap:72px;align-items:center;padding:58px 0;border-bottom:1px solid var(--z3-line)}
+.zenai-home .story-row:nth-child(even) .story-copy{order:2}
+.zenai-home .story-kicker{display:block;font-size:10px;font-weight:800;letter-spacing:1.6px;color:var(--z3-accent);margin-bottom:16px}
+.zenai-home .story-copy h3{font-size:clamp(21px,2.2vw,27px);line-height:1.22;letter-spacing:-.8px;margin:0 0 12px;color:var(--z3-ink)}
+.zenai-home .story-copy p{margin:0;font-size:13.5px;line-height:1.75;color:var(--z3-muted);max-width:480px}
+.zenai-home .story-preview{min-width:0}
+.zenai-home .story-preview>*{background:var(--z3-surface);border:1px solid var(--z3-line);border-radius:12px;padding:20px;box-shadow:0 1px 2px rgba(16,24,40,.04),0 14px 34px rgba(16,24,40,.06);transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s ease}
+.zenai-home .story-row:hover .story-preview>*{transform:translateY(-3px);box-shadow:0 1px 2px rgba(16,24,40,.04),0 20px 44px rgba(16,24,40,.1)}
+.zenai-home .mini-label{display:block;font-size:8.5px;font-weight:800;letter-spacing:1.4px;color:var(--z3-faint);margin-bottom:14px}
+.zenai-home .mini-pulse strong{display:block;font-size:44px;letter-spacing:-2.5px;line-height:1;color:var(--z3-ink);margin:2px 0 10px;font-variant-numeric:tabular-nums}
+.zenai-home .mini-pulse .score-ring{background:var(--z3-line)!important}
+.zenai-home .mini-pulse .score-ring span{background:var(--z3-accent)!important}
+.zenai-home .mini-pulse em{color:var(--z3-muted)!important;font-style:normal!important;font-weight:600!important}
+.zenai-home .mini-diagnosis>div{display:flex;align-items:flex-start;gap:10px;padding:10px 0}
+.zenai-home .mini-diagnosis>div+div{border-top:1px solid var(--z3-line-soft)}
+.zenai-home .mini-diagnosis i{width:7px;height:7px;border-radius:50%;flex:0 0 7px;margin-top:5px}
+.zenai-home .mini-diagnosis b{display:block;font-size:12.5px;color:var(--z3-ink)}
+.zenai-home .mini-diagnosis small{display:block;font-size:11px;color:var(--z3-muted);margin-top:2px}
+.zenai-home .mini-market span{display:flex;align-items:center;gap:9px;padding:9px 0;font-size:12px;color:var(--z3-ink)}
+.zenai-home .mini-market span+span{border-top:1px solid var(--z3-line-soft)}
+.zenai-home .mini-market span:before{content:"";width:5px;height:5px;border-radius:50%;background:var(--z3-faint)}
+.zenai-home .mini-autopilot>div{display:flex;gap:12px;padding:9px 0;font-size:12.5px;color:var(--z3-ink)}
+.zenai-home .mini-autopilot>div+div{border-top:1px solid var(--z3-line-soft)}
+.zenai-home .mini-autopilot b{color:var(--z3-accent);font-weight:800;font-size:10.5px;letter-spacing:.5px;margin-top:2px}
+.zenai-home .mini-finance>div{display:flex;align-items:baseline;justify-content:space-between;padding:10px 0}
+.zenai-home .mini-finance>div+div{border-top:1px solid var(--z3-line-soft)}
+.zenai-home .mini-finance small{font-size:11px;color:var(--z3-muted)}
+.zenai-home .mini-finance b{font-size:17px;letter-spacing:-.4px;color:var(--z3-ink);font-variant-numeric:tabular-nums}
+.zenai-home .mini-finance>div:last-child b{color:var(--z3-accent)}
+
+/* ---------- How it works: open editorial timeline ---------- */
+.zenai-home .home-method{max-width:1240px!important;margin:0 auto!important;padding:110px clamp(20px,5vw,64px)!important}
+.zenai-home .method-head h2{color:var(--z3-ink)}
+.zenai-home .method-head h2 span{color:var(--z3-faint)}
+.zenai-home .method-grid{display:grid!important;grid-template-columns:repeat(5,1fr)!important;margin-top:56px;border-top:1px solid var(--z3-line)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;overflow:visible!important}
+.zenai-home .method-grid article{min-height:0!important;padding:26px 22px 0 0!important;border-right:1px solid var(--z3-line-soft)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;position:relative}
+.zenai-home .method-grid article:last-child{border-right:0!important}
+.zenai-home .method-grid article:before{content:"";position:absolute;top:-3.5px;left:0;width:7px;height:7px;border-radius:50%;background:var(--z3-accent)}
+.zenai-home .method-grid article>span{color:var(--z3-faint)!important;font-size:11px!important;font-weight:800!important;letter-spacing:1px}
+.zenai-home .method-grid h3{color:var(--z3-ink);margin:26px 0 8px!important}
+.zenai-home .method-grid p{color:var(--z3-muted)!important}
+.zenai-home .method-grid article:hover{background:transparent!important;transform:none!important}
+
+/* ---------- Philosophy ---------- */
+.zenai-home .home-philosophy{max-width:1240px;margin:0 auto;padding:110px clamp(20px,5vw,64px);display:grid;grid-template-columns:.9fr 1.1fr;gap:80px;align-items:start}
+.zenai-home .philosophy-copy h2{font-size:clamp(30px,3.6vw,46px);line-height:1.14;letter-spacing:-1.6px;margin:14px 0 18px;color:var(--z3-ink)}
+.zenai-home .philosophy-copy h2 em{font-style:normal;color:var(--z3-accent)}
+.zenai-home .philosophy-copy p{margin:0;font-size:14px;line-height:1.75;color:var(--z3-muted);max-width:440px}
+.zenai-home .philosophy-list{list-style:none;margin:0;padding:0;border-top:1px solid var(--z3-line)}
+.zenai-home .philosophy-list li{display:grid;gap:4px;padding:19px 0;border-bottom:1px solid var(--z3-line)}
+.zenai-home .philosophy-list b{font-size:14px;letter-spacing:-.1px;color:var(--z3-ink)}
+.zenai-home .philosophy-list span{font-size:12.5px;line-height:1.6;color:var(--z3-muted)}
+
+/* ---------- Final CTA: solid, calm ---------- */
+.zenai-home .home-final{margin:30px clamp(20px,5vw,64px) 60px!important;padding:78px clamp(28px,6vw,90px)!important;border-radius:16px!important;background:#141922!important;box-shadow:0 1px 2px rgba(16,24,40,.06),0 30px 70px rgba(16,24,40,.14)!important;display:grid!important;grid-template-columns:1fr auto!important;align-items:end!important;gap:40px}
+.zenai-home .home-final:before{display:none!important}
+.zenai-home .home-final h2{color:#F4F6F9!important;letter-spacing:-2.4px!important}
+.zenai-home .home-final p{color:#A6AEBB!important}
+.zenai-home .home-final .home-primary{background:#fff!important;color:#141922!important;box-shadow:0 1px 2px rgba(0,0,0,.12)!important}
+.zenai-home .home-final .home-primary:hover{box-shadow:0 10px 30px rgba(0,0,0,.2)!important}
+.zenai-home .final-mark{color:#fff!important}
+.zenai-home-dark .home-final{background:#151D2A!important;box-shadow:none!important;border:1px solid var(--z3-line)!important}
+.zenai-home-dark .home-final .home-primary{background:#F2F4F7!important}
+
+/* ---------- Footer ---------- */
+.zenai-home .home-footer{color:var(--z3-faint)!important;border-top:1px solid var(--z3-line-soft)}
+.zenai-home .footer-brand b{color:var(--z3-ink)!important}
+.zenai-home .footer-brand span{color:var(--z3-faint)!important}
+
+/* ---------- Dark mode surfaces ---------- */
+.zenai-home-dark .story-preview>*{background:var(--z3-surface)!important;border-color:var(--z3-line)!important;box-shadow:0 14px 34px rgba(0,0,0,.3)!important}
+.zenai-home-dark .problem-flow li:first-child:before{background:var(--z3-accent)!important;border-color:var(--z3-accent)!important}
+.zenai-home-dark .problem-flow li:before{background:var(--z3-paper)!important;border-color:var(--z3-faint)!important}
+.zenai-home-dark .insight-panel h4,.zenai-home-dark .command-head h3{color:var(--z3-ink)!important}
+.zenai-home-dark .mini-pulse strong,.zenai-home-dark .mini-diagnosis b,.zenai-home-dark .mini-market span,.zenai-home-dark .mini-autopilot>div,.zenai-home-dark .mini-finance b{color:var(--z3-ink)}
+.zenai-home-dark .home-primary{background:var(--z3-accent)!important;color:#0B0F16!important}
+
+/* ---------- Reveal on scroll (native CSS, no JS) ---------- */
+@media (prefers-reduced-motion:no-preference){
+  @supports (animation-timeline:view()){
+    .zenai-home .problem-intro,.zenai-home .problem-flow li,.zenai-home .feature-lead,.zenai-home .story-row,.zenai-home .method-head,.zenai-home .method-grid article,.zenai-home .philosophy-copy,.zenai-home .philosophy-list li,.zenai-home .home-final{
+      animation:z3Reveal linear both;
+      animation-timeline:view();
+      animation-range:entry 2% entry 32%;
+    }
+    .zenai-home .problem-flow li:nth-child(2){animation-range:entry 6% entry 34%}
+    .zenai-home .problem-flow li:nth-child(3){animation-range:entry 10% entry 36%}
+    .zenai-home .problem-flow li:nth-child(4){animation-range:entry 14% entry 38%}
+    .zenai-home .problem-flow li:nth-child(5){animation-range:entry 18% entry 40%}
+  }
+  @keyframes z3Reveal{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+}
+
+/* ---------- Responsive ---------- */
+@media(max-width:1000px){
+  .zenai-home .home-problem,.zenai-home .home-philosophy{grid-template-columns:1fr;gap:44px}
+  .zenai-home .story-row{grid-template-columns:1fr;gap:28px;padding:44px 0}
+  .zenai-home .story-row:nth-child(even) .story-copy{order:0}
+  .zenai-home .story-preview{max-width:520px}
+  .zenai-home .method-grid{grid-template-columns:repeat(2,1fr)!important;row-gap:36px}
+  .zenai-home .method-grid article:nth-child(2n){border-right:0!important}
+  .zenai-home .home-final{grid-template-columns:1fr!important}
+  .zenai-home .final-mark{display:none!important}
+}
+@media(max-width:640px){
+  .zenai-home .home-problem,.zenai-home .home-features,.zenai-home .home-method,.zenai-home .home-philosophy{padding-left:18px!important;padding-right:18px!important;padding-top:72px!important;padding-bottom:72px!important}
+  .zenai-home .method-grid{grid-template-columns:1fr!important}
+  .zenai-home .method-grid article{border-right:0!important;padding-right:0!important}
+  .zenai-home .story-row{padding:34px 0}
+  .zenai-home .home-final{margin:16px 18px 40px!important;padding:48px 24px!important}
+  .zenai-home .home-footer{display:grid!important;grid-template-columns:1fr;gap:10px}
+}
