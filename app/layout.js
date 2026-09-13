@@ -1,6 +1,6 @@
-import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import LanguageSwitcher from "../components/LanguageSwitcher";
+import { ZenLocaleProvider } from "../providers/ZenLocaleProvider";
 import "./globals.css";
 
 export const metadata = {
@@ -20,10 +20,10 @@ export default async function RootLayout({ children }) {
   return (
     <html lang={locale} suppressHydrationWarning>
       <body className="antialiased">
-        <NextIntlClientProvider messages={messages} locale={locale}>
+        <ZenLocaleProvider initialLocale={locale} initialMessages={messages}>
           {children}
           <LanguageSwitcher />
-        </NextIntlClientProvider>
+        </ZenLocaleProvider>
       </body>
     </html>
   );
