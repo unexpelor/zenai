@@ -1467,7 +1467,7 @@ Jelaskan secara spesifik:
 4. batas keputusan jika tersedia;
 5. kondisi yang harus dipenuhi agar keputusan tetap layak.
 Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan, katakan tidak cukup.`,
-          system: "Anda adalah Financial Decision Intelligence AI ZENAI. Berikan 4-6 kalimat Bahasa Indonesia formal dan konkret. Jangan memberi nasihat umum seperti 'tingkatkan pemasaran', 'efisiensi biaya', atau 'pantau secara berkala' kecuali langsung terkait dengan angka simulasi. Jangan mengubah angka. Jangan membuat data. Jangan markdown atau emoji."
+          system: "Anda adalah Financial Decision Intelligence AI ZENAI. Berikan 4-6 kalimat formal dan konkret sesuai bahasa output yang diminta. Jangan memberi nasihat umum seperti 'tingkatkan pemasaran', 'efisiensi biaya', atau 'pantau secara berkala' kecuali langsung terkait dengan angka simulasi. Jangan mengubah angka. Jangan membuat data. Jangan markdown atau emoji."
         });
         result.interpretation = String(aiRaw || "").trim();
       } catch (aiError) {
@@ -1832,6 +1832,8 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
         body: JSON.stringify({
           prompt: localizedPrompt,
           system: localizedSystem,
+          locale,
+          outputLanguage,
           text,
           image,
           audio,
@@ -1986,7 +1988,7 @@ Anda adalah Business Intelligence AI untuk ZENAI.
 Tugas Anda adalah memahami informasi usaha pengguna
 dan mengubahnya menjadi profil usaha yang jelas.
 
-Gunakan bahasa Indonesia yang sederhana.
+Gunakan bahasa output yang diminta.
 
 Jangan mengarang informasi yang tidak tersedia.
 Balas hanya dengan JSON valid.
@@ -2122,7 +2124,7 @@ Aturan:
 
 - Jangan membuat angka atau omzet jika tidak ada data.
 - Fokus pada kondisi usaha yang benar-benar tersedia.
-- Gunakan bahasa Indonesia sederhana.
+- Gunakan bahasa output yang diminta.
 - Jangan gunakan markdown.
 - Balas hanya JSON valid.
 `;
@@ -2284,7 +2286,7 @@ Aturan:
 - Jangan membuat angka tanpa data pendukung.
 - Fokus pada masalah yang benar-benar mungkin
   berdasarkan informasi usaha.
-- Gunakan bahasa Indonesia sederhana.
+- Gunakan bahasa output yang diminta.
 - Jangan gunakan markdown.
 - Balas hanya JSON valid.
 `;
@@ -2365,6 +2367,8 @@ Balas hanya JSON valid.
 
         body: JSON.stringify({
           action: "market-insight",
+          locale,
+          outputLanguage: locale === "en" ? "English" : "Bahasa Indonesia",
 
           businessProfile: {
             business:
@@ -2551,7 +2555,7 @@ Aturan:
 - Jangan membuat angka target, omzet,
   persentase, atau estimasi keuntungan
   tanpa data pendukung.
-- Gunakan bahasa Indonesia sederhana.
+- Gunakan bahasa output yang diminta.
 - Jangan gunakan markdown.
 - Balas hanya JSON valid.
 `;
@@ -2563,6 +2567,8 @@ Aturan:
           ...(await getApiAuthHeaders())
         },
         body: JSON.stringify({
+          locale,
+          outputLanguage: locale === "en" ? "English" : "Bahasa Indonesia",
           business: {
             ...context,
             pulse: latestPulse || {},
@@ -2586,7 +2592,7 @@ Aturan:
         summary: apiResult.mission.target,
         priority: apiResult.mission.priority,
         plan30: apiResult.actions.map((item) => ({
-          phase: `Hari ${item.id}`,
+          phase: locale === "en" ? `Day ${item.id}` : `Hari ${item.id}`,
           title: item.title,
           action: item.description
         })),
@@ -2597,7 +2603,7 @@ Aturan:
           purpose: item.output
         })),
         plan14: apiResult.actions.slice(0, 14).map((item) => ({
-          phase: `Hari ${item.id}`,
+          phase: locale === "en" ? `Day ${item.id}` : `Hari ${item.id}`,
           title: item.title,
           action: item.description
         })),
@@ -8164,7 +8170,7 @@ darkMode={darkMode}
                                   }}
                                 >
                                   {item.day ||
-                                    `Hari ${index + 1}`}
+                                    locale === "en" ? `Day ${index + 1}` : `Hari ${index + 1}`}
                                 </div>
 
                                 <div
