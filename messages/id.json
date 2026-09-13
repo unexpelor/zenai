@@ -40,7 +40,12 @@
     "backToHome": "← Kembali ke beranda",
     "loginTitle": "Masuk untuk menyimpan data bisnis dan hasil AI secara permanen.",
     "signupTitle": "Buat akun ZENAI agar data tersimpan di cloud.",
-    "success": "Berhasil masuk."
+    "success": "Berhasil masuk.",
+    "cloudLoadError": "Data cloud belum dapat dimuat. Coba refresh.",
+    "supabaseNotConfigured": "Supabase belum dikonfigurasi. Tambahkan NEXT_PUBLIC_SUPABASE_URL dan NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.",
+    "validationError": "Masukkan email dan password minimal 6 karakter.",
+    "accountCreated": "Akun berhasil dibuat. Cek email untuk verifikasi, lalu masuk.",
+    "emailPlaceholder": "anda@email.com"
   },
   "home": {
     "welcome": "Selamat datang kembali",
