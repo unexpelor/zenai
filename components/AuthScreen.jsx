@@ -66,7 +66,7 @@ export default function AuthScreen({
           onChange={(e) => setAuthEmail(e.target.value)}
           autoComplete="email"
           className="w-full px-4 py-3 rounded-xl border border-[var(--border-medium)] bg-[var(--bg-primary)] text-[var(--text-primary)] text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all"
-          placeholder="anda@email.com"
+          placeholder={t("auth.emailPlaceholder")}
         />
 
         {/* Password */}
