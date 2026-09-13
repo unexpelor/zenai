@@ -343,7 +343,7 @@ const [marketError, setMarketError] =
 
       if (error) {
         console.error("Gagal memuat data ZenAI:", error);
-        if (active) setAuthMessage("Data cloud belum dapat dimuat. Coba refresh.");
+        if (active) setAuthMessage(uiText("Data cloud belum dapat dimuat. Coba refresh.", "Cloud data could not be loaded. Please refresh."));
       } else if (data?.state && active) {
         const saved = data.state;
         if (saved.business !== undefined) setBusiness(saved.business);
@@ -458,12 +458,12 @@ const [marketError, setMarketError] =
     event.preventDefault();
 
     if (!supabase) {
-      setAuthMessage("Supabase belum dikonfigurasi. Tambahkan NEXT_PUBLIC_SUPABASE_URL dan NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.");
+      setAuthMessage(uiText("Supabase belum dikonfigurasi. Tambahkan NEXT_PUBLIC_SUPABASE_URL dan NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.", "Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY."));
       return;
     }
 
     if (!authEmail.trim() || authPassword.length < 6) {
-      setAuthMessage("Masukkan email dan password minimal 6 karakter.");
+      setAuthMessage(uiText("Masukkan email dan password minimal 6 karakter.", "Enter an email and a password with at least 6 characters."));
       return;
     }
 
@@ -483,10 +483,10 @@ const [marketError, setMarketError] =
     if (result.error) {
       setAuthMessage(result.error.message);
     } else if (authMode === "signup" && !result.data.session) {
-      setAuthMessage("Akun berhasil dibuat. Cek email untuk verifikasi, lalu masuk.");
+      setAuthMessage(uiText("Akun berhasil dibuat. Cek email untuk verifikasi, lalu masuk.", "Account created successfully. Check your email to verify it, then log in."));
       setAuthMode("login");
     } else {
-      setAuthMessage("Berhasil masuk.");
+      setAuthMessage(uiText("Berhasil masuk.", "Successfully logged in."));
     }
 
     setAuthLoading(false);
@@ -3365,7 +3365,7 @@ ${sectionHtml}
             }}
           >
             {authMode === "login"
-              ? "Masuk untuk menyimpan data bisnis dan hasil AI secara permanen."
+              ? uiText("Masuk untuk menyimpan data bisnis dan hasil AI secara permanen.", "Log in to save your business data and AI results permanently.")
               : uiText("Buat akun ZENAI agar data tersimpan di cloud.","Create a ZENAI account to save your data in the cloud.")}
           </div>
 
@@ -3416,10 +3416,10 @@ ${sectionHtml}
             }}
           >
             {authLoading
-              ? "Memproses..."
+              ? uiText("Memproses...", "Processing...")
               : authMode === "login"
-                ? "Masuk"
-                : uiText("Buat Akun","Sign Up")}
+                ? uiText("Masuk", "Log In")
+                : uiText("Buat Akun", "Sign Up")}
           </button>
 
           {authMessage && (
@@ -3452,8 +3452,8 @@ ${sectionHtml}
             }}
           >
             {authMode === "login"
-              ? "Belum punya akun? Buat akun"
-              : "Sudah punya akun? Masuk"}
+              ? uiText("Belum punya akun? Buat akun", "Don't have an account? Sign Up")
+              : uiText("Sudah punya akun? Masuk", "Already have an account? Log In")}
           </button>
         </form>
       </main>
@@ -4182,7 +4182,7 @@ padding: isMobile ? "16px 12px" : "32px",
                 <h3 style={{ margin: "0 0 14px", color: darkMode ? "#F8FAFC" : "#0F172A" }}>{uiText('Jika Anda bingung','If you are unsure')}</h3>
                 <div style={{ display: "grid", gap: "10px" }}>
                   {[
-                    ["Saya baru pertama kali menggunakan ZenAI", uiText("Mulai dari Ceritakan Usaha. Masukkan konteks usaha terlebih dahulu agar analisis berikutnya memiliki dasar.","Start with Tell Your Business. Enter your business context first so the next analyses have a foundation."), "capture"],
+                    [uiText("Saya baru pertama kali menggunakan ZenAI", "I'm using ZenAI for the first time"), uiText("Mulai dari Ceritakan Usaha. Masukkan konteks usaha terlebih dahulu agar analisis berikutnya memiliki dasar.","Start with Tell Your Business. Enter your business context first so the next analyses have a foundation."), "capture"],
                     [uiText("Saya sudah punya profil usaha, lalu apa?","I already have a business profile. What's next?"), uiText("Jalankan Kondisi Usaha untuk melihat gambaran dan prioritas, lalu lanjutkan ke Diagnosis.","Run Business Condition to see the overview and priorities, then continue to Diagnosis."), "pulse"],
                     [uiText("Apa fungsi Perspektif Bisnis?", "What does Business Perspective do?"), uiText("Fitur ini memperkaya analisis dengan informasi eksternal yang relevan. Tavily hanya menjadi sumber di belakang layar.", "This feature enriches the analysis with relevant external information. Tavily only serves as a behind-the-scenes source."), "market"],
                     [uiText("Saya sudah mendapat strategi, lalu bagaimana?","I already have a strategy. What next?"), uiText("Jadikan strategi sebagai tindakan dan lanjutkan ke Growth Loop untuk menjalankan serta mengevaluasi hasilnya.","Turn the strategy into actions and continue to Growth Loop to execute and evaluate the results."), "autopilot"],
