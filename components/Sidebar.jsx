@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useZenLocale } from "../providers/ZenLocaleProvider";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard,
@@ -62,12 +63,12 @@ export default function Sidebar({
   session,
 }) {
   const isActive = (id) => tab === id;
+  const { setLocale: setAppLocale } = useZenLocale();
 
   const toggleLocale = () => {
     const next = locale === "id" ? "en" : "id";
-    setLocale(next);
-    document.cookie = `NEXT_LOCALE=${next};path=/;max-age=31536000`;
-    window.location.reload();
+    setAppLocale(next);
+    if (typeof setLocale === "function") setLocale(next);
   };
 
   return (
