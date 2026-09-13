@@ -1594,6 +1594,117 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
       : {};
   };
 
+  // =========================
+  // GLOBAL AI OUTPUT LANGUAGE SYNC
+  // When locale changes, translate every AI-generated state currently loaded.
+  // Keep translation outside the DOM so Advanced Analysis remains stable.
+  // =========================
+  const translateAiState = async (value, targetLocale) => {
+    if (value === null || value === undefined) return value;
+
+    const outputLanguage = targetLocale === "en" ? "English" : "Bahasa Indonesia";
+    const source = JSON.stringify(value);
+    if (!source || source === "null" || source === "undefined") return value;
+
+    // Skip tiny non-human values. JSON keys are preserved by the model.
+    const response = await fetch("/api/ai", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(await getApiAuthHeaders())
+      },
+      body: JSON.stringify({
+        prompt: `Translate the following ZENAI AI output into ${outputLanguage}.\n\nRULES:\n- Preserve the exact JSON structure and all property names.\n- Translate every human-readable string value.\n- Do not translate IDs, enum values, URLs, numbers, dates, currency codes, or technical identifiers.\n- Do not add or remove fields.\n- Do not summarize.\n- Return ONLY valid JSON.\n\nSOURCE JSON:\n${source}`,
+        system: `You are ZENAI's output localization engine. Convert AI-generated content to ${outputLanguage}. Preserve JSON keys and data integrity exactly. Translate all human-readable content and never mix Indonesian and English.`,
+        jsonMode: true,
+        locale: targetLocale,
+        outputLanguage
+      }),
+      cache: "no-store"
+    });
+
+    const data = await response.json().catch(() => null);
+    if (!response.ok || !data?.success) {
+      throw new Error(data?.error || data?.message || "Output translation failed.");
+    }
+
+    return extractJson(data.text || "");
+  };
+
+  useEffect(() => {
+    if (!cloudLoaded || !session?.user?.id) return;
+
+    // Only run the expensive translation pass after the user explicitly
+    // switched language. This prevents translating fresh ID output to ID
+    // on every normal page load.
+    let pendingLocale = null;
+    try { pendingLocale = window.sessionStorage.getItem("zenai_pending_locale_sync"); } catch {}
+    if (pendingLocale !== locale) return;
+
+    let cancelled = false;
+
+    const syncAllAiOutputs = async () => {
+      const targets = [
+        ["business", business, setBusiness],
+        ["pulseData", pulseData, setPulseData],
+        ["diagnosis", diagnosis, setDiagnosis],
+        ["marketData", marketData, setMarketData],
+        ["autopilotData", autopilotData, setAutopilotData],
+        ["growthActions", growthActions, setGrowthActions],
+        ["businessUpdates", businessUpdates, setBusinessUpdates],
+        ["decisionResult", decisionResult, setDecisionResult]
+      ].filter(([, value]) => value !== null && value !== undefined);
+
+      if (!targets.length) return;
+
+      // Cache by exact source + target locale to avoid repeated AI calls when
+      // the user switches EN -> ID -> EN during the same browser session.
+      const cachePrefix = `zenai_i18n_ai_${session.user.id}_${locale}_`;
+      const hash = (input) => {
+        let h = 2166136261;
+        for (let i = 0; i < input.length; i++) {
+          h ^= input.charCodeAt(i);
+          h = Math.imul(h, 16777619);
+        }
+        return (h >>> 0).toString(36);
+      };
+
+      for (const [key, value, setter] of targets) {
+        if (cancelled) return;
+        const source = JSON.stringify(value);
+        const cacheKey = cachePrefix + key + "_" + hash(source);
+        try {
+          const cached = sessionStorage.getItem(cacheKey);
+          if (cached) {
+            setter(JSON.parse(cached));
+            continue;
+          }
+        } catch {}
+
+        try {
+          const translated = await translateAiState(value, locale);
+          if (cancelled) return;
+          setter(translated);
+          try { sessionStorage.setItem(cacheKey, JSON.stringify(translated)); } catch {}
+        } catch (error) {
+          console.warn(`Global output localization failed for ${key}:`, error);
+          // Keep the existing output intact if translation fails.
+        }
+      }
+
+      if (!cancelled) {
+        try { window.sessionStorage.removeItem("zenai_pending_locale_sync"); } catch {}
+      }
+    };
+
+    syncAllAiOutputs();
+
+    return () => { cancelled = true; };
+    // Run only after cloud hydration and when locale changes. State updates from
+    // translation must never recursively trigger another translation pass.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locale, cloudLoaded, session?.user?.id]);
+
   const askAI = async ({
     prompt,
     system = ""
