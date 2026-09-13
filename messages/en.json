@@ -218,51 +218,8 @@
     "delta": "Change",
     "interpretation": "AI Interpretation"
   },
-  "settings": {
-    "title": "Settings",
-    "description": "Manage ZenAI settings and preferences here.",
-    "theme": "Appearance",
-    "themeDesc": "Set the ZenAI interface theme.",
-    "lightMode": "Use Light Theme",
-    "darkMode": "Use Dark Theme",
-    "language": "Display Language",
-    "english": "English",
-    "indonesian": "Bahasa Indonesia",
-    "dataReset": "Data & Reset",
-    "dataResetDesc": "Reset analysis or delete all company data.",
-    "resetAnalysis": "Reset Analysis",
-    "resetCompany": "Reset Entire Company",
-    "systemHealth": "System Health",
-    "systemHealthDesc": "Check ZenAI service status and AI connection live.",
-    "runHealthCheck": "Run Live Health Check",
-    "checking": "Checking...",
-    "operational": "Operational",
-    "configured": "Configured",
-    "down": "Down",
-    "aiSmokeTest": "Live AI Smoke Test",
-    "runAiSmokeTest": "Run AI Smoke Test",
-    "testingAi": "Testing AI..."
-  },
-  "guide": {
-    "title": "ZenAI Guide",
-    "step1": "Tell Your Business",
-    "step1Desc": "Enter your story, profile, condition, products, customers, and important business information. This becomes ZenAI's main context.",
-    "step2": "Business Condition",
-    "step2Desc": "Use Business Pulse to see a snapshot of your business condition and priorities based on the context provided.",
-    "step3": "Diagnosis",
-    "step3Desc": "Use Diagnosis to understand problems, strengths, opportunities, recommendations, and next steps.",
-    "step4": "Business Perspective",
-    "step4Desc": "ZenAI enriches analysis with relevant external information to provide a broader business perspective.",
-    "step5": "Strategy & Actions",
-    "step5Desc": "Turn analysis results into actionable strategies. Choose the duration that fits your business needs.",
-    "step6": "Growth Loop",
-    "step6Desc": "Turn strategy into action: start, complete, record results, and evaluate. Results feed back into the next analysis cycle.",
-    "step7": "Financial Report",
-    "step7Desc": "Record transactions and use financial summaries to understand revenue, costs, profit, cash flow, and financial position.",
-    "completed": "Completed",
-    "open": "Open",
-    "nextRecommended": "Next:"
-  },
+  "settings": "Settings",
+  "guide": "Guide",
   "landing": {
     "navFeatures": "Features",
     "navHow": "How It Works",
@@ -330,5 +287,6 @@
     "finalSub": "Start from today's business condition. Understand, decide, then grow.",
     "finalCta": "Try ZENAI Now",
     "tagline": "Understand. Decide. Grow."
-  }
+  },
+  "mockStable": "Stable"
 }
