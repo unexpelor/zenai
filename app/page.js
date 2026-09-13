@@ -3950,6 +3950,8 @@ padding: isMobile ? "16px 12px" : "32px",
           const hasAutopilot = !!autopilotData;
           const hasGrowth = Array.isArray(growthActions) && growthActions.length > 0;
           const hasFinance = Array.isArray(financeTransactions) && financeTransactions.length > 0;
+          const hasAdvanced = true;
+          const hasSettings = true;
 
           const guideSteps = [
             {
@@ -4015,6 +4017,24 @@ padding: isMobile ? "16px 12px" : "32px",
               action: uiText("Buka Laporan Keuangan","Open Financial Report"),
               canOpen: true
             },
+            {
+              key: "advancedAnalysis",
+              title: uiText('Analisis Lanjutan','Advanced Analysis'),
+              icon: "",
+              done: hasAdvanced,
+              text: uiText("Gunakan analisis lanjutan untuk menguji keputusan, melihat dampak keuangan, membaca konteks periode, dan memperoleh insight yang lebih spesifik.","Use Advanced Analysis to test decisions, assess financial impact, compare periods, and get more specific insights."),
+              action: uiText("Buka Analisis Lanjutan","Open Advanced Analysis"),
+              canOpen: true
+            },
+            {
+              key: "settings",
+              title: uiText('Pengaturan','Settings'),
+              icon: "",
+              done: hasSettings,
+              text: uiText("Kelola tampilan, System Health, pemeriksaan AI, serta data dan reset ZenAI.","Manage appearance, System Health, AI checks, and ZenAI data and reset options."),
+              action: uiText("Buka Pengaturan","Open Settings"),
+              canOpen: true
+            },
           ];
 
           const nextStep =
@@ -4024,7 +4044,8 @@ padding: isMobile ? "16px 12px" : "32px",
             !hasMarket ? guideSteps[3] :
             !hasAutopilot ? guideSteps[4] :
             !hasGrowth ? guideSteps[5] :
-            guideSteps[6];
+            !hasFinance ? guideSteps[6] :
+            guideSteps[7];
 
           const openGuideStep = (step) => {
             if (!step.canOpen) {
@@ -4102,7 +4123,7 @@ padding: isMobile ? "16px 12px" : "32px",
               >
                 <h3 style={{ margin: "0 0 15px", color: darkMode ? "#F8FAFC" : "#0F172A" }}>{uiText('Alur utama ZenAI','ZENAI main flow')}</h3>
                 <div style={{ display: "grid", gap: "9px" }}>
-                  {guideSteps.slice(0, 6).map((step, index) => (
+                  {guideSteps.map((step, index) => (
                     <div
                       key={step.key}
                       style={{
