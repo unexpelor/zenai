@@ -284,6 +284,8 @@ const [marketError, setMarketError] =
     setBusiness(null);
     setPulseData(null);
     setDiagnosis(null);
+    aiSourceRef.current.autopilotData = null;
+    aiSourceRef.current.marketData = null;
     setAutopilotData(null);
     setMarketData(null);
     setMarketError("");
@@ -349,8 +351,8 @@ const [marketError, setMarketError] =
         if (saved.business !== undefined) setBusiness(saved.business);
         if (saved.pulseData !== undefined) setPulseData(saved.pulseData);
         if (saved.diagnosis !== undefined) setDiagnosis(saved.diagnosis);
-        if (saved.autopilotData !== undefined) setAutopilotData(saved.autopilotData);
-        if (saved.marketData !== undefined) setMarketData(saved.marketData);
+        if (saved.autopilotData !== undefined) { aiSourceRef.current.autopilotData = saved.autopilotData; setAutopilotData(saved.autopilotData); }
+        if (saved.marketData !== undefined) { aiSourceRef.current.marketData = saved.marketData; setMarketData(saved.marketData); }
         if (Array.isArray(saved.businessUpdates)) setBusinessUpdates(saved.businessUpdates);
         if (Array.isArray(saved.growthActions)) setGrowthActions(saved.growthActions);
         if (Array.isArray(saved.financeTransactions)) setFinanceTransactions(saved.financeTransactions);
@@ -1603,35 +1605,49 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
     if (value === null || value === undefined) return value;
 
     const outputLanguage = targetLocale === "en" ? "English" : "Bahasa Indonesia";
-    const source = JSON.stringify(value);
-    if (!source || source === "null" || source === "undefined") return value;
+    const translateChunk = async (chunk) => {
+      const source = JSON.stringify(chunk);
+      if (!source || source === "null" || source === "undefined") return chunk;
+      const response = await fetch("/api/ai", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(await getApiAuthHeaders())
+        },
+        body: JSON.stringify({
+          prompt: `Translate this ZENAI AI output into ${outputLanguage}.\n\nRULES:\n- Translate EVERY human-readable string value.\n- Preserve JSON keys, structure, IDs, enum values, URLs, numbers, dates, currency codes and technical identifiers.\n- Do not add, remove, summarize, or reorder data.\n- Return ONLY valid JSON.\n\nSOURCE JSON:\n${source}`,
+          system: `You are ZENAI's strict localization engine. Translate all human-readable content to ${outputLanguage}. Never leave Indonesian text when target is English and never leave English text when target is Bahasa Indonesia. Preserve data structure exactly.`,
+          jsonMode: true,
+          locale: targetLocale,
+          outputLanguage
+        }),
+        cache: "no-store"
+      });
+      const data = await response.json().catch(() => null);
+      if (!response.ok || !data?.success) {
+        throw new Error(data?.error || data?.message || "Output translation failed.");
+      }
+      return extractJson(data.text || "");
+    };
 
-    // Skip tiny non-human values. JSON keys are preserved by the model.
-    const response = await fetch("/api/ai", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(await getApiAuthHeaders())
-      },
-      body: JSON.stringify({
-        prompt: `Translate the following ZENAI AI output into ${outputLanguage}.\n\nRULES:\n- Preserve the exact JSON structure and all property names.\n- Translate every human-readable string value.\n- Do not translate IDs, enum values, URLs, numbers, dates, currency codes, or technical identifiers.\n- Do not add or remove fields.\n- Do not summarize.\n- Return ONLY valid JSON.\n\nSOURCE JSON:\n${source}`,
-        system: `You are ZENAI's output localization engine. Convert AI-generated content to ${outputLanguage}. Preserve JSON keys and data integrity exactly. Translate all human-readable content and never mix Indonesian and English.`,
-        jsonMode: true,
-        locale: targetLocale,
-        outputLanguage
-      }),
-      cache: "no-store"
-    });
-
-    const data = await response.json().catch(() => null);
-    if (!response.ok || !data?.success) {
-      throw new Error(data?.error || data?.message || "Output translation failed.");
+    // Large Market Perspective and Strategy payloads are split by top-level
+    // fields so one oversized JSON payload cannot silently fail localization.
+    if (Array.isArray(value)) {
+      const translated = await Promise.all(value.map((item) => translateChunk(item)));
+      return translated;
     }
-
-    return extractJson(data.text || "");
+    if (typeof value === "object") {
+      const entries = Object.entries(value);
+      const translatedEntries = await Promise.all(
+        entries.map(async ([key, item]) => [key, await translateChunk(item)])
+      );
+      return Object.fromEntries(translatedEntries);
+    }
+    return await translateChunk(value);
   };
 
   const aiLocalizationRef = useRef({});
+  const aiSourceRef = useRef({});
 
   useEffect(() => {
     if (!cloudLoaded || !session?.user?.id) return;
@@ -1666,7 +1682,11 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
 
       for (const [key, value, setter] of targets) {
         if (cancelled) return;
-        const source = JSON.stringify(value);
+        if (!aiSourceRef.current[key]) {
+          aiSourceRef.current[key] = value;
+        }
+        const sourceValue = aiSourceRef.current[key];
+        const source = JSON.stringify(sourceValue);
         const sourceHash = hash(source);
         const localizationState = aiLocalizationRef.current[key];
 
@@ -1683,16 +1703,16 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
           if (cached) {
             const translated = JSON.parse(cached);
             setter(translated);
-            aiLocalizationRef.current[key] = { locale, sourceHash: hash(JSON.stringify(translated)) };
+            aiLocalizationRef.current[key] = { locale, sourceHash };
             continue;
           }
         } catch {}
 
         try {
-          const translated = await translateAiState(value, locale);
+          const translated = await translateAiState(sourceValue, locale);
           if (cancelled) return;
           setter(translated);
-          aiLocalizationRef.current[key] = { locale, sourceHash: hash(JSON.stringify(translated)) };
+          aiLocalizationRef.current[key] = { locale, sourceHash };
           try { sessionStorage.setItem(cacheKey, JSON.stringify(translated)); } catch {}
         } catch (error) {
           console.warn(`Global output localization failed for ${key}:`, error);
@@ -2321,6 +2341,7 @@ Balas hanya JSON valid.
       );
     }
 
+    aiSourceRef.current.marketData = result;
     setMarketData(result);
 
     setTab("market");
@@ -2531,6 +2552,7 @@ Aturan:
         nextStep: apiResult.actions[0]?.title || "Mulai dari tindakan prioritas pertama."
       };
 
+      aiSourceRef.current.autopilotData = result;
       setAutopilotData(result);
 
       if (goToTab) {
