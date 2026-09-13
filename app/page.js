@@ -63,6 +63,7 @@ export default function Home() {
 
     const extraPairs = {
       "Ceritakan usaha Anda kepada ZENAI. Anda bisa menulis, mengirim gambar, atau menggunakan rekaman suara.": "Tell ZENAI about your business. You can write, send an image, or use a voice recording.",
+      "Jelaskan usaha Anda dengan bahasa biasa. Semakin lengkap informasi yang diberikan, semakin baik ZENAI memahami kondisi usaha Anda.": "Describe your business in plain language. The more complete the information you provide, the better ZENAI can understand your business condition.",
       "ZENAI akan membaca kondisi usaha Anda dan menunjukkan hal yang berjalan baik, hal yang perlu diperhatikan, serta langkah prioritas.": "ZENAI will read your business condition and show what is working, what needs attention, and the priority steps.",
       "Analisis Kondisi Usaha": "Analyze Business Condition",
       "Analisis Usaha Saya": "Analyze My Business",
@@ -1073,16 +1074,37 @@ const [marketError, setMarketError] =
 
       return {
         headline: hasPrevious
-          ? `Tidak ada transaksi pada ${financePeriodLabel(financePeriod)}, sehingga belum ada kinerja baru yang dapat dibandingkan.`
-          : `Belum ada transaksi pada ${financePeriodLabel(financePeriod)}.`,
+          ? uiText(
+              `Tidak ada transaksi pada ${financePeriodLabel(financePeriod)}, sehingga belum ada kinerja baru yang dapat dibandingkan.`,
+              `No transactions were recorded in ${financePeriodLabel(financePeriod)}, so there is no new performance to compare.`
+            )
+          : uiText(
+              `Belum ada transaksi pada ${financePeriodLabel(financePeriod)}.`,
+              `No transactions were recorded in ${financePeriodLabel(financePeriod)}.`
+            ),
         summary: hasPrevious
-          ? `ZENAI tetap menampilkan periode sebelumnya sebagai konteks, tetapi tidak menganggap bulan kosong sebagai penurunan 100%. Tambahkan transaksi jika memang ada aktivitas keuangan pada periode ini.`
-          : `Belum ada transaksi yang tercatat pada ${financePeriodLabel(financePeriod)}. Laporan ditampilkan sebagai nol dan tidak akan dianggap sebagai penurunan kinerja.`,
+          ? uiText(
+              `ZENAI tetap menampilkan periode sebelumnya sebagai konteks, tetapi tidak menganggap bulan kosong sebagai penurunan 100%. Tambahkan transaksi jika memang ada aktivitas keuangan pada periode ini.`,
+              `ZENAI still shows the previous period as context, but does not treat an empty month as a 100% decline. Add transactions if there was financial activity during this period.`
+            )
+          : uiText(
+              `Belum ada transaksi yang tercatat pada ${financePeriodLabel(financePeriod)}. Laporan ditampilkan sebagai nol dan tidak akan dianggap sebagai penurunan kinerja.`,
+              `No transactions were recorded in ${financePeriodLabel(financePeriod)}. The report is shown as zero and the empty period is not treated as a performance decline.`
+            ),
         points: hasPrevious
           ? [
-              `Periode sebelumnya (${financePeriodLabel(financePreviousPeriod)}) memiliki data: pendapatan ${formatRupiah(previous.income)}, HPP ${formatRupiah(previous.hpp)}, beban ${formatRupiah(previous.expense)}, dan laba bersih ${formatRupiah(previous.netProfit)}.`,
-              "Perubahan persentase tidak dihitung untuk periode kosong agar tidak menghasilkan kesimpulan yang menyesatkan.",
-              "Analisis bisnis tetap menggunakan hasil ZENAI terbaru dan tidak berubah hanya karena periode laporan keuangan sedang kosong."
+              uiText(
+                `Periode sebelumnya (${financePeriodLabel(financePreviousPeriod)}) memiliki data: pendapatan ${formatRupiah(previous.income)}, HPP ${formatRupiah(previous.hpp)}, beban ${formatRupiah(previous.expense)}, dan laba bersih ${formatRupiah(previous.netProfit)}.`,
+                `The previous period (${financePeriodLabel(financePreviousPeriod)}) has data: revenue ${formatRupiah(previous.income)}, COGS ${formatRupiah(previous.hpp)}, expenses ${formatRupiah(previous.expense)}, and net profit ${formatRupiah(previous.netProfit)}.`
+              ),
+              uiText(
+                "Perubahan persentase tidak dihitung untuk periode kosong agar tidak menghasilkan kesimpulan yang menyesatkan.",
+                "Percentage changes are not calculated for an empty period to avoid misleading conclusions."
+              ),
+              uiText(
+                "Analisis bisnis tetap menggunakan hasil ZENAI terbaru dan tidak berubah hanya karena periode laporan keuangan sedang kosong.",
+                "Business analysis continues to use the latest ZENAI results and does not change simply because the financial reporting period is empty."
+              )
             ]
           : [],
         linkedAnalysis
@@ -1793,6 +1815,10 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
     prompt,
     system = ""
   }) => {
+    const outputLanguage = locale === "en" ? "English" : "Bahasa Indonesia";
+    const localizedPrompt = `${prompt}\n\nOUTPUT LANGUAGE: ${outputLanguage}. Return all human-readable content in ${outputLanguage}. Keep JSON keys exactly as requested.`;
+    const localizedSystem = `${system}\n\nIMPORTANT LANGUAGE RULE: Respond in ${outputLanguage}. All human-readable text inside JSON values must use ${outputLanguage}. Do not mix Indonesian and English.`;
+
     const response = await fetch(
       "/api/ai",
       {
@@ -1804,8 +1830,8 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
         },
 
         body: JSON.stringify({
-          prompt,
-          system,
+          prompt: localizedPrompt,
+          system: localizedSystem,
           text,
           image,
           audio,
@@ -3300,11 +3326,11 @@ ${sectionHtml}
     reportWindow.document.close();
   };
 
-  const exportPulsePdf = () => exportReportPdf("Laporan Kondisi Usaha", [
-    { title: "Kondisi Usaha", value: pulseData }
+  const exportPulsePdf = () => exportReportPdf(uiText("Laporan Kondisi Usaha","Business Condition Report"), [
+    { title: uiText("Kondisi Usaha","Business Condition"), value: pulseData }
   ]);
 
-  const exportDiagnosisPdf = () => exportReportPdf("Laporan Diagnosis Usaha", [
+  const exportDiagnosisPdf = () => exportReportPdf(uiText("Laporan Diagnosis Usaha","Business Diagnosis Report"), [
     { title: uiText('Diagnosis Usaha','Business Diagnosis'), value: diagnosis }
   ]);
 
@@ -3319,29 +3345,29 @@ ${sectionHtml}
         }))
       : [];
 
-    return exportReportPdf("Laporan Perspektif Bisnis", [
+    return exportReportPdf(uiText("Laporan Perspektif Bisnis","Business Perspective Report"), [
       {
-        title: "Ringkasan",
-        value: analysis.summary || "Belum tersedia."
+        title: uiText("Ringkasan","Summary"),
+        value: analysis.summary || uiText("Belum tersedia.","Not available yet.")
       },
       {
         title: uiText('Kondisi Pasar','Market Condition'),
-        value: analysis.marketCondition || "Belum tersedia."
+        value: analysis.marketCondition || uiText("Belum tersedia.","Not available yet.")
       },
       {
         title: uiText('Sinyal Permintaan','Demand Signal'),
-        value: analysis.demandSignal || "Belum tersedia."
+        value: analysis.demandSignal || uiText("Belum tersedia.","Not available yet.")
       },
       {
         title: uiText('Perspektif Bisnis','Business Perspective'),
-        value: analysis.businessPerspective || "Belum tersedia."
+        value: analysis.businessPerspective || uiText("Belum tersedia.","Not available yet.")
       },
       {
-        title: "Faktor Eksternal",
+        title: uiText("Faktor Eksternal","External Factors"),
         value: analysis.externalFactors || []
       },
       {
-        title: "Risiko",
+        title: uiText("Risiko","Risk"),
         value: analysis.risks || []
       },
       {
@@ -3349,23 +3375,23 @@ ${sectionHtml}
         value: analysis.opportunities || []
       },
       {
-        title: "Wawasan Persaingan",
-        value: analysis.competitionInsight || "Belum tersedia."
+        title: uiText("Wawasan Persaingan","Competition Insight"),
+        value: analysis.competitionInsight || uiText("Belum tersedia.","Not available yet.")
       },
       {
-        title: "Skenario",
+        title: uiText("Skenario","Scenarios"),
         value: analysis.scenarios || {}
       },
       {
         title: uiText('Implikasi Strategis','Strategic Implication'),
-        value: analysis.strategicImplication || "Belum tersedia."
+        value: analysis.strategicImplication || uiText("Belum tersedia.","Not available yet.")
       },
       {
-        title: "Keterbatasan",
-        value: analysis.limitations || "Belum tersedia."
+        title: uiText("Keterbatasan","Limitations"),
+        value: analysis.limitations || uiText("Belum tersedia.","Not available yet.")
       },
       ...(sourceItems.length
-        ? [{ title: "Sumber Informasi", value: sourceItems }]
+        ? [{ title: uiText("Sumber Informasi","Information Sources"), value: sourceItems }]
         : [])
     ]);
   };
@@ -3377,8 +3403,8 @@ ${sectionHtml}
       { title: uiText('Rencana 30 Hari','30-Day Plan'), value: Array.isArray(autopilotData?.plan30) ? autopilotData.plan30 : [] },
     ].filter((section) => section.value.length > 0);
 
-    return exportReportPdf("Rencana Strategi dan Tindakan", [
-      { title: "Strategi Utama", value: autopilotData?.mission || autopilotData?.strategy || {} },
+    return exportReportPdf(uiText("Rencana Strategi dan Tindakan","Strategy and Action Plan"), [
+      { title: uiText("Strategi Utama","Main Strategy"), value: autopilotData?.mission || autopilotData?.strategy || {} },
       ...plans,
       { title: "Tindakan Pertumbuhan", value: growthActions }
     ]);
@@ -3433,7 +3459,7 @@ ${sectionHtml}
         }
       },
       {
-        title: "Analisis Keuangan ZENAI",
+        title: uiText("Analisis Keuangan ZENAI","ZENAI Financial Analysis"),
         value: {
           "Kesimpulan": financeInsight.headline,
           "Ringkasan": financeInsight.summary,
@@ -3551,7 +3577,7 @@ ${sectionHtml}
           >
             {authMode === "login"
               ? "Masuk untuk menyimpan data bisnis dan hasil AI secara permanen."
-              : "Buat akun ZENAI agar data tersimpan di cloud."}
+              : uiText("Buat akun ZENAI agar data tersimpan di cloud.","Create a ZENAI account to save your data in the cloud.")}
           </div>
 
           <label style={{ display: "block", fontWeight: "600", marginBottom: "7px", color: darkMode ? "#F8FAFC" : "#0F172A" }}>{uiText('Email','Email')}</label>
@@ -3604,7 +3630,7 @@ ${sectionHtml}
               ? "Memproses..."
               : authMode === "login"
                 ? "Masuk"
-                : "Buat Akun"}
+                : uiText("Buat Akun","Sign Up")}
           </button>
 
           {authMessage && (
@@ -3690,7 +3716,7 @@ padding: isMobile ? "16px 12px" : "32px",
   {/* TOGGLE SIDEBAR */}
   <button
     onClick={() => setSidebarOpen(!sidebarOpen)}
-    title={sidebarOpen ? "Tutup menu" : "Buka menu"}
+    title={sidebarOpen ? "Tutup menu" : uiText("Buka menu","Open menu")}
     style={{
       width: "100%",
       minHeight: "40px",
@@ -3834,8 +3860,8 @@ padding: isMobile ? "16px 12px" : "32px",
       <button
         type="button"
         onClick={() => { setTab("guide"); if (isMobile) setSidebarOpen(false); }}
-        title={sidebarOpen ? "" : "Panduan"}
-        aria-label="Panduan"
+        title={sidebarOpen ? "" : uiText("Panduan","Guide")}
+        aria-label={uiText("Panduan","Guide")}
         className={tab === "guide" ? "zenai-nav-item is-active" : "zenai-nav-item"}
         style={{
           width: "100%",
@@ -3863,8 +3889,8 @@ padding: isMobile ? "16px 12px" : "32px",
       <button
         type="button"
         onClick={() => { setTab("settings"); if (isMobile) setSidebarOpen(false); }}
-        title={sidebarOpen ? "" : "Pengaturan"}
-        aria-label="Pengaturan"
+        title={sidebarOpen ? "" : uiText("Pengaturan","Settings")}
+        aria-label={uiText("Pengaturan","Settings")}
         className={tab === "settings" ? "zenai-nav-item is-active" : "zenai-nav-item"}
         style={{
           width: "100%",
@@ -3893,12 +3919,12 @@ padding: isMobile ? "16px 12px" : "32px",
       <button
         type="button"
         onClick={async () => {
-          const ok = window.confirm("Keluar dari akun ZenAI?");
+          const ok = window.confirm(uiText("Keluar dari akun ZenAI?","Are you sure you want to log out?"));
           if (!ok) return;
           await handleLogout();
         }}
-        title={sidebarOpen ? "" : "Keluar"}
-        aria-label="Keluar"
+        title={sidebarOpen ? "" : uiText("Keluar","Log Out")}
+        aria-label={uiText("Keluar","Log Out")}
         style={{
           width: "100%",
           minHeight: "41px",
@@ -3925,7 +3951,7 @@ padding: isMobile ? "16px 12px" : "32px",
 </aside>
 
       {/* KONTEN UTAMA */}
-      {isMobile && <button type="button" className="zenai-mobile-menu" aria-label="Buka menu" onClick={() => setSidebarOpen(true)}><ZenIcon name="menu" size={20} /></button>}
+      {isMobile && <button type="button" className="zenai-mobile-menu" aria-label={uiText("Buka menu","Open menu")} onClick={() => setSidebarOpen(true)}><ZenIcon name="menu" size={20} /></button>}
       <section
   className="zenai-content"
   style={{
@@ -4008,10 +4034,10 @@ padding: isMobile ? "16px 12px" : "32px",
               }}
             >
               {tab === "settings"
-                ? "Kelola sistem, tampilan, dan data ZenAI dari satu tempat."
+                ? uiText("Kelola sistem, tampilan, dan data ZenAI dari satu tempat.", "Manage ZenAI systems, appearance, and data from one place.")
                 : provider
-                  ? `AI aktif: ${provider}`
-                  : "Gunakan AI untuk memahami kondisi usaha Anda."}
+                  ? `${uiText("AI aktif:", "AI active:")} ${provider}`
+                  : uiText("Gunakan AI untuk memahami kondisi usaha Anda.", "Use AI to understand your business condition.")}
             </p>
           </div>
 
@@ -4105,7 +4131,7 @@ padding: isMobile ? "16px 12px" : "32px",
                 <div style={{ fontSize: "17px", fontWeight: "800", color: darkMode ? "#F8FAFC" : "#0F172A" }}>{uiText('Tampilan','Appearance')}</div>
                 <div style={{ marginTop: "6px", color: darkMode ? "#CBD5E1" : "#64748B", fontSize: "13px", lineHeight: 1.5 }}>{uiText('Atur tema antarmuka ZenAI.','Set the ZenAI interface theme.')}</div>
                 <button type="button" onClick={() => setDarkMode((current) => !current)} style={{ marginTop: "14px", width: "100%", minHeight: "43px", border: `1px solid ${darkMode ? "#475569" : "#CBD5E1"}`, background: darkMode ? "#0F172A" : "#F8FAFC", color: darkMode ? "#F8FAFC" : "#0F172A", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}>
-                  {darkMode ? "️ Gunakan Tema Terang" : " Gunakan Tema Gelap"}
+                  {darkMode ? uiText("️ Gunakan Tema Terang", "️ Use Light Theme") : uiText(" Gunakan Tema Gelap", " Use Dark Theme")}
                 </button>
               </div>
 
@@ -4113,7 +4139,7 @@ padding: isMobile ? "16px 12px" : "32px",
                 <div style={{ fontSize: "17px", fontWeight: "800", color: darkMode ? "#F8FAFC" : "#0F172A" }}>{uiText('️ Data & Reset','️ Data & Reset')}</div>
                 <div style={{ marginTop: "6px", color: darkMode ? "#CBD5E1" : "#64748B", fontSize: "13px", lineHeight: 1.5 }}>{uiText('Reset analisis atau hapus seluruh data perusahaan.','Reset analysis or delete all company data.')}</div>
                 <div style={{ display: "grid", gap: "9px", marginTop: "14px" }}>
-                  <button type="button" disabled={!business} onClick={() => { const ok = window.confirm("Reset Analisis? Profil perusahaan dan laporan keuangan tetap disimpan."); if (ok) resetAnalysis(); }} style={{ width: "100%", minHeight: "43px", border: "1px solid #FDA4AF", background: darkMode ? "#3B121D" : "#FFF1F2", color: darkMode ? "#FDA4AF" : "#9F1239", padding: "10px 14px", borderRadius: "10px", cursor: business ? "pointer" : "not-allowed", fontWeight: "700", opacity: business ? 1 : 0.55 }}>{uiText('Reset Analisis','Reset Analysis')}</button>
+                  <button type="button" disabled={!business} onClick={() => { const ok = window.confirm(uiText("Reset Analisis? Profil perusahaan dan laporan keuangan tetap disimpan.","Reset analysis? Company profile and financial reports will remain saved.")); if (ok) resetAnalysis(); }} style={{ width: "100%", minHeight: "43px", border: "1px solid #FDA4AF", background: darkMode ? "#3B121D" : "#FFF1F2", color: darkMode ? "#FDA4AF" : "#9F1239", padding: "10px 14px", borderRadius: "10px", cursor: business ? "pointer" : "not-allowed", fontWeight: "700", opacity: business ? 1 : 0.55 }}>{uiText('Reset Analisis','Reset Analysis')}</button>
                   <button type="button" disabled={!business} onClick={resetCompanyTotal} style={{ width: "100%", minHeight: "43px", border: "1px solid #FDA4AF", background: darkMode ? "#3B121D" : "#FFF1F2", color: darkMode ? "#FDA4AF" : "#9F1239", padding: "10px 14px", borderRadius: "10px", cursor: business ? "pointer" : "not-allowed", fontWeight: "700", opacity: business ? 1 : 0.55 }}>{uiText('Reset Perusahaan Total','Reset Entire Company')}</button>
                 </div>
               </div>
@@ -4136,20 +4162,20 @@ padding: isMobile ? "16px 12px" : "32px",
           const guideSteps = [
             {
               key: "capture",
-              title: "Ceritakan Usaha",
+              title: uiText("Ceritakan Usaha","Tell Your Business"),
               icon: "",
               done: hasBusiness,
-              text: "Masukkan cerita, profil, kondisi, produk, pelanggan, dan informasi penting usaha Anda. Ini menjadi konteks utama ZenAI.",
-              action: "Buka Ceritakan Usaha",
+              text: uiText("Masukkan cerita, profil, kondisi, produk, pelanggan, dan informasi penting usaha Anda. Ini menjadi konteks utama ZenAI.","Enter your story, profile, condition, products, customers, and important business information. This becomes ZenAI's main context."),
+              action: uiText("Buka Ceritakan Usaha","Open Tell Your Business"),
               canOpen: true
             },
             {
               key: "pulse",
-              title: "Kondisi Usaha",
+              title: uiText("Kondisi Usaha","Business Condition"),
               icon: "",
               done: hasPulse,
-              text: "Gunakan Business Pulse untuk melihat gambaran kondisi dan prioritas usaha berdasarkan konteks yang sudah diberikan.",
-              action: "Buka Kondisi Usaha",
+              text: uiText("Gunakan Business Pulse untuk melihat gambaran kondisi dan prioritas usaha berdasarkan konteks yang sudah diberikan.","Use Business Pulse to see a snapshot of your business condition and priorities based on the context provided."),
+              action: uiText("Buka Kondisi Usaha","Open Business Condition"),
               canOpen: hasBusiness
             },
             {
@@ -4157,8 +4183,8 @@ padding: isMobile ? "16px 12px" : "32px",
               title: "Diagnosis",
               icon: "",
               done: hasDiagnosis,
-              text: "Gunakan Diagnosis untuk memahami masalah, kekuatan, peluang, rekomendasi, dan langkah berikutnya.",
-              action: "Buka Diagnosis",
+              text: uiText("Gunakan Diagnosis untuk memahami masalah, kekuatan, peluang, rekomendasi, dan langkah berikutnya.","Use Diagnosis to understand problems, strengths, opportunities, recommendations, and next steps."),
+              action: uiText("Buka Diagnosis","Open Diagnosis"),
               canOpen: hasBusiness
             },
             {
@@ -4166,17 +4192,17 @@ padding: isMobile ? "16px 12px" : "32px",
               title: uiText('Perspektif Bisnis','Business Perspective'),
               icon: "",
               done: hasMarket,
-              text: "ZenAI memperkaya analisis dengan informasi eksternal yang relevan. Tavily bekerja di belakang layar sebagai sumber informasi, kemudian AI mengolahnya menjadi perspektif bisnis.",
-              action: "Buka Perspektif Bisnis",
+              text: uiText("ZenAI memperkaya analisis dengan informasi eksternal yang relevan. Tavily bekerja di belakang layar sebagai sumber informasi, kemudian AI mengolahnya menjadi perspektif bisnis.", "ZenAI enriches the analysis with relevant external information. Tavily works behind the scenes as an information source, then AI processes it into a business perspective."),
+              action: uiText("Buka Perspektif Bisnis","Open Business Perspective"),
               canOpen: hasBusiness
             },
             {
               key: "autopilot",
-              title: "Strategi & Tindakan",
+              title: uiText("Strategi & Tindakan","Strategy & Actions"),
               icon: "",
               done: hasAutopilot,
-              text: "Ubah hasil analisis menjadi strategi dan tindakan yang dapat dijalankan. Pilih durasi yang sesuai dengan kebutuhan usaha.",
-              action: "Buka Strategi & Tindakan",
+              text: uiText("Ubah hasil analisis menjadi strategi dan tindakan yang dapat dijalankan. Pilih durasi yang sesuai dengan kebutuhan usaha.","Turn analysis results into actionable strategies and actions. Choose the duration that fits your business needs."),
+              action: uiText("Buka Strategi & Tindakan","Open Strategy & Actions"),
               canOpen: hasBusiness
             },
             {
@@ -4184,8 +4210,8 @@ padding: isMobile ? "16px 12px" : "32px",
               title: "Growth Loop",
               icon: "",
               done: hasGrowth,
-              text: "Jadikan strategi sebagai tindakan, mulai, selesaikan, catat hasil, dan evaluasi. Hasil evaluasi digunakan sebagai konteks untuk analisis berikutnya.",
-              action: "Buka Strategi & Tindakan",
+              text: uiText("Jadikan strategi sebagai tindakan, mulai, selesaikan, catat hasil, dan evaluasi. Hasil evaluasi digunakan sebagai konteks untuk analisis berikutnya.","Turn the strategy into actions, start, complete, record results, and evaluate. Evaluation results are used as context for the next analysis."),
+              action: uiText("Buka Strategi & Tindakan","Open Strategy & Actions"),
               canOpen: hasAutopilot
             },
             {
@@ -4193,8 +4219,8 @@ padding: isMobile ? "16px 12px" : "32px",
               title: uiText('Laporan Keuangan','Financial Report'),
               icon: "",
               done: hasFinance,
-              text: "Catat transaksi dan gunakan ringkasan keuangan untuk memahami pendapatan, HPP, biaya, laba, arus kas, dan posisi keuangan.",
-              action: "Buka Laporan Keuangan",
+              text: uiText("Catat transaksi dan gunakan ringkasan keuangan untuk memahami pendapatan, HPP, biaya, laba, arus kas, dan posisi keuangan.","Record transactions and use the financial summary to understand revenue, COGS, expenses, profit, cash flow, and financial position."),
+              action: uiText("Buka Laporan Keuangan","Open Financial Report"),
               canOpen: true
             },
           ];
@@ -4229,8 +4255,7 @@ padding: isMobile ? "16px 12px" : "32px",
                 <div style={{ fontSize: "13px", fontWeight: "800", color: darkMode ? "#6ee7b7" : "#2563EB", letterSpacing: "0.04em" }}>{uiText('PANDUAN INTERAKTIF','INTERACTIVE GUIDE')}</div>
                 <h3 style={{ margin: "7px 0 8px", fontSize: "25px", color: darkMode ? "#F8FAFC" : "#0F172A" }}>{uiText('Bingung harus mulai dari mana?','Not sure where to start?')}</h3>
                 <p style={{ margin: 0, color: darkMode ? "#CBD5E1" : "#64748B", lineHeight: 1.65, maxWidth: "760px" }}>
-                  ZenAI akan membimbing Anda sesuai kondisi data yang sudah ada. Tidak perlu membuka semua menu sekaligus.
-                  Ikuti langkah berikut dan gunakan tombol tindakan untuk melanjutkan.
+                  {uiText("ZenAI akan membimbing Anda sesuai kondisi data yang sudah ada. Tidak perlu membuka semua menu sekaligus. Ikuti langkah berikut dan gunakan tombol tindakan untuk melanjutkan.", "ZenAI will guide you based on your existing data. You do not need to open every menu at once. Follow the steps below and use the action buttons to continue.")}
                 </p>
               </div>
 
@@ -4344,12 +4369,12 @@ padding: isMobile ? "16px 12px" : "32px",
                 <h3 style={{ margin: "0 0 14px", color: darkMode ? "#F8FAFC" : "#0F172A" }}>{uiText('Jika Anda bingung','If you are unsure')}</h3>
                 <div style={{ display: "grid", gap: "10px" }}>
                   {[
-                    ["Saya baru pertama kali menggunakan ZenAI", "Mulai dari Ceritakan Usaha. Masukkan konteks usaha terlebih dahulu agar analisis berikutnya memiliki dasar.", "capture"],
-                    ["Saya sudah punya profil usaha, lalu apa?", "Jalankan Kondisi Usaha untuk melihat gambaran dan prioritas, lalu lanjutkan ke Diagnosis.", "pulse"],
-                    ["Apa fungsi Perspektif Bisnis?", "Fitur ini memperkaya analisis dengan informasi eksternal yang relevan. Tavily hanya menjadi sumber di belakang layar.", "market"],
-                    ["Saya sudah mendapat strategi, lalu bagaimana?", "Jadikan strategi sebagai tindakan dan lanjutkan ke Growth Loop untuk menjalankan serta mengevaluasi hasilnya.", "autopilot"],
-                    ["Saya ingin melihat atau mencatat keuangan", "Buka Laporan Keuangan untuk mencatat transaksi dan melihat ringkasan keuangan.", "finance"],
-                    ["Sistem terasa bermasalah", "Buka System Health untuk memeriksa layanan dan menjalankan pemeriksaan sistem/AI.", "health"]
+                    ["Saya baru pertama kali menggunakan ZenAI", uiText("Mulai dari Ceritakan Usaha. Masukkan konteks usaha terlebih dahulu agar analisis berikutnya memiliki dasar.","Start with Tell Your Business. Enter your business context first so the next analyses have a foundation."), "capture"],
+                    [uiText("Saya sudah punya profil usaha, lalu apa?","I already have a business profile. What's next?"), uiText("Jalankan Kondisi Usaha untuk melihat gambaran dan prioritas, lalu lanjutkan ke Diagnosis.","Run Business Condition to see the overview and priorities, then continue to Diagnosis."), "pulse"],
+                    [uiText("Apa fungsi Perspektif Bisnis?", "What does Business Perspective do?"), uiText("Fitur ini memperkaya analisis dengan informasi eksternal yang relevan. Tavily hanya menjadi sumber di belakang layar.", "This feature enriches the analysis with relevant external information. Tavily only serves as a behind-the-scenes source."), "market"],
+                    [uiText("Saya sudah mendapat strategi, lalu bagaimana?","I already have a strategy. What next?"), uiText("Jadikan strategi sebagai tindakan dan lanjutkan ke Growth Loop untuk menjalankan serta mengevaluasi hasilnya.","Turn the strategy into actions and continue to Growth Loop to execute and evaluate the results."), "autopilot"],
+                    [uiText("Saya ingin melihat atau mencatat keuangan","I want to view or record finances"), uiText("Buka Laporan Keuangan untuk mencatat transaksi dan melihat ringkasan keuangan.","Open Financial Report to record transactions and view the financial summary."), "finance"],
+                    [uiText("Sistem terasa bermasalah","The system seems to have a problem"), uiText("Buka System Health untuk memeriksa layanan dan menjalankan pemeriksaan sistem/AI.","Open System Health to check services and run system/AI diagnostics."), "health"]
                   ].map(([question, answer, target]) => (
                     <button
                       key={question}
@@ -4429,9 +4454,7 @@ padding: isMobile ? "16px 12px" : "32px",
                     lineHeight: "1.6"
                   }}
                 >
-                  Ceritakan usaha Anda kepada ZENAI.
-                  Anda bisa menulis, mengirim gambar,
-                  atau menggunakan rekaman suara.
+                  {uiText("Ceritakan usaha Anda kepada ZENAI. Anda bisa menulis, mengirim gambar, atau menggunakan rekaman suara.", "Tell ZENAI about your business. You can write, send an image, or use a voice recording.")}
                 </p>
 
                 <button
@@ -4491,7 +4514,7 @@ padding: isMobile ? "16px 12px" : "32px",
                       >
                         {business.name ||
                           business.product ||
-                          "Usaha Anda"}
+                          uiText("Usaha Anda","Your Business")}
                       </h3>
 
                       <p
@@ -4504,7 +4527,7 @@ padding: isMobile ? "16px 12px" : "32px",
                       >
                         {business.description ||
                           business.summary ||
-                          "Profil usaha telah dianalisis oleh ZENAI."}
+                          uiText("Profil usaha telah dianalisis oleh ZENAI.","Your business profile has been analyzed by ZENAI.")}
                       </p>
                     </div>
 
@@ -4660,9 +4683,7 @@ padding: isMobile ? "16px 12px" : "32px",
                         lineHeight: "1.5"
                       }}
                     >
-                      Ketahui hal penting yang
-                      perlu diperhatikan dari
-                      usaha Anda.
+                      {uiText("Ketahui hal penting yang perlu diperhatikan dari usaha Anda.", "See the key things that need attention in your business.")}
                     </p>
                   </button>
 
@@ -4702,9 +4723,7 @@ padding: isMobile ? "16px 12px" : "32px",
                         lineHeight: "1.5"
                       }}
                     >
-                      Temukan masalah,
-                      kekuatan, peluang, dan
-                      prioritas perbaikan.
+                      {uiText("Temukan masalah, kekuatan, peluang, dan prioritas perbaikan.", "Find problems, strengths, opportunities, and improvement priorities.")}
                     </p>
                   </button>
 
@@ -4744,9 +4763,7 @@ padding: isMobile ? "16px 12px" : "32px",
                         lineHeight: "1.5"
                       }}
                     >
-                      Dapatkan langkah
-                      prioritas berdasarkan
-                      kondisi usaha Anda.
+                      {uiText("Dapatkan langkah prioritas berdasarkan kondisi usaha Anda.", "Get priority steps based on your business condition.")}
                     </p>
                   </button>
                 </div>
@@ -4861,11 +4878,7 @@ padding: isMobile ? "16px 12px" : "32px",
                   marginBottom: "24px"
                 }}
               >
-                Jelaskan usaha Anda dengan
-                bahasa biasa. Semakin lengkap
-                informasi yang diberikan,
-                semakin baik ZENAI memahami
-                kondisi usaha Anda.
+                {uiText("Jelaskan usaha Anda dengan bahasa biasa. Semakin lengkap informasi yang diberikan, semakin baik ZENAI memahami kondisi usaha Anda.", "Describe your business in plain language. The more complete the information you provide, the better ZENAI can understand your business condition.")}
               </p>
 
 
@@ -4877,7 +4890,7 @@ padding: isMobile ? "16px 12px" : "32px",
                     event.target.value
                   )
                 }
-                placeholder="Contoh: Saya memiliki usaha kuliner di Pekalongan. Saya menjual ayam geprek dan minuman. Penjualan akhir-akhir ini menurun, terutama pada hari kerja..."
+                placeholder={uiText("Contoh: Saya memiliki usaha kuliner di Pekalongan. Saya menjual ayam geprek dan minuman. Penjualan akhir-akhir ini menurun, terutama pada hari kerja...","Example: I run a culinary business in Pekalongan. I sell smashed fried chicken and drinks. Sales have recently declined, especially on weekdays...")}
                 style={{
                   width: "100%",
                   minHeight: "180px",
@@ -4938,7 +4951,7 @@ padding: isMobile ? "16px 12px" : "32px",
                   >
                     <img
                       src={image}
-                      alt="Preview usaha"
+                      alt={uiText("Preview usaha","Business preview")}
                       style={{
                         width: "100%",
                         maxWidth:
@@ -4993,8 +5006,7 @@ padding: isMobile ? "16px 12px" : "32px",
                     fontSize: "13px"
                   }}
                 >
-                  Rekam langsung atau upload
-                  file audio.
+                  {uiText("Rekam langsung atau upload file audio.", "Record directly or upload an audio file.")}
                 </p>
 
                 <div
@@ -5156,7 +5168,7 @@ padding: isMobile ? "16px 12px" : "32px",
                 >
                   {busy
                     ? uiText("ZENAI sedang menganalisis...","ZENAI is analyzing...")
-                    : " Analisis Usaha Saya"}
+                    : uiText(" Analisis Usaha Saya"," Analyze My Business")}
                 </button>
               </div>
             </div>
@@ -5211,10 +5223,7 @@ padding: isMobile ? "16px 12px" : "32px",
                     lineHeight: "1.6"
                   }}
                 >
-                  ZENAI akan membaca kondisi usaha Anda
-                  dan menunjukkan hal yang berjalan baik,
-                  hal yang perlu diperhatikan, serta
-                  langkah prioritas.
+                  {uiText("ZENAI akan membaca kondisi usaha Anda dan menunjukkan hal yang berjalan baik, hal yang perlu diperhatikan, serta langkah prioritas.", "ZENAI will read your business condition and show what is working, what needs attention, and the priority steps.")}
                 </p>
 
                 <button
@@ -5236,7 +5245,7 @@ padding: isMobile ? "16px 12px" : "32px",
                 >
                   {busy
                     ? uiText("ZENAI sedang membaca kondisi...","ZENAI is reading your business condition...")
-                    : " Analisis Kondisi Usaha"}
+                    : uiText(" Analisis Kondisi Usaha"," Analyze Business Condition")}
                 </button>
               </div>
             ) : (
@@ -5295,7 +5304,7 @@ padding: isMobile ? "16px 12px" : "32px",
                         }}
                       >
                         {pulseData.summary ||
-                          "Analisis kondisi usaha telah selesai."}
+                          uiText("Analisis kondisi usaha telah selesai.","Business condition analysis is complete.")}
                       </p>
                     </div>
 
@@ -5348,7 +5357,7 @@ padding: isMobile ? "16px 12px" : "32px",
                             >
                               <strong>
                                 {item.title ||
-                                  "Hal Positif"}
+                                  uiText("Hal Positif","What's Working")}
                               </strong>
 
                               <p
@@ -5428,7 +5437,7 @@ padding: isMobile ? "16px 12px" : "32px",
                               >
                                 <strong>
                                   {item.title ||
-                                    "Perlu Perhatian"}
+                                    uiText("Perlu Perhatian","Needs Attention")}
                                 </strong>
 
                                 {item.status && (
@@ -5543,7 +5552,7 @@ padding: isMobile ? "16px 12px" : "32px",
                                 <div>
                                   <strong>
                                     {item.title ||
-                                      "Prioritas"}
+                                      uiText("Prioritas","Priority")}
                                   </strong>
 
                                   <p
@@ -5634,9 +5643,7 @@ padding: isMobile ? "16px 12px" : "32px",
                       lineHeight: "1.6"
                     }}
                   >
-                    Ceritakan perubahan terbaru.
-                    ZENAI akan memperbarui kondisi,
-                    diagnosis, dan strategi Anda.
+                    {uiText("Ceritakan perubahan terbaru. ZENAI akan memperbarui kondisi, diagnosis, dan strategi Anda.", "Tell us about the latest changes. ZENAI will update your condition, diagnosis, and strategy.")}
                   </p>
 
                   <textarea
@@ -5646,7 +5653,7 @@ padding: isMobile ? "16px 12px" : "32px",
       event.target.value
     )
   }
-  placeholder="Contoh: Penjualan minggu ini turun, saya baru menaikkan harga, ada pesaing baru, atau saya menambah produk..."
+  placeholder={uiText("Contoh: Penjualan minggu ini turun, saya baru menaikkan harga, ada pesaing baru, atau saya menambah produk...","Example: Sales dropped this week, I just raised prices, there is a new competitor, or I added a product...")}
   style={{
     width: "100%",
     minHeight: "110px",
@@ -6130,7 +6137,7 @@ padding: isMobile ? "16px 12px" : "32px",
                             >
                               <strong>
                                 {item.title ||
-                                  "Peluang"}
+                                  uiText("Peluang","Opportunities")}
                               </strong>
 
                               <p
@@ -6544,7 +6551,7 @@ padding: isMobile ? "16px 12px" : "32px",
       >
         {marketData.analysis.businessPerspective ||
           marketData.analysis.summary ||
-          "Belum tersedia."}
+          uiText("Belum tersedia.","Not available yet.")}
       </p>
     </div>
 
@@ -6584,7 +6591,7 @@ padding: isMobile ? "16px 12px" : "32px",
           }}
         >
           {marketData.analysis.marketCondition ||
-            "Belum tersedia."}
+            uiText("Belum tersedia.","Not available yet.")}
         </p>
       </div>
 
@@ -6626,7 +6633,7 @@ padding: isMobile ? "16px 12px" : "32px",
           }}
         >
           {marketData.analysis.demandSignal?.reason ||
-            "Belum tersedia."}
+            uiText("Belum tersedia.","Not available yet.")}
         </p>
       </div>
     </div>
@@ -6762,7 +6769,7 @@ padding: isMobile ? "16px 12px" : "32px",
         }}
       >
         {marketData.analysis.strategicImplication ||
-          "Belum tersedia."}
+          uiText("Belum tersedia.","Not available yet.")}
       </p>
     </div>
   </div>
@@ -6974,7 +6981,7 @@ padding: isMobile ? "16px 12px" : "32px",
                       >
                         {change === null
                           ? uiText("Belum ada pembanding","No comparison available")
-                          : `${change >= 0 ? "↑" : "↓"} ${Math.abs(change).toFixed(1)}% vs periode sebelumnya`}
+                          : `${change >= 0 ? "↑" : "↓"} ${Math.abs(change).toFixed(1)}% ${uiText("vs periode sebelumnya", "vs previous period")}`}
                       </div>
                     </article>
                   ))}
@@ -7057,7 +7064,7 @@ padding: isMobile ? "16px 12px" : "32px",
                   <h3 style={{ marginTop: 0 }}>
                     {editingFinanceId
                       ? "Edit Transaksi"
-                      : "Tambah Transaksi"}
+                      : uiText("Tambah Transaksi","Add Transaction")}
                   </h3>
 
                   <form
@@ -7078,7 +7085,7 @@ padding: isMobile ? "16px 12px" : "32px",
                             description: event.target.value
                           }))
                         }
-                        placeholder="Contoh: Penjualan produk"
+                        placeholder={uiText("Contoh: Penjualan produk","Example: Product sales")}
                         style={{
                           display: "block",
                           width: "100%",
@@ -7212,8 +7219,8 @@ padding: isMobile ? "16px 12px" : "32px",
                           }}
                         >
                           {editingFinanceId
-                            ? "Simpan Perubahan"
-                            : "+ Simpan Transaksi"}
+                            ? uiText("Simpan Perubahan", "Save Changes")
+                            : uiText("+ Simpan Transaksi","+ Save Transaction")}
                         </button>
 
                         {editingFinanceId && (
@@ -7265,10 +7272,10 @@ padding: isMobile ? "16px 12px" : "32px",
                         <thead>
                           <tr>
                             {[
-                              "Tanggal",
-                              "Keterangan",
-                              "Jenis",
-                              "Nominal",
+                              uiText("Tanggal","Date"),
+                              uiText("Keterangan","Description"),
+                              uiText("Jenis","Type"),
+                              uiText("Nominal","Amount"),
                               ""
                             ].map((heading) => (
                               <th
@@ -7406,7 +7413,7 @@ padding: isMobile ? "16px 12px" : "32px",
                 }}
               >
                 <h3 style={{ marginTop: 0 }}>
-                  Laporan Laba Rugi — {financePeriodLabel(financePeriod)}
+                  {uiText("Laporan Laba Rugi", "Income Statement")} — {financePeriodLabel(financePeriod)}
                 </h3>
 
                 <div style={{ overflowX: "auto" }}>
@@ -7423,9 +7430,9 @@ padding: isMobile ? "16px 12px" : "32px",
                     <tbody>
                       {[
                         [uiText("Pendapatan","Revenue"), financeCurrentTotals.income, financePreviousTotals.income, false],
-                        ["HPP", financeCurrentTotals.hpp, financePreviousTotals.hpp, true],
-                        ["Laba Kotor", financeCurrentTotals.grossProfit, financePreviousTotals.grossProfit, false],
-                        ["Beban Operasional", financeCurrentTotals.expense, financePreviousTotals.expense, true],
+                        [uiText("HPP","COGS"), financeCurrentTotals.hpp, financePreviousTotals.hpp, true],
+                        [uiText("Laba Kotor","Gross Profit"), financeCurrentTotals.grossProfit, financePreviousTotals.grossProfit, false],
+                        [uiText("Beban Operasional","Operating Expenses"), financeCurrentTotals.expense, financePreviousTotals.expense, true],
                         [uiText("Laba Bersih","Net Profit"), financeCurrentTotals.netProfit, financePreviousTotals.netProfit, false]
                       ].map(([label, value, previousValue, inverse]) => {
                         const { delta, percentage } = financeDelta(value, previousValue);
@@ -7466,7 +7473,7 @@ padding: isMobile ? "16px 12px" : "32px",
                 }}
               >
                 <h3 style={{ marginTop: 0 }}>
-                  Laporan Arus Kas — {financePeriodLabel(financePeriod)}
+                  {uiText("Laporan Arus Kas", "Cash Flow Statement")} — {financePeriodLabel(financePeriod)}
                 </h3>
 
                 <div style={{ overflowX: "auto" }}>
@@ -7480,8 +7487,8 @@ padding: isMobile ? "16px 12px" : "32px",
                     </thead>
                     <tbody>
                       {[
-                        ["Kas Masuk", financeCurrentTotals.cashIn, financePreviousTotals.cashIn, false],
-                        ["Kas Keluar", financeCurrentTotals.cashOut, financePreviousTotals.cashOut, true],
+                        [uiText("Kas Masuk","Cash In"), financeCurrentTotals.cashIn, financePreviousTotals.cashIn, false],
+                        [uiText("Kas Keluar","Cash Out"), financeCurrentTotals.cashOut, financePreviousTotals.cashOut, true],
                         [uiText("Perubahan Kas","Cash Change"), financeCurrentTotals.cashChange, financePreviousTotals.cashChange, false],
                         [uiText("Kas & Bank","Cash & Bank"), financeCurrentTotals.cashTotal, financePreviousTotals.cashTotal, false]
                       ].map(([label, value, previousValue, inverse]) => {
@@ -7519,7 +7526,7 @@ padding: isMobile ? "16px 12px" : "32px",
                 }}
               >
                 <h3 style={{ marginTop: 0 }}>
-                  Laporan Posisi Keuangan — {financePeriodLabel(financePeriod)}
+                  {uiText("Laporan Posisi Keuangan", "Balance Sheet")} — {financePeriodLabel(financePeriod)}
                 </h3>
 
                 <div
@@ -7535,7 +7542,7 @@ padding: isMobile ? "16px 12px" : "32px",
                     {[
                       [uiText("Kas & Bank","Cash & Bank"), financeCurrentTotals.cashTotal],
                       [uiText("Piutang","Receivables"), financeCurrentTotals.receivable],
-                      ["Persediaan", financeCurrentTotals.inventory]
+                      [uiText("Persediaan","Inventory"), financeCurrentTotals.inventory]
                     ].map(([label, value]) => (
                       <div
                         key={label}
@@ -7573,9 +7580,9 @@ padding: isMobile ? "16px 12px" : "32px",
                     <h4>{uiText('Utang & Modal','Debt & Capital')}</h4>
 
                     {[
-                      ["Liabilitas", financeCurrentTotals.debt],
+                      [uiText("Liabilitas","Liabilities"), financeCurrentTotals.debt],
                       [
-                        "Modal + Laba",
+                        uiText("Modal + Laba","Capital + Profit"),
                         financeCurrentTotals.totalEquity
                       ]
                     ].map(([label, value]) => (
@@ -7624,9 +7631,9 @@ padding: isMobile ? "16px 12px" : "32px",
                   <strong>{uiText('Perubahan posisi keuangan','Financial position change')}</strong>
                   <div style={{ display: "grid", gap: "8px", marginTop: "10px" }}>
                     {[
-                      ["Total Aset", financeCurrentTotals.totalAssets, financePreviousTotals.totalAssets],
-                      ["Liabilitas", financeCurrentTotals.debt, financePreviousTotals.debt],
-                      ["Modal + Laba", financeCurrentTotals.totalEquity, financePreviousTotals.totalEquity]
+                      [uiText("Total Aset","Total Assets"), financeCurrentTotals.totalAssets, financePreviousTotals.totalAssets],
+                      [uiText("Liabilitas","Liabilities"), financeCurrentTotals.debt, financePreviousTotals.debt],
+                      [uiText("Modal + Laba","Capital + Profit"), financeCurrentTotals.totalEquity, financePreviousTotals.totalEquity]
                     ].map(([label, value, previousValue]) => {
                       const { delta, percentage } = financeDelta(value, previousValue);
                       return (
@@ -7679,8 +7686,8 @@ padding: isMobile ? "16px 12px" : "32px",
                       financeCurrentTotals.totalEquity
                     )
                   ) < 1
-                    ? " Posisi keuangan seimbang."
-                    : "️ Data belum seimbang. Periksa transaksi modal, utang, atau aset."}
+                    ? uiText(" Posisi keuangan seimbang.", " Balanced financial position.")
+                    : uiText("️ Data belum seimbang. Periksa transaksi modal, utang, atau aset.", "️ Data is not balanced. Check capital, debt, or asset transactions.")}
                 </div>
               </section>
             )}
@@ -7742,8 +7749,8 @@ padding: isMobile ? "16px 12px" : "32px",
             );
             if (decisionType === "investment") return (
               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)", gap: "13px" }}>
-                {field("investmentAmount", "Nilai investasi / pengeluaran", "Rp", "Contoh: 5000000")}
-                {field("expectedRevenue", "Tambahan pendapatan yang diharapkan", "Rp", "Contoh: 8000000")}
+                {field("investmentAmount", uiText("Nilai investasi / pengeluaran","Investment / Expense Amount"), "Rp", "Contoh: 5000000")}
+                {field("expectedRevenue", uiText("Tambahan pendapatan yang diharapkan","Expected Additional Revenue"), "Rp", "Contoh: 8000000")}
                 {field("incrementalHppRate", "HPP atas tambahan penjualan", "%", "Contoh: 40")}
                 {field("incrementalExpense", uiText("Beban tambahan","Additional Expenses"), "Rp", uiText("Contoh: 500000","Example: 500000"))}
               </div>
@@ -7832,7 +7839,7 @@ padding: isMobile ? "16px 12px" : "32px",
                     <section style={{ padding: "18px", borderRadius: "18px", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}` }}>
                       <div style={{ fontSize: "12px", fontWeight: "800", marginBottom: "12px" }}>{uiText('DAMPAK TERHADAP KEUANGAN','FINANCIAL IMPACT')}</div>
                       <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)", gap: "10px" }}>
-                        {[ [uiText("Pendapatan","Revenue"), decisionResult.baseline.income, decisionResult.simulated.income], ["HPP", decisionResult.baseline.hpp, decisionResult.simulated.hpp], [uiText("Laba Bersih","Net Profit"), decisionResult.baseline.profit, decisionResult.simulated.profit], [uiText("Kas","Cash"), decisionResult.baseline.cash, decisionResult.simulated.cash] ].map(([label, before, after]) => (
+                        {[ [uiText("Pendapatan","Revenue"), decisionResult.baseline.income, decisionResult.simulated.income], [uiText("HPP","COGS"), decisionResult.baseline.hpp, decisionResult.simulated.hpp], [uiText("Laba Bersih","Net Profit"), decisionResult.baseline.profit, decisionResult.simulated.profit], [uiText("Kas","Cash"), decisionResult.baseline.cash, decisionResult.simulated.cash] ].map(([label, before, after]) => (
                           <div key={label} style={{ padding: "13px", borderRadius: "12px", background: darkMode ? "#111827" : "#F8FAFC" }}>
                             <div style={{ fontSize: "11px", color: darkMode ? "#94A3B8" : "#64748B" }}>{label}</div>
                             <div style={{ marginTop: "5px", fontWeight: "800", fontSize: "15px" }}>{formatRupiah(after)}</div>
@@ -7945,8 +7952,8 @@ padding: isMobile ? "16px 12px" : "32px",
                   }}
                 >
                   {busy
-                    ? "ZENAI sedang membuat strategi..."
-                    : " Buat Strategi"}
+                    ? uiText("ZENAI sedang membuat strategi...", "ZENAI is creating a strategy...")
+                    : uiText(" Buat Strategi", " Create Strategy")}
                 </button>
               </div>
             ) : (
@@ -8263,7 +8270,7 @@ darkMode={darkMode}
 
                               <strong>
                                 {item.title ||
-                                  "Strategi"}
+                                  uiText("Strategi","Strategy")}
                               </strong>
 
                               <p
