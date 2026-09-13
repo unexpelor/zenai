@@ -40,7 +40,12 @@
     "backToHome": "← Back to home",
     "loginTitle": "Log in to save your business data and AI results permanently.",
     "signupTitle": "Create a ZENAI account to save your data in the cloud.",
-    "success": "Successfully logged in."
+    "success": "Successfully logged in.",
+    "cloudLoadError": "Cloud data could not be loaded. Please refresh.",
+    "supabaseNotConfigured": "Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.",
+    "validationError": "Enter an email and a password with at least 6 characters.",
+    "accountCreated": "Account created successfully. Check your email to verify it, then log in.",
+    "emailPlaceholder": "you@example.com"
   },
   "home": {
     "welcome": "Welcome back",
