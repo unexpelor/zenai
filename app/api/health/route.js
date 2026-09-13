@@ -63,7 +63,7 @@ export async function GET(request) {
         throw new Error(data?.detail || data?.message || `HTTP ${response.status}`);
       }
       return text.tavily;
-    }), locale));
+    }), locale);
   } else {
     services.push({ name: "Tavily Market Search", status: "down", detail: text.tavilyMissing });
   }
