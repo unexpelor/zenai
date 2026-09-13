@@ -218,51 +218,8 @@
     "delta": "Perubahan",
     "interpretation": "Interpretasi AI"
   },
-  "settings": {
-    "title": "Pengaturan",
-    "description": "Kelola pengaturan dan preferensi ZenAI di sini.",
-    "theme": "Tampilan",
-    "themeDesc": "Atur tema antarmuka ZenAI.",
-    "lightMode": "Gunakan Tema Terang",
-    "darkMode": "Gunakan Tema Gelap",
-    "language": "Bahasa Tampilan",
-    "english": "English",
-    "indonesian": "Bahasa Indonesia",
-    "dataReset": "Data & Reset",
-    "dataResetDesc": "Reset analisis atau hapus seluruh data perusahaan.",
-    "resetAnalysis": "Reset Analisis",
-    "resetCompany": "Reset Perusahaan Total",
-    "systemHealth": "System Health",
-    "systemHealthDesc": "Periksa kondisi layanan ZenAI dan koneksi AI secara langsung.",
-    "runHealthCheck": "Run Live Health Check",
-    "checking": "Memeriksa...",
-    "operational": "Beroperasi",
-    "configured": "Terkonfigurasi",
-    "down": "Tidak Tersedia",
-    "aiSmokeTest": "Live AI Smoke Test",
-    "runAiSmokeTest": "Run AI Smoke Test",
-    "testingAi": "Menguji AI..."
-  },
-  "guide": {
-    "title": "Panduan ZenAI",
-    "step1": "Ceritakan Usaha",
-    "step1Desc": "Masukkan cerita, profil, kondisi, produk, pelanggan, dan informasi penting usaha Anda. Ini menjadi konteks utama ZenAI.",
-    "step2": "Kondisi Usaha",
-    "step2Desc": "Gunakan Business Pulse untuk melihat gambaran kondisi dan prioritas usaha berdasarkan konteks yang sudah diberikan.",
-    "step3": "Diagnosis",
-    "step3Desc": "Gunakan Diagnosis untuk memahami masalah, kekuatan, peluang, rekomendasi, dan langkah berikutnya.",
-    "step4": "Perspektif Bisnis",
-    "step4Desc": "ZenAI memperkaya analisis dengan informasi eksternal yang relevan untuk perspektif bisnis yang lebih luas.",
-    "step5": "Strategi & Tindakan",
-    "step5Desc": "Ubah hasil analisis menjadi strategi dan tindakan yang dapat dijalankan. Pilih durasi yang sesuai.",
-    "step6": "Growth Loop",
-    "step6Desc": "Jadikan strategi sebagai tindakan: mulai, selesaikan, catat hasil, evaluasi. Hasil menjadi konteks siklus berikutnya.",
-    "step7": "Laporan Keuangan",
-    "step7Desc": "Catat transaksi dan gunakan ringkasan keuangan untuk memahami pendapatan, biaya, laba, arus kas, dan posisi keuangan.",
-    "completed": "Selesai",
-    "open": "Buka",
-    "nextRecommended": "Selanjutnya:"
-  },
+  "settings": "Pengaturan",
+  "guide": "Panduan",
   "landing": {
     "navFeatures": "Fitur",
     "navHow": "Cara Kerja",
@@ -330,5 +287,6 @@
     "finalSub": "Mulai dari kondisi usaha hari ini. Pahami, putuskan, lalu tumbuh.",
     "finalCta": "Coba ZENAI Sekarang",
     "tagline": "Pahami. Putuskan. Tumbuh."
-  }
+  },
+  "mockStable": "Stabil"
 }
