@@ -9,17 +9,16 @@ export default function LanguageSwitcher() {
   const switchTo = (next) => {
     if (!["id", "en"].includes(next)) return;
 
-    // Persist the locale for both next-intl/server and client-side reloads.
+    // Persist the explicit choice before refreshing the whole app.
+    // This makes every server/client component use the same locale.
     document.cookie = `NEXT_LOCALE=${next}; Path=/; Max-Age=31536000; SameSite=Lax`;
     try {
       window.localStorage.setItem("zenai_locale", next);
+      window.sessionStorage.setItem("zenai_pending_locale_sync", next);
     } catch {}
 
-    if (next === locale) {
-      window.location.reload();
-      return;
-    }
-
+    // Force a full App Router request so layout, server messages, auth UI,
+    // guide, settings, and every client component are rendered in the new locale.
     window.location.reload();
   };
 
