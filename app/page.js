@@ -366,14 +366,14 @@ const [marketError, setMarketError] =
     setHealthLoading(true); setHealthError("");
     try {
       const accessToken = await getAccessToken();
-      if (!accessToken) throw new Error("Sesi pengguna tidak tersedia.");
-      const response = await fetch("/api/health", { headers: { Authorization: `Bearer ${accessToken}` }, cache: "no-store" });
+      if (!accessToken) throw new Error(locale === "en" ? "User session is unavailable." : "Sesi pengguna tidak tersedia.");
+      const response = await fetch(`/api/health?locale=${encodeURIComponent(locale)}`, { headers: { Authorization: `Bearer ${accessToken}` }, cache: "no-store" });
       const result = await response.json().catch(() => null);
-      if (!response.ok || !result?.success) throw new Error(result?.message || "Health check gagal.");
+      if (!response.ok || !result?.success) throw new Error(result?.message || (locale === "en" ? "Health check failed." : "Health check gagal."));
       setHealthData(result);
     } catch (error) {
       console.error("LIVE HEALTH CHECK ERROR:", error);
-      setHealthError(error?.message || "Health check gagal dijalankan.");
+      setHealthError(error?.message || (locale === "en" ? "Health check could not be completed." : "Health check gagal dijalankan."));
     } finally { setHealthLoading(false); }
   };
 
@@ -381,18 +381,27 @@ const [marketError, setMarketError] =
     setHealthLoading(true); setHealthError("");
     try {
       const accessToken = await getAccessToken();
-      if (!accessToken) throw new Error("Sesi pengguna tidak tersedia.");
+      if (!accessToken) throw new Error(locale === "en" ? "User session is unavailable." : "Sesi pengguna tidak tersedia.");
       const started = performance.now();
-      const response = await fetch("/api/ai", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` }, body: JSON.stringify({ prompt: "Balas hanya dengan kata PASS.", system: "Smoke test. Jawab tepat: PASS", jsonMode: false }), cache: "no-store" });
+      const response = await fetch("/api/ai", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` }, body: JSON.stringify({ prompt: locale === "en" ? "Reply only with PASS in English. Do not use Indonesian." : "Balas hanya dengan PASS dalam Bahasa Indonesia. Jangan gunakan bahasa Inggris.", system: locale === "en" ? "English-only smoke test. Reply exactly: PASS." : "Uji smoke Bahasa Indonesia. Balas tepat: PASS.", jsonMode: false, locale }), cache: "no-store" });
       const result = await response.json().catch(() => null);
       const latency = Math.round(performance.now() - started);
-      if (!response.ok || !result?.success) throw new Error(result?.message || "AI smoke test gagal.");
+      if (!response.ok || !result?.success) throw new Error(result?.message || (locale === "en" ? "AI smoke test failed." : "AI smoke test gagal."));
       setHealthData((previous) => ({ ...(previous || {}), checkedAt: new Date().toISOString(), liveAiSmokeTest: { status: "operational", provider: result.provider || "Unknown", latencyMs: latency, response: String(result.text || "").trim().slice(0, 20) } }));
     } catch (error) {
       console.error("LIVE AI SMOKE TEST ERROR:", error);
-      setHealthError(error?.message || "AI smoke test gagal.");
+      setHealthError(error?.message || (locale === "en" ? "AI smoke test failed." : "AI smoke test gagal."));
     } finally { setHealthLoading(false); }
   };
+
+  // Refresh Health data automatically when the interface language changes,
+  // so previously loaded Indonesian details are never shown in English mode.
+  useEffect(() => {
+    if (!healthData) return;
+    runLiveHealthCheck();
+    // Intentionally depend only on locale: re-check once per language change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locale]);
 
   const [businessUpdates, setBusinessUpdates] =
     useState([]);
@@ -4092,7 +4101,7 @@ padding: isMobile ? "16px 12px" : "32px",
                   <div style={{ marginTop: "6px", color: darkMode ? "#CBD5E1" : "#1D4ED8", fontSize: "14px", lineHeight: 1.5 }}>{uiText('Periksa kondisi layanan ZenAI dan koneksi AI secara langsung.','Check ZenAI service status and AI connection live.')}</div>
                 </div>
                 <button type="button" onClick={runLiveHealthCheck} disabled={healthLoading} style={{ border: "none", borderRadius: "10px", padding: "11px 16px", background: "#2563EB", color: "#FFFFFF", fontWeight: "800", cursor: healthLoading ? "wait" : "pointer" }}>
-                  {healthLoading ? "Memeriksa..." : "Run Live Health Check"}
+                  {healthLoading ? uiText("Memeriksa...", "Checking...") : uiText("Periksa Kesehatan Sistem", "Run Live Health Check")}
                 </button>
               </div>
             </div>
@@ -4106,28 +4115,31 @@ padding: isMobile ? "16px 12px" : "32px",
             {healthData && (
               <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
                 <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, minmax(0, 1fr))", gap: "14px" }}>
-                  {(healthData.services || []).map((service) => (
-                    <div key={service.name} style={{ padding: "18px", borderRadius: "14px", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}`, background: darkMode ? "#111827" : "#FFFFFF" }}>
+                  {(healthData.services || []).map((service, index) => {
+                    const serviceName = service?.name || uiText("Layanan Tidak Dikenal", "Unknown Service");
+                    return (
+                    <div key={`${serviceName}-${index}`} style={{ padding: "18px", borderRadius: "14px", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}`, background: darkMode ? "#111827" : "#FFFFFF" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", gap: "12px" }}>
-                        <strong>{service.name}</strong>
+                        <strong>{serviceName}</strong>
                         <span style={{ fontWeight: "800", color: service.status === "operational" ? "#2563EB" : service.status === "configured" ? "#B45309" : "#BE123C" }}>
-                          {service.status === "operational" ? " OPERATIONAL" : service.status === "configured" ? " CONFIGURED" : " DOWN"}
+                          {service.status === "operational" ? uiText(" BEROPERASI", " OPERATIONAL") : service.status === "configured" ? uiText(" TERKONFIGURASI", " CONFIGURED") : uiText(" TIDAK TERSEDIA", " DOWN")}
                         </span>
                       </div>
                       <div style={{ marginTop: "8px", color: darkMode ? "#CBD5E1" : "#64748B", fontSize: "13px", lineHeight: 1.5 }}>{service.detail}</div>
-                      {service.latencyMs != null && <div style={{ marginTop: "8px", fontSize: "12px", color: darkMode ? "#94A3B8" : "#64748B" }}>Latency: {service.latencyMs} ms</div>}
+                      {service.latencyMs != null && <div style={{ marginTop: "8px", fontSize: "12px", color: darkMode ? "#94A3B8" : "#64748B" }}>{uiText("Latensi", "Latency")}: {service.latencyMs} ms</div>}
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
                 {healthData.liveAiSmokeTest && (
                   <div style={{ padding: "18px", borderRadius: "14px", border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}`, background: darkMode ? "#111827" : "#FFFFFF" }}>
                     <div style={{ display: "flex", justifyContent: "space-between" }}><strong>{uiText('Live AI Smoke Test','Live AI Smoke Test')}</strong><span style={{ color: darkMode ? "#60A5FA" : "#2563EB", fontWeight: "800" }}>{uiText('OPERATIONAL','OPERATIONAL')}</span></div>
-                    <div style={{ marginTop: "8px", fontSize: "13px", color: darkMode ? "#CBD5E1" : "#64748B" }}>Provider: {healthData.liveAiSmokeTest.provider} · Latency: {healthData.liveAiSmokeTest.latencyMs} ms · Response: {healthData.liveAiSmokeTest.response || "—"}</div>
+                    <div style={{ marginTop: "8px", fontSize: "13px", color: darkMode ? "#CBD5E1" : "#64748B" }}>{uiText("Penyedia", "Provider")}: {healthData.liveAiSmokeTest.provider} · {uiText("Latensi", "Latency")}: {healthData.liveAiSmokeTest.latencyMs} ms · {uiText("Respons", "Response")}: {healthData.liveAiSmokeTest.response || "—"}</div>
                   </div>
                 )}
                 <div style={{ display: "flex", justifyContent: "space-between", gap: "12px", alignItems: "center", flexWrap: "wrap", padding: "16px", borderRadius: "14px", background: darkMode ? "#0F172A" : "#F8FAFC" }}>
-                  <div><strong>{healthData.summary?.operational ?? 0}/{healthData.summary?.total ?? 0} layanan operational</strong><div style={{ marginTop: "4px", fontSize: "12px", color: darkMode ? "#94A3B8" : "#64748B" }}>Checked: {healthData.checkedAt ? new Date(healthData.checkedAt).toLocaleString("id-ID") : "—"}</div></div>
-                  <button type="button" onClick={runLiveAiSmokeTest} disabled={healthLoading} style={{ border: `1px solid ${darkMode ? "#475569" : "#CBD5E1"}`, borderRadius: "10px", padding: "10px 14px", background: darkMode ? "#111827" : "#FFFFFF", color: darkMode ? "#F8FAFC" : "#0F172A", fontWeight: "700", cursor: healthLoading ? "wait" : "pointer" }}>{healthLoading ? "Menguji AI..." : "Run AI Smoke Test"}</button>
+                  <div><strong>{healthData.summary?.operational ?? 0}/{healthData.summary?.total ?? 0} {uiText("layanan beroperasi", "services operational")}</strong><div style={{ marginTop: "4px", fontSize: "12px", color: darkMode ? "#94A3B8" : "#64748B" }}>{uiText("Diperiksa", "Checked")}: {healthData.checkedAt ? new Date(healthData.checkedAt).toLocaleString(locale === "en" ? "en-US" : "id-ID") : "—"}</div></div>
+                  <button type="button" onClick={runLiveAiSmokeTest} disabled={healthLoading} style={{ border: `1px solid ${darkMode ? "#475569" : "#CBD5E1"}`, borderRadius: "10px", padding: "10px 14px", background: darkMode ? "#111827" : "#FFFFFF", color: darkMode ? "#F8FAFC" : "#0F172A", fontWeight: "700", cursor: healthLoading ? "wait" : "pointer" }}>{healthLoading ? uiText("Menguji AI...", "Testing AI...") : uiText("Uji AI", "Run AI Smoke Test")}</button>
                 </div>
               </div>
             )}
