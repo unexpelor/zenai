@@ -35,7 +35,7 @@ export async function GET(request) {
     const { error } = await supabase.from("zenai_user_state").select("user_id").eq("user_id", auth.user.id).maybeSingle();
     if (error) throw error;
     return text.supabase;
-  }), locale)); else services.push({ name: "Supabase Database", status: "down", detail: text.supabaseMissing });
+  }), locale); else services.push({ name: "Supabase Database", status: "down", detail: text.supabaseMissing });
   if (process.env.GROQ_API_KEY) services.push(await timedCheck("Groq", () => checkModels("https://api.groq.com/openai/v1/models", { Authorization: `Bearer ${process.env.GROQ_API_KEY}` }, locale), locale)); else services.push({ name: "Groq", status: "not_configured", detail: text.providerMissing });
   if (process.env.OPENROUTER_API_KEY) services.push(await timedCheck("OpenRouter", () => checkModels("https://openrouter.ai/api/v1/models", { Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}` }, locale), locale)); else services.push({ name: "OpenRouter", status: "not_configured", detail: text.providerMissing });
   if (process.env.GEMINI_API_KEY) services.push(await timedCheck("Gemini", () => checkModels(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(process.env.GEMINI_API_KEY)}`, {}, locale), locale)); else services.push({ name: "Gemini", status: "not_configured", detail: text.providerMissing });
