@@ -5,15 +5,37 @@ import { useLocale, useTranslations } from "next-intl";
 import { createClient } from "../lib/supabase/client";
 import BusinessGrowthLoop from "../components/BusinessGrowthLoop";
 import ZenLanding from "../components/ZenLanding";
+import { useAILocalization } from "../hooks/useAILocalization";
+import { stableHash, translateContent } from "../lib/localization/translateContent";
+import { createLocalizationCacheKey, readLocalizationCache, writeLocalizationCache } from "../lib/localization/localizationCache";
+import { AI_LOCALIZATION_KEYS } from "../lib/localization/localizationRegistry";
 
 function safeArray(value) {
   return Array.isArray(value) ? value : [];
+}
+
+function safeText(value, fallback = "") {
+  if (value === null || value === undefined) return fallback;
+  if (typeof value === "string" || typeof value === "number") return String(value);
+  if (Array.isArray(value)) return value.map((item) => safeText(item)).filter(Boolean).join(", ");
+  if (typeof value === "object") {
+    const preferred = value.name ?? value.title ?? value.label ?? value.description ?? value.summary ?? value.text ?? value.value;
+    if (preferred !== undefined) return safeText(preferred, fallback);
+    return Object.values(value).map((item) => safeText(item)).filter(Boolean).join(", ");
+  }
+  return fallback;
 }
 
 function normalizeBusiness(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   return {
     ...value,
+    name: safeText(value.name),
+    product: safeText(value.product),
+    description: safeText(value.description),
+    summary: safeText(value.summary),
+    targetMarket: safeText(value.targetMarket),
+    location: safeText(value.location ?? value.lokasi),
     strengths: safeArray(value.strengths),
     weaknesses: safeArray(value.weaknesses),
     opportunities: safeArray(value.opportunities),
@@ -68,15 +90,6 @@ function normalizeDecision(value) {
   };
 }
 
-function stableHash(value) {
-  const input = typeof value === "string" ? value : JSON.stringify(value);
-  let h = 2166136261;
-  for (let i = 0; i < input.length; i++) {
-    h ^= input.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return (h >>> 0).toString(36);
-}
 
 function ZenIcon({ name, size = 18, strokeWidth = 1.9 }) {
   const common = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true };
@@ -1694,30 +1707,21 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
   // =========================
   const aiCanonicalRef = useRef({});
   const aiLocalizationRef = useRef({});
-  const aiSyncGenerationRef = useRef(0);
+  const { beginGeneration, isCurrent } = useAILocalization();
 
   const translateAiState = async (value, targetLocale, signal) => {
-    if (value === null || value === undefined) return value;
     const outputLanguage = targetLocale === "en" ? "English" : "Bahasa Indonesia";
-
     const translateChunk = async (chunk) => {
       const source = JSON.stringify(chunk);
-      if (!source || source === "null" || source === "undefined") return chunk;
       const response = await fetch("/api/ai", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(await getApiAuthHeaders())
-        },
+        headers: { "Content-Type": "application/json", ...(await getApiAuthHeaders()) },
         body: JSON.stringify({
-          prompt: `Translate this ZENAI AI output into ${outputLanguage}.\n\nRULES:\n- Translate EVERY human-readable string value.\n- Preserve JSON keys, structure, IDs, enum values, URLs, numbers, dates, currency codes and technical identifiers.\n- Do not add, remove, summarize, or reorder data.\n- Return ONLY valid JSON.\n\nSOURCE JSON:\n${source}`,
-          system: `You are ZENAI's strict localization engine. Translate all human-readable content to ${outputLanguage}. Never leave Indonesian text when target is English and never leave English text when target is Bahasa Indonesia. Preserve data structure exactly.`,
-          jsonMode: true,
-          locale: targetLocale,
-          outputLanguage
+          prompt: `Translate this COMPLETE ZENAI AI payload into ${outputLanguage}.\n\nRULES:\n- Translate EVERY human-readable string value, including deeply nested values.\n- Preserve JSON keys, structure, IDs, enum values, URLs, numbers, dates, currency codes and technical identifiers.\n- Do not add, remove, summarize, or reorder data.\n- Return ONLY valid JSON with the EXACT same structure.\n\nSOURCE JSON:\n${source}`,
+          system: `You are ZENAI's strict localization engine. Translate the COMPLETE JSON payload to ${outputLanguage}. Every human-readable string must use the target language. Preserve the exact JSON structure.`,
+          jsonMode: true, locale: targetLocale, outputLanguage
         }),
-        cache: "no-store",
-        signal
+        cache: "no-store", signal
       });
       const data = await response.json().catch(() => null);
       if (!response.ok || !data?.success) throw new Error(data?.error || data?.message || "Output translation failed.");
@@ -1725,13 +1729,7 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
       if (translated === null || translated === undefined) throw new Error("Translation response is not valid JSON.");
       return translated;
     };
-
-    if (Array.isArray(value)) return Promise.all(value.map(translateChunk));
-    if (typeof value === "object") {
-      const entries = Object.entries(value);
-      return Object.fromEntries(await Promise.all(entries.map(async ([key, item]) => [key, await translateChunk(item)])));
-    }
-    return translateChunk(value);
+    return translateContent(value, translateChunk);
   };
 
   const registerCanonicalAi = (key, value, sourceLocale = locale) => {
@@ -1748,25 +1746,21 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
   const canonicalValueForSave = (key, fallback) => aiCanonicalRef.current[key]?.value ?? fallback;
 
   useEffect(() => {
-    if (!cloudLoaded || !session?.user?.id) return;
+    // AI presentation localization is independent from cloud persistence.
+    // It must also work in local/no-Supabase sessions.
+    if (!cloudLoaded && supabase && session?.user?.id) return;
 
-    const generation = ++aiSyncGenerationRef.current;
-    const controller = new AbortController();
+    const { generation, signal } = beginGeneration();
 
-    const targets = [
-      ["business", business, setBusiness],
-      ["pulseData", pulseData, setPulseData],
-      ["diagnosis", diagnosis, setDiagnosis],
-      ["marketData", marketData, setMarketData],
-      ["autopilotData", autopilotData, setAutopilotData],
-      ["growthActions", growthActions, setGrowthActions],
-      ["businessUpdates", businessUpdates, setBusinessUpdates],
-      ["decisionResult", decisionResult, setDecisionResult]
-    ].filter(([, value]) => value !== null && value !== undefined);
+    const stateMap = { business, pulseData, diagnosis, marketData, autopilotData, growthActions, businessUpdates, decisionResult };
+    const setterMap = { business: setBusiness, pulseData: setPulseData, diagnosis: setDiagnosis, marketData: setMarketData, autopilotData: setAutopilotData, growthActions: setGrowthActions, businessUpdates: setBusinessUpdates, decisionResult: setDecisionResult };
+    const targets = AI_LOCALIZATION_KEYS
+      .map((key) => [key, stateMap[key], setterMap[key]])
+      .filter(([, value]) => value !== null && value !== undefined);
 
     const syncAllAiOutputs = async () => {
       for (const [key, currentValue, setter] of targets) {
-        if (controller.signal.aborted || generation !== aiSyncGenerationRef.current) return;
+        if (!isCurrent(generation)) return;
 
         const currentHash = stableHash(currentValue);
         let canonical = aiCanonicalRef.current[key];
@@ -1792,19 +1786,15 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
 
         if (localization.locale === locale && localization.sourceHash === sourceHash) continue;
 
-        const cacheKey = `zenai_i18n_ai_${session.user.id}_${sourceHash}_${locale}_${key}`;
-        let translated = null;
-        try {
-          const cached = sessionStorage.getItem(cacheKey);
-          if (cached) translated = JSON.parse(cached);
-        } catch {}
+        const cacheKey = createLocalizationCacheKey({ userId: session?.user?.id || "anonymous", sourceHash, locale, key });
+        let translated = readLocalizationCache(cacheKey);
 
         try {
           if (translated === null) {
-            translated = await translateAiState(sourceValue, locale, controller.signal);
-            try { sessionStorage.setItem(cacheKey, JSON.stringify(translated)); } catch {}
+            translated = await translateAiState(sourceValue, locale, signal);
+            writeLocalizationCache(cacheKey, translated);
           }
-          if (controller.signal.aborted || generation !== aiSyncGenerationRef.current) return;
+          if (!isCurrent(generation)) return;
           setter(translated);
           aiLocalizationRef.current[key] = { locale, sourceHash, lastPresentationHash: stableHash(translated) };
         } catch (error) {
@@ -1815,7 +1805,7 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
     };
 
     syncAllAiOutputs();
-    return () => controller.abort();
+    return undefined;
     // AI states are intentionally dependencies so newly generated outputs are
     // registered automatically. Canonical/presentation hashes prevent loops.
   }, [locale, cloudLoaded, session?.user?.id, business, pulseData, diagnosis, marketData, autopilotData, growthActions, businessUpdates, decisionResult]);
@@ -2996,8 +2986,8 @@ Aturan:
           type: "Profil Usaha",
 
           description:
-            business.product ||
-            business.description ||
+            safeText(business.product) ||
+            safeText(business.description) ||
             "Informasi usaha telah dianalisis.",
 
           date:
@@ -3011,7 +3001,7 @@ Aturan:
             "Lihat Kondisi Usaha",
 
           description:
-            pulseData.summary ||
+            safeText(pulseData.summary) ||
             "Analisis kondisi usaha telah dibuat.",
 
           date:
@@ -3025,7 +3015,7 @@ Aturan:
             "Diagnosis Usaha",
 
           description:
-            diagnosis.summary ||
+            safeText(diagnosis.summary) ||
             "Diagnosis usaha telah dibuat.",
 
           date:
@@ -3039,7 +3029,7 @@ Aturan:
             "Strategi & Tindakan",
 
           description:
-            autopilotData.summary ||
+            safeText(autopilotData.summary) ||
             "Rencana tindakan telah dibuat.",
 
           date:
@@ -4556,8 +4546,8 @@ padding: isMobile ? "16px 12px" : "32px",
                           fontSize: "24px"
                         }}
                       >
-                        {business.name ||
-                          business.product ||
+                        {safeText(business.name) ||
+                          safeText(business.product) ||
                           uiText("Usaha Anda","Your Business")}
                       </h3>
 
@@ -4569,8 +4559,8 @@ padding: isMobile ? "16px 12px" : "32px",
                           lineHeight: "1.6"
                         }}
                       >
-                        {business.description ||
-                          business.summary ||
+                        {safeText(business.description) ||
+                          safeText(business.summary) ||
                           uiText("Profil usaha telah dianalisis oleh ZENAI.","Your business profile has been analyzed by ZENAI.")}
                       </p>
                     </div>
@@ -4622,7 +4612,7 @@ padding: isMobile ? "16px 12px" : "32px",
                           marginTop: "6px"
                         }}
                       >
-                        {business.product ||
+                        {safeText(business.product) ||
                           "-"}
                       </strong>
                     </div>
@@ -4648,7 +4638,7 @@ padding: isMobile ? "16px 12px" : "32px",
                           marginTop: "6px"
                         }}
                       >
-                        {business.targetMarket ||
+                        {safeText(business.targetMarket) ||
                           "-"}
                       </strong>
                     </div>
@@ -4674,7 +4664,7 @@ padding: isMobile ? "16px 12px" : "32px",
                           marginTop: "6px"
                         }}
                       >
-                        {business.location ||
+                        {safeText(business.location) ||
                           "-"}
                       </strong>
                     </div>
