@@ -7,8 +7,19 @@ export default function LanguageSwitcher() {
   const locale = useLocale();
 
   const switchTo = (next) => {
-    if (next === locale) return;
-    document.cookie = `NEXT_LOCALE=${next};path=/;max-age=31536000;samesite=lax`;
+    if (!["id", "en"].includes(next)) return;
+
+    // Persist the locale for both next-intl/server and client-side reloads.
+    document.cookie = `NEXT_LOCALE=${next}; Path=/; Max-Age=31536000; SameSite=Lax`;
+    try {
+      window.localStorage.setItem("zenai_locale", next);
+    } catch {}
+
+    if (next === locale) {
+      window.location.reload();
+      return;
+    }
+
     window.location.reload();
   };
 
