@@ -336,11 +336,17 @@ export async function POST(request) {
       return jsonError("Ukuran audio terlalu besar.", 413);
     }
 
-    const prompt = rawPrompt;
+    const requestedLocale = body.locale === "en" ? "en" : "id";
+    const outputLanguage =
+      body.outputLanguage ||
+      (requestedLocale === "en" ? "English" : "Bahasa Indonesia");
 
-    const system =
+    const prompt = `${rawPrompt}\n\nLANGUAGE REQUIREMENT: Return every human-readable value in ${outputLanguage}. JSON property names must remain exactly as requested. Do not mix Indonesian and English. User-provided business names, product names, URLs, source titles, and quoted source text may remain unchanged.`;
+
+    const system = `${
       rawSystem ||
-      "Anda adalah AI bisnis yang membantu UMKM Indonesia.";
+      "Anda adalah AI bisnis yang membantu UMKM Indonesia."
+    }\n\nLANGUAGE REQUIREMENT: Respond entirely in ${outputLanguage}. Every generated human-readable sentence, label, explanation, recommendation, status, title, description, and JSON string value must use ${outputLanguage}. Never mix Indonesian and English. Keep JSON keys exactly as requested.`;
 
     const hasImage =
       Boolean(body.image);
