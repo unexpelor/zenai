@@ -1,5 +1,5 @@
 import { jsonError, rateLimit, requireApiUser } from "../../../lib/api-security";
-function validateAutopilotResult(result, duration) {
+function validateAutopilotResult(result, duration, outputLanguage = "Bahasa Indonesia") {
   if (!result || typeof result !== "object" || Array.isArray(result)) return null;
   if (!result.mission || typeof result.mission !== "object" || Array.isArray(result.mission)) return null;
   if (!Array.isArray(result.actions) || result.actions.length === 0 || result.actions.length > duration) return null;
@@ -22,9 +22,9 @@ function validateAutopilotResult(result, duration) {
 
   return {
     mission: {
-      title: String(result.mission.title || "Strategi Bisnis").trim(),
-      target: String(result.mission.target || "Meningkatkan pertumbuhan bisnis").trim(),
-      duration: `${duration} hari`,
+      title: String(result.mission.title || (outputLanguage === "English" ? "Business Strategy" : "Strategi Bisnis")).trim(),
+      target: String(result.mission.target || (outputLanguage === "English" ? "Improve business growth" : "Meningkatkan pertumbuhan bisnis")).trim(),
+      duration: outputLanguage === "English" ? `${duration} days` : `${duration} hari`,
       priority: String(result.mission.priority || "HIGH").trim().toUpperCase(),
     },
     actions,
@@ -42,6 +42,9 @@ export async function POST(req) {
     let body;
     try { body = await req.json(); } catch { return jsonError("Format permintaan tidak valid.", 400); }
     if (!body || typeof body !== "object" || Array.isArray(body)) return jsonError("Data permintaan tidak valid.", 400);
+
+    const requestedLocale = body.locale === "en" ? "en" : "id";
+    const outputLanguage = body.outputLanguage || (requestedLocale === "en" ? "English" : "Bahasa Indonesia");
 
     if (!body.business) {
       return Response.json(
@@ -66,6 +69,8 @@ export async function POST(req) {
 
     const prompt = `
 Anda adalah Business Autopilot untuk UMKM Indonesia.
+
+WAJIB OUTPUT LANGUAGE: ${outputLanguage}. Semua teks yang dibuat AI di dalam JSON harus menggunakan ${outputLanguage}. Jangan mencampur Indonesian dan English. JSON keys tetap persis seperti schema.
 
 Buat strategi bisnis selama ${duration} hari berdasarkan data berikut.
 
@@ -126,8 +131,12 @@ Tetap ringkas agar JSON selesai dihasilkan.
         },
         body: JSON.stringify({
           prompt,
+          locale: requestedLocale,
+          outputLanguage,
           system: `
 Anda adalah Business Autopilot UMKM Indonesia.
+
+OUTPUT LANGUAGE WAJIB: ${outputLanguage}. Semua nilai teks yang dihasilkan harus menggunakan ${outputLanguage}. JSON keys tetap persis.
 
 PENTING:
 Jangan tampilkan <think>.
@@ -204,7 +213,7 @@ Karakter terakhir harus }
       return jsonError("Format respons AI tidak valid.", 502);
     }
 
-    const validated = validateAutopilotResult(result, duration);
+    const validated = validateAutopilotResult(result, duration, outputLanguage);
     if (!validated) {
       return Response.json(
         {
