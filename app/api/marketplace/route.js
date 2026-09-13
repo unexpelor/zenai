@@ -162,7 +162,7 @@ function normalizeResults(results = [], query = "") {
    AI ANALYSIS
 ========================================================= */
 
-async function analyzeWithAI(req, prompt, system) {
+async function analyzeWithAI(req, prompt, system, locale = "id", outputLanguage = "Bahasa Indonesia") {
   // Use the current request URL so this works in localhost and production.
   const aiUrl = new URL("/api/ai", req.url);
 
@@ -181,6 +181,8 @@ async function analyzeWithAI(req, prompt, system) {
     body: JSON.stringify({
       prompt,
       system,
+      locale,
+      outputLanguage,
     }),
     cache: "no-store",
     signal: AbortSignal.timeout(30000),
@@ -404,8 +406,13 @@ export async function POST(req) {
          ANALISIS AI
       ================================================= */
 
+      const requestedLocale = body.locale === "en" ? "en" : "id";
+      const outputLanguage = body.outputLanguage || (requestedLocale === "en" ? "English" : "Bahasa Indonesia");
+
       const analysisPrompt = `
 Anda adalah analis bisnis strategis untuk UMKM Indonesia.
+
+WAJIB: Seluruh teks hasil analisis yang dibuat AI harus menggunakan ${outputLanguage}. Jangan mencampur Bahasa Indonesia dan English. JSON keys tetap persis seperti schema.
 
 Analisis usaha berdasarkan:
 1. informasi usaha,
@@ -415,7 +422,7 @@ Analisis usaha berdasarkan:
 
 Jangan sekadar merangkum sumber. Hubungkan temuan eksternal dengan kondisi usaha.
 Jangan mengarang angka, fakta, tren, atau kompetitor yang tidak didukung sumber.
-Jika bukti tidak cukup, tuliskan "Belum tersedia bukti yang cukup.".
+Jika bukti tidak cukup, tuliskan ${outputLanguage === "English" ? "Not enough evidence is available." : "Belum tersedia bukti yang cukup."}.
 
 INFORMASI USAHA
 Nama/Jenis Usaha: ${business || "-"}
@@ -457,7 +464,11 @@ Format wajib:
           await analyzeWithAI(
             req,
             analysisPrompt,
-            "Anda adalah analis bisnis yang kritis, objektif, berbasis bukti, dan tidak membuat klaim tanpa dasar."
+            `Anda adalah analis bisnis yang kritis, objektif, berbasis bukti, dan tidak membuat klaim tanpa dasar.
+
+WAJIB: Semua teks output harus menggunakan ${outputLanguage}. JSON keys tetap persis seperti schema.`,
+            requestedLocale,
+            outputLanguage
           );
 
         analysis =
