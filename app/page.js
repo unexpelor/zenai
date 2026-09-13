@@ -3,10 +3,81 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { createClient } from "../lib/supabase/client";
-import idMessages from "../messages/id.json";
-import enMessages from "../messages/en.json";
 import BusinessGrowthLoop from "../components/BusinessGrowthLoop";
 import ZenLanding from "../components/ZenLanding";
+
+function safeArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function normalizeBusiness(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  return {
+    ...value,
+    strengths: safeArray(value.strengths),
+    weaknesses: safeArray(value.weaknesses),
+    opportunities: safeArray(value.opportunities),
+    risks: safeArray(value.risks),
+  };
+}
+
+function normalizePulse(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  return { ...value, positive: safeArray(value.positive), attention: safeArray(value.attention), priority: safeArray(value.priority) };
+}
+
+function normalizeDiagnosis(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  return { ...value, strengths: safeArray(value.strengths), problems: safeArray(value.problems), opportunities: safeArray(value.opportunities), recommendations: safeArray(value.recommendations) };
+}
+
+function normalizeMarket(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  return {
+    ...value,
+    analysis: {
+      ...(value.analysis && typeof value.analysis === "object" ? value.analysis : {}),
+      externalFactors: safeArray(value.analysis?.externalFactors),
+      risks: safeArray(value.analysis?.risks),
+      opportunities: safeArray(value.analysis?.opportunities),
+    },
+  };
+}
+
+function normalizeAutopilot(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  return {
+    ...value,
+    plan7: safeArray(value.plan7),
+    plan14: safeArray(value.plan14),
+    plan30: safeArray(value.plan30),
+    plan: safeArray(value.plan),
+  };
+}
+
+function normalizeDecision(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  return {
+    ...value,
+    linked: safeArray(value.linked),
+    boundary: {
+      ...(value.boundary && typeof value.boundary === "object" ? value.boundary : {}),
+      value: value.boundary?.value ?? null,
+      explanation: String(value.boundary?.explanation || ""),
+    },
+  };
+}
+
+function stableHash(value) {
+  const input = typeof value === "string" ? value : JSON.stringify(value);
+  let h = 2166136261;
+  for (let i = 0; i < input.length; i++) {
+    h ^= input.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0).toString(36);
+}
+
 function ZenIcon({ name, size = 18, strokeWidth = 1.9 }) {
   const common = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true };
   const paths = {
@@ -50,10 +121,16 @@ export default function Home() {
   const cloudHydratedRef = useRef(false);
   const cloudSaveTimerRef = useRef(null);
   const [isMobile, setIsMobile] = useState(false);
-  const [darkMode, setDarkMode] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return window.localStorage.getItem("zenai_theme") === "dark";
-  });
+  const [darkMode, setDarkMode] = useState(false);
+
+  useEffect(() => {
+    try {
+      const savedTheme = window.localStorage.getItem("zenai_theme");
+      if (savedTheme === "dark") setDarkMode(true);
+    } catch (error) {
+      console.error("Gagal membaca tema:", error);
+    }
+  }, []);
 
   useEffect(() => {
     try {
@@ -202,22 +279,29 @@ const [marketError, setMarketError] =
   // Saat pengguna login, source of truth adalah Supabase cloud state.
   // Jika Supabase tidak dikonfigurasi, data hanya berada di memory sesi.
   // =========================
-  const [financePeriod, setFinancePeriod] =
-    useState(new Date().toISOString().slice(0, 7));
+  const [financePeriod, setFinancePeriod] = useState("");
+
+  useEffect(() => {
+    if (!financePeriod) setFinancePeriod(new Date().toISOString().slice(0, 7));
+  }, [financePeriod]);
 
   // Periode pembanding dapat dipilih secara manual oleh pengguna.
-  const [financeComparisonPeriod, setFinanceComparisonPeriod] = useState(() => {
-    const now = new Date();
-    const previous = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    return `${previous.getFullYear()}-${String(previous.getMonth() + 1).padStart(2, "0")}`;
-  });
+  const [financeComparisonPeriod, setFinanceComparisonPeriod] = useState("");
+
+  useEffect(() => {
+    if (!financeComparisonPeriod) {
+      const now = new Date();
+      const previous = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      setFinanceComparisonPeriod(`${previous.getFullYear()}-${String(previous.getMonth() + 1).padStart(2, "0")}`);
+    }
+  }, [financeComparisonPeriod]);
 
   const [financeTransactions, setFinanceTransactions] =
     useState([]);
 
   const [financeForm, setFinanceForm] =
     useState({
-      date: new Date().toISOString().slice(0, 10),
+      date: "",
       description: "",
       amount: "",
       type: "income",
@@ -255,6 +339,10 @@ const [marketError, setMarketError] =
   const [financeMessage, setFinanceMessage] =
     useState("");
 
+  useEffect(() => {
+    if (!financeForm.date) setFinanceForm((current) => ({ ...current, date: new Date().toISOString().slice(0, 10) }));
+  }, [financeForm.date]);
+
   const financePersistenceNotice = supabase
     ? "Data keuangan tersimpan di akun Supabase Anda."
     : "Mode tanpa Supabase: data keuangan hanya tersimpan selama sesi ini dan tidak disimpan ke browser.";
@@ -284,13 +372,14 @@ const [marketError, setMarketError] =
     setBusiness(null);
     setPulseData(null);
     setDiagnosis(null);
-    aiSourceRef.current.autopilotData = null;
-    aiSourceRef.current.marketData = null;
+    ["business", "pulseData", "diagnosis"].forEach((key) => { delete aiCanonicalRef.current[key]; delete aiLocalizationRef.current[key]; });
     setAutopilotData(null);
     setMarketData(null);
+    ["autopilotData", "marketData"].forEach((key) => { delete aiCanonicalRef.current[key]; delete aiLocalizationRef.current[key]; });
     setMarketError("");
     setBusinessUpdates([]);
     setGrowthActions([]);
+    ["businessUpdates", "growthActions", "decisionResult"].forEach((key) => { delete aiCanonicalRef.current[key]; delete aiLocalizationRef.current[key]; });
     setFinanceTransactions([]);
     setFinancePeriod(new Date().toISOString().slice(0, 7));
     setText("");
@@ -348,21 +437,22 @@ const [marketError, setMarketError] =
         if (active) setAuthMessage(uiText("Data cloud belum dapat dimuat. Coba refresh.", "Cloud data could not be loaded. Please refresh."));
       } else if (data?.state && active) {
         const saved = data.state;
-        if (saved.business !== undefined) setBusiness(saved.business);
-        if (saved.pulseData !== undefined) setPulseData(saved.pulseData);
-        if (saved.diagnosis !== undefined) setDiagnosis(saved.diagnosis);
-        if (saved.autopilotData !== undefined) { aiSourceRef.current.autopilotData = saved.autopilotData; setAutopilotData(saved.autopilotData); }
-        if (saved.marketData !== undefined) { aiSourceRef.current.marketData = saved.marketData; setMarketData(saved.marketData); }
-        if (Array.isArray(saved.businessUpdates)) setBusinessUpdates(saved.businessUpdates);
-        if (Array.isArray(saved.growthActions)) setGrowthActions(saved.growthActions);
+        if (saved.business !== undefined) { const value = normalizeBusiness(saved.business); registerCanonicalAi("business", value, saved.aiSourceLocales?.business || locale); setBusiness(value); }
+        if (saved.pulseData !== undefined) { const value = normalizePulse(saved.pulseData); registerCanonicalAi("pulseData", value, saved.aiSourceLocales?.pulseData || locale); setPulseData(value); }
+        if (saved.diagnosis !== undefined) { const value = normalizeDiagnosis(saved.diagnosis); registerCanonicalAi("diagnosis", value, saved.aiSourceLocales?.diagnosis || locale); setDiagnosis(value); }
+        if (saved.autopilotData !== undefined) { const value = normalizeAutopilot(saved.autopilotData); registerCanonicalAi("autopilotData", value, saved.aiSourceLocales?.autopilotData || locale); setAutopilotData(value); }
+        if (saved.marketData !== undefined) { const value = normalizeMarket(saved.marketData); registerCanonicalAi("marketData", value, saved.aiSourceLocales?.marketData || locale); setMarketData(value); }
+        if (Array.isArray(saved.businessUpdates)) { registerCanonicalAi("businessUpdates", saved.businessUpdates, saved.aiSourceLocales?.businessUpdates || locale); setBusinessUpdates(saved.businessUpdates); }
+        if (Array.isArray(saved.growthActions)) { registerCanonicalAi("growthActions", saved.growthActions, saved.aiSourceLocales?.growthActions || locale); setGrowthActions(saved.growthActions); }
         if (Array.isArray(saved.financeTransactions)) setFinanceTransactions(saved.financeTransactions);
         if (saved.financePeriod) setFinancePeriod(saved.financePeriod);
         if (saved.financeComparisonPeriod) setFinanceComparisonPeriod(saved.financeComparisonPeriod);
         if (saved.decisionScenario) setDecisionScenario(saved.decisionScenario);
         if (saved.decisionType) setDecisionType(saved.decisionType);
         if (saved.decisionText !== undefined) setDecisionText(saved.decisionText || "");
-        if (saved.decisionResult !== undefined) setDecisionResult(saved.decisionResult || null);
-        if (saved.tab) setTab(saved.tab);
+        if (saved.decisionResult !== undefined) { const value = normalizeDecision(saved.decisionResult); registerCanonicalAi("decisionResult", value, saved.aiSourceLocales?.decisionResult || locale); setDecisionResult(value); }
+        const validTabs = new Set(["home", "capture", "pulse", "diagnosis", "market", "autopilot", "finance", "advancedAnalysis", "guide", "settings"]);
+        if (validTabs.has(saved.tab)) setTab(saved.tab);
       }
 
       if (active) {
@@ -407,13 +497,14 @@ const [marketError, setMarketError] =
           {
             user_id: session.user.id,
             state: {
-              business,
-              pulseData,
-              diagnosis,
-              autopilotData,
-              marketData,
-              businessUpdates,
-              growthActions,
+              business: canonicalValueForSave("business", business),
+              pulseData: canonicalValueForSave("pulseData", pulseData),
+              diagnosis: canonicalValueForSave("diagnosis", diagnosis),
+              autopilotData: canonicalValueForSave("autopilotData", autopilotData),
+              marketData: canonicalValueForSave("marketData", marketData),
+              businessUpdates: canonicalValueForSave("businessUpdates", businessUpdates),
+              growthActions: canonicalValueForSave("growthActions", growthActions),
+              aiSourceLocales: Object.fromEntries(Object.entries(aiCanonicalRef.current).map(([key, item]) => [key, item.sourceLocale])),
               financeTransactions,
               financePeriod,
               financeComparisonPeriod,
@@ -1260,7 +1351,8 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
         result.interpretation = `${modelExplanation} Dampak terhadap laba adalah ${formatRupiah(profitDelta)} dan dampak terhadap kas adalah ${formatRupiah(cashDelta)}. ${boundary.explanation || "Batas keputusan belum dapat dihitung dari data yang tersedia."}`;
       }
 
-      setDecisionResult(result);
+      registerCanonicalAi("decisionResult", normalizeDecision(result), locale);
+      setDecisionResult(normalizeDecision(result));
       return result;
     } catch (error) {
       console.error("ANALISIS LANJUTAN ERROR:", error);
@@ -1598,13 +1690,16 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
 
   // =========================
   // GLOBAL AI OUTPUT LANGUAGE SYNC
-  // When locale changes, translate every AI-generated state currently loaded.
-  // Keep translation outside the DOM so Advanced Analysis remains stable.
+  // Canonical AI source is kept separate from localized presentation.
   // =========================
-  const translateAiState = async (value, targetLocale) => {
-    if (value === null || value === undefined) return value;
+  const aiCanonicalRef = useRef({});
+  const aiLocalizationRef = useRef({});
+  const aiSyncGenerationRef = useRef(0);
 
+  const translateAiState = async (value, targetLocale, signal) => {
+    if (value === null || value === undefined) return value;
     const outputLanguage = targetLocale === "en" ? "English" : "Bahasa Indonesia";
+
     const translateChunk = async (chunk) => {
       const source = JSON.stringify(chunk);
       if (!source || source === "null" || source === "undefined") return chunk;
@@ -1621,130 +1716,109 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
           locale: targetLocale,
           outputLanguage
         }),
-        cache: "no-store"
+        cache: "no-store",
+        signal
       });
       const data = await response.json().catch(() => null);
-      if (!response.ok || !data?.success) {
-        throw new Error(data?.error || data?.message || "Output translation failed.");
-      }
-      return extractJson(data.text || "");
+      if (!response.ok || !data?.success) throw new Error(data?.error || data?.message || "Output translation failed.");
+      const translated = extractJson(data.text || "");
+      if (translated === null || translated === undefined) throw new Error("Translation response is not valid JSON.");
+      return translated;
     };
 
-    // Large Market Perspective and Strategy payloads are split by top-level
-    // fields so one oversized JSON payload cannot silently fail localization.
-    if (Array.isArray(value)) {
-      const translated = await Promise.all(value.map((item) => translateChunk(item)));
-      return translated;
-    }
+    if (Array.isArray(value)) return Promise.all(value.map(translateChunk));
     if (typeof value === "object") {
       const entries = Object.entries(value);
-      const translatedEntries = await Promise.all(
-        entries.map(async ([key, item]) => [key, await translateChunk(item)])
-      );
-      return Object.fromEntries(translatedEntries);
+      return Object.fromEntries(await Promise.all(entries.map(async ([key, item]) => [key, await translateChunk(item)])));
     }
-    return await translateChunk(value);
+    return translateChunk(value);
   };
 
-  const aiLocalizationRef = useRef({});
-  const aiSourceRef = useRef({});
+  const registerCanonicalAi = (key, value, sourceLocale = locale) => {
+    if (value === null || value === undefined) {
+      delete aiCanonicalRef.current[key];
+      delete aiLocalizationRef.current[key];
+      return;
+    }
+    const sourceHash = stableHash(value);
+    aiCanonicalRef.current[key] = { value, sourceLocale, sourceHash };
+    aiLocalizationRef.current[key] = { ...(aiLocalizationRef.current[key] || {}), sourceHash, lastPresentationHash: sourceHash };
+  };
+
+  const canonicalValueForSave = (key, fallback) => aiCanonicalRef.current[key]?.value ?? fallback;
 
   useEffect(() => {
     if (!cloudLoaded || !session?.user?.id) return;
 
-    let cancelled = false;
+    const generation = ++aiSyncGenerationRef.current;
+    const controller = new AbortController();
+
+    const targets = [
+      ["business", business, setBusiness],
+      ["pulseData", pulseData, setPulseData],
+      ["diagnosis", diagnosis, setDiagnosis],
+      ["marketData", marketData, setMarketData],
+      ["autopilotData", autopilotData, setAutopilotData],
+      ["growthActions", growthActions, setGrowthActions],
+      ["businessUpdates", businessUpdates, setBusinessUpdates],
+      ["decisionResult", decisionResult, setDecisionResult]
+    ].filter(([, value]) => value !== null && value !== undefined);
 
     const syncAllAiOutputs = async () => {
-      const targets = [
-        ["business", business, setBusiness],
-        ["pulseData", pulseData, setPulseData],
-        ["diagnosis", diagnosis, setDiagnosis],
-        ["marketData", marketData, setMarketData],
-        ["autopilotData", autopilotData, setAutopilotData],
-        ["growthActions", growthActions, setGrowthActions],
-        ["businessUpdates", businessUpdates, setBusinessUpdates],
-        ["decisionResult", decisionResult, setDecisionResult]
-      ].filter(([, value]) => value !== null && value !== undefined);
+      for (const [key, currentValue, setter] of targets) {
+        if (controller.signal.aborted || generation !== aiSyncGenerationRef.current) return;
 
-      if (!targets.length) return;
+        const currentHash = stableHash(currentValue);
+        let canonical = aiCanonicalRef.current[key];
+        const localization = aiLocalizationRef.current[key] || {};
 
-      // Cache by exact source + target locale to avoid repeated AI calls when
-      // the user switches EN -> ID -> EN during the same browser session.
-      const cachePrefix = `zenai_i18n_ai_${session.user.id}_${locale}_`;
-      const hash = (input) => {
-        let h = 2166136261;
-        for (let i = 0; i < input.length; i++) {
-          h ^= input.charCodeAt(i);
-          h = Math.imul(h, 16777619);
+        // If the current value is the presentation we previously applied, keep
+        // the canonical source. Otherwise this is a genuinely new AI result.
+        if (!canonical || localization.lastPresentationHash !== currentHash) {
+          if (!canonical || canonical.sourceHash !== currentHash) {
+            canonical = { value: currentValue, sourceLocale: locale, sourceHash: currentHash };
+            aiCanonicalRef.current[key] = canonical;
+          }
         }
-        return (h >>> 0).toString(36);
-      };
 
-      for (const [key, value, setter] of targets) {
-        if (cancelled) return;
-        if (!aiSourceRef.current[key]) {
-          aiSourceRef.current[key] = value;
-        }
-        const sourceValue = aiSourceRef.current[key];
-        const source = JSON.stringify(sourceValue);
-        const sourceHash = hash(source);
-        const localizationState = aiLocalizationRef.current[key];
+        const sourceValue = canonical.value;
+        const sourceHash = canonical.sourceHash;
 
-        // Do not translate the same state repeatedly. This is important for
-        // outputs such as Market Perspective and Strategy, whose setters can
-        // cause the component to render again.
-        if (localizationState?.locale === locale && localizationState?.sourceHash === sourceHash) {
+        if (canonical.sourceLocale === locale) {
+          if (currentHash !== sourceHash) setter(sourceValue);
+          aiLocalizationRef.current[key] = { ...localization, locale, sourceHash, lastPresentationHash: sourceHash };
           continue;
         }
 
-        const cacheKey = cachePrefix + key + "_" + sourceHash;
+        if (localization.locale === locale && localization.sourceHash === sourceHash) continue;
+
+        const cacheKey = `zenai_i18n_ai_${session.user.id}_${sourceHash}_${locale}_${key}`;
+        let translated = null;
         try {
           const cached = sessionStorage.getItem(cacheKey);
-          if (cached) {
-            const translated = JSON.parse(cached);
-            setter(translated);
-            aiLocalizationRef.current[key] = { locale, sourceHash };
-            continue;
-          }
+          if (cached) translated = JSON.parse(cached);
         } catch {}
 
         try {
-          const translated = await translateAiState(sourceValue, locale);
-          if (cancelled) return;
+          if (translated === null) {
+            translated = await translateAiState(sourceValue, locale, controller.signal);
+            try { sessionStorage.setItem(cacheKey, JSON.stringify(translated)); } catch {}
+          }
+          if (controller.signal.aborted || generation !== aiSyncGenerationRef.current) return;
           setter(translated);
-          aiLocalizationRef.current[key] = { locale, sourceHash };
-          try { sessionStorage.setItem(cacheKey, JSON.stringify(translated)); } catch {}
+          aiLocalizationRef.current[key] = { locale, sourceHash, lastPresentationHash: stableHash(translated) };
         } catch (error) {
+          if (error?.name === "AbortError") return;
           console.warn(`Global output localization failed for ${key}:`, error);
-          // Keep the existing output intact if translation fails.
         }
-      }
-
-      if (!cancelled) {
-        // Keep the current localization state; future AI updates are detected
-        // by their source hash and will be localized automatically.
       }
     };
 
     syncAllAiOutputs();
-
-    return () => { cancelled = true; };
-    // Run only after cloud hydration and when locale changes. State updates from
-    // translation must never recursively trigger another translation pass.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    locale,
-    cloudLoaded,
-    session?.user?.id,
-    business,
-    pulseData,
-    diagnosis,
-    marketData,
-    autopilotData,
-    growthActions,
-    businessUpdates,
-    decisionResult
-  ]);
+    return () => controller.abort();
+    // AI states are intentionally dependencies so newly generated outputs are
+    // registered automatically. Canonical/presentation hashes prevent loops.
+  }, [locale, cloudLoaded, session?.user?.id, business, pulseData, diagnosis, marketData, autopilotData, growthActions, businessUpdates, decisionResult]);
 
   const askAI = async ({
     prompt,
@@ -1933,7 +2007,8 @@ Balas hanya dengan JSON valid.
       const result =
         extractJson(raw);
 
-      setBusiness(result);
+      registerCanonicalAi("business", normalizeBusiness(result), locale);
+      setBusiness(normalizeBusiness(result));
 
       // Gambar/audio adalah input satu kali. Hapus setelah berhasil agar
       // tidak ikut terkirim pada Business Pulse, Diagnosis, Autopilot, dll.
@@ -2085,7 +2160,8 @@ Balas JSON valid.
       const result =
         extractJson(raw);
 
-      setPulseData(result);
+      registerCanonicalAi("pulseData", normalizePulse(result), locale);
+      setPulseData(normalizePulse(result));
 
       if (goToTab) {
         setTab("pulse");
@@ -2248,7 +2324,8 @@ Balas hanya JSON valid.
       const result =
         extractJson(raw);
 
-      setDiagnosis(result);
+      registerCanonicalAi("diagnosis", normalizeDiagnosis(result), locale);
+      setDiagnosis(normalizeDiagnosis(result));
 
       if (goToTab) {
         setTab("diagnosis");
@@ -2341,8 +2418,8 @@ Balas hanya JSON valid.
       );
     }
 
-    aiSourceRef.current.marketData = result;
-    setMarketData(result);
+    registerCanonicalAi("marketData", normalizeMarket(result), locale);
+    setMarketData(normalizeMarket(result));
 
     setTab("market");
 
@@ -2552,8 +2629,8 @@ Aturan:
         nextStep: apiResult.actions[0]?.title || "Mulai dari tindakan prioritas pertama."
       };
 
-      aiSourceRef.current.autopilotData = result;
-      setAutopilotData(result);
+      registerCanonicalAi("autopilotData", normalizeAutopilot(result), locale);
+      setAutopilotData(normalizeAutopilot(result));
 
       if (goToTab) {
         setTab("autopilot");
@@ -7974,7 +8051,7 @@ padding: isMobile ? "16px 12px" : "32px",
       : []
   }
   actions={growthActions}
-  onActionsChange={setGrowthActions}
+  onActionsChange={(value) => { registerCanonicalAi("growthActions", value, locale); setGrowthActions(value); }}
   evaluating={growthEvaluating}
 darkMode={darkMode}
   onEvaluate={async (action) => {
