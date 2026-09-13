@@ -1631,15 +1631,10 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
     return extractJson(data.text || "");
   };
 
+  const aiLocalizationRef = useRef({});
+
   useEffect(() => {
     if (!cloudLoaded || !session?.user?.id) return;
-
-    // Only run the expensive translation pass after the user explicitly
-    // switched language. This prevents translating fresh ID output to ID
-    // on every normal page load.
-    let pendingLocale = null;
-    try { pendingLocale = window.sessionStorage.getItem("zenai_pending_locale_sync"); } catch {}
-    if (pendingLocale !== locale) return;
 
     let cancelled = false;
 
@@ -1672,11 +1667,23 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
       for (const [key, value, setter] of targets) {
         if (cancelled) return;
         const source = JSON.stringify(value);
-        const cacheKey = cachePrefix + key + "_" + hash(source);
+        const sourceHash = hash(source);
+        const localizationState = aiLocalizationRef.current[key];
+
+        // Do not translate the same state repeatedly. This is important for
+        // outputs such as Market Perspective and Strategy, whose setters can
+        // cause the component to render again.
+        if (localizationState?.locale === locale && localizationState?.sourceHash === sourceHash) {
+          continue;
+        }
+
+        const cacheKey = cachePrefix + key + "_" + sourceHash;
         try {
           const cached = sessionStorage.getItem(cacheKey);
           if (cached) {
-            setter(JSON.parse(cached));
+            const translated = JSON.parse(cached);
+            setter(translated);
+            aiLocalizationRef.current[key] = { locale, sourceHash: hash(JSON.stringify(translated)) };
             continue;
           }
         } catch {}
@@ -1685,6 +1692,7 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
           const translated = await translateAiState(value, locale);
           if (cancelled) return;
           setter(translated);
+          aiLocalizationRef.current[key] = { locale, sourceHash: hash(JSON.stringify(translated)) };
           try { sessionStorage.setItem(cacheKey, JSON.stringify(translated)); } catch {}
         } catch (error) {
           console.warn(`Global output localization failed for ${key}:`, error);
@@ -1693,7 +1701,8 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
       }
 
       if (!cancelled) {
-        try { window.sessionStorage.removeItem("zenai_pending_locale_sync"); } catch {}
+        // Keep the current localization state; future AI updates are detected
+        // by their source hash and will be localized automatically.
       }
     };
 
@@ -1703,7 +1712,19 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
     // Run only after cloud hydration and when locale changes. State updates from
     // translation must never recursively trigger another translation pass.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [locale, cloudLoaded, session?.user?.id]);
+  }, [
+    locale,
+    cloudLoaded,
+    session?.user?.id,
+    business,
+    pulseData,
+    diagnosis,
+    marketData,
+    autopilotData,
+    growthActions,
+    businessUpdates,
+    decisionResult
+  ]);
 
   const askAI = async ({
     prompt,
