@@ -1,25 +1,17 @@
 "use client";
 
 import { useLocale } from "next-intl";
+import { useZenLocale } from "../providers/ZenLocaleProvider";
 import { Languages } from "lucide-react";
 
 export default function LanguageSwitcher() {
   const locale = useLocale();
 
+  const { setLocale } = useZenLocale();
+
   const switchTo = (next) => {
-    if (!["id", "en"].includes(next)) return;
-
-    // Persist the explicit choice before refreshing the whole app.
-    // This makes every server/client component use the same locale.
-    document.cookie = `NEXT_LOCALE=${next}; Path=/; Max-Age=31536000; SameSite=Lax`;
-    try {
-      window.localStorage.setItem("zenai_locale", next);
-      window.sessionStorage.setItem("zenai_pending_locale_sync", next);
-    } catch {}
-
-    // Force a full App Router request so layout, server messages, auth UI,
-    // guide, settings, and every client component are rendered in the new locale.
-    window.location.reload();
+    if (!["id", "en"].includes(next) || next === locale) return;
+    setLocale(next);
   };
 
   return (
