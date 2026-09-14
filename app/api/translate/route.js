@@ -1,8 +1,9 @@
+import * as deepl from "deepl-node";
 import { jsonError, rateLimit, requireApiUser } from "../../../lib/api-security";
 
-const YANDEX_TRANSLATE_URL = "https://translate.api.cloud.yandex.net/translate/v2/translate";
 const MAX_STRING_LENGTH = 5000;
-const MAX_BATCH_CHARS = 9000; // Yandex limit is 10,000 chars per request.
+const MAX_BATCH_CHARS = 9000;
+const MAX_BATCH_STRINGS = 50;
 const MAX_TOTAL_STRINGS = 1500;
 
 const TECHNICAL_KEYS = new Set([
@@ -37,20 +38,29 @@ function collectStrings(value, path = [], output = []) {
     }
     return output;
   }
+
   if (Array.isArray(value)) {
     value.forEach((item, index) => collectStrings(item, [...path, index], output));
     return output;
   }
+
   if (value && typeof value === "object") {
-    Object.entries(value).forEach(([key, item]) => collectStrings(item, [...path, key], output));
+    Object.entries(value).forEach(([key, item]) =>
+      collectStrings(item, [...path, key], output)
+    );
   }
+
   return output;
 }
 
 function setAtPath(root, path, value) {
   if (!path.length) return value;
+
   let cursor = root;
-  for (let i = 0; i < path.length - 1; i += 1) cursor = cursor[path[i]];
+  for (let i = 0; i < path.length - 1; i += 1) {
+    cursor = cursor[path[i]];
+  }
+
   cursor[path[path.length - 1]] = value;
   return root;
 }
@@ -62,11 +72,17 @@ function chunkEntries(entries) {
 
   for (const entry of entries) {
     const size = entry.value.length;
-    if (current.length && chars + size > MAX_BATCH_CHARS) {
+
+    if (
+      current.length &&
+      (chars + size > MAX_BATCH_CHARS ||
+        current.length >= MAX_BATCH_STRINGS)
+    ) {
       batches.push(current);
       current = [];
       chars = 0;
     }
+
     current.push(entry);
     chars += size;
   }
@@ -75,56 +91,32 @@ function chunkEntries(entries) {
   return batches;
 }
 
+function getDeepLTargetLanguage(targetLocale) {
+  // DeepL uses regional English target codes.
+  // Keep the application's locale as "en", but send "en-US" to DeepL.
+  return targetLocale === "en" ? "en-US" : "id";
+}
+
 async function translateBatch(entries, { targetLocale, sourceLocale, apiKey }) {
-  const body = {
-    targetLanguageCode: targetLocale,
-    format: "PLAIN_TEXT",
-    texts: entries.map((entry) => entry.value),
-  };
-
-  if (sourceLocale === "id" || sourceLocale === "en") {
-    body.sourceLanguageCode = sourceLocale;
-  }
-
-  // This endpoint authenticates with a service-account API key.
-  // Yandex resolves the service account's folder automatically, so do not
-  // send folderId here. This also avoids accidentally forcing a different
-  // folder through a deployment environment variable.
-
-  const response = await fetch(YANDEX_TRANSLATE_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Api-Key ${apiKey}`,
-    },
-    body: JSON.stringify(body),
-    signal: AbortSignal.timeout(20000),
+  const client = new deepl.DeepLClient(apiKey, {
+    maxRetries: 2,
+    minTimeout: 1000,
+    sendPlatformInfo: false,
   });
 
-  const data = await response.json().catch(() => null);
-  if (!response.ok) {
-    const providerError = new Error(
-      data?.message || data?.error?.message || "Yandex Translation API failed."
-    );
-    providerError.providerStatus = response.status;
-    providerError.providerCode = data?.code || data?.error?.code || null;
-    providerError.providerDetails = Array.isArray(data?.details)
-      ? data.details.map((detail) => {
-          if (typeof detail === "string") return detail.slice(0, 500);
-          if (!detail || typeof detail !== "object") return String(detail);
-          return {
-            type: typeof detail.type === "string" ? detail.type : undefined,
-            message: typeof detail.message === "string" ? detail.message.slice(0, 500) : undefined,
-            field: typeof detail.field === "string" ? detail.field : undefined,
-          };
-        })
-      : null;
-    throw providerError;
-  }
+  const targetLanguage = getDeepLTargetLanguage(targetLocale);
+  const sourceLanguage = sourceLocale || null;
 
-  const translations = data?.translations;
-  if (!Array.isArray(translations) || translations.length !== entries.length) {
-    throw new Error("Yandex Translation API returned an invalid response.");
+  const results = await client.translateText(
+    entries.map((entry) => entry.value),
+    sourceLanguage,
+    targetLanguage
+  );
+
+  const translations = Array.isArray(results) ? results : [results];
+
+  if (translations.length !== entries.length) {
+    throw new Error("DeepL Translation API returned an invalid response.");
   }
 
   return translations.map((item) => item?.text ?? "");
@@ -137,30 +129,59 @@ export async function POST(request) {
 
     const identity = auth.user?.id || "anonymous";
     const limit = rateLimit(request, "translate", 30, 60_000, identity);
+
     if (!limit.ok) {
-      return jsonError("Translation rate limit exceeded. Please try again shortly.", 429, {
-        "Retry-After": String(limit.retryAfter),
-      });
+      return jsonError(
+        "Translation rate limit exceeded. Please try again shortly.",
+        429,
+        { "Retry-After": String(limit.retryAfter) }
+      );
     }
 
-    const apiKey = process.env.YANDEX_TRANSLATE_API_KEY;
-    if (!apiKey) return jsonError("YANDEX_TRANSLATE_API_KEY belum dikonfigurasi di server.", 503);
+    const apiKey = process.env.DEEPL_API_KEY;
+
+    if (!apiKey) {
+      return jsonError(
+        "DEEPL_API_KEY belum dikonfigurasi di server.",
+        503
+      );
+    }
 
     const body = await request.json().catch(() => null);
     const content = body?.content;
-    const targetLocale = body?.targetLocale === "en" ? "en" : body?.targetLocale === "id" ? "id" : null;
-    const sourceLocale = body?.sourceLocale === "en" || body?.sourceLocale === "id" ? body.sourceLocale : null;
+
+    const targetLocale =
+      body?.targetLocale === "en"
+        ? "en"
+        : body?.targetLocale === "id"
+          ? "id"
+          : null;
+
+    const sourceLocale =
+      body?.sourceLocale === "en" || body?.sourceLocale === "id"
+        ? body.sourceLocale
+        : null;
+
     if (!content || typeof content !== "object" || !targetLocale) {
       return jsonError("Payload translation tidak valid.", 400);
     }
 
     if (sourceLocale === targetLocale) {
-      return Response.json({ success: true, content, translated: false });
+      return Response.json({
+        success: true,
+        content,
+        translated: false,
+      });
     }
 
     const entries = collectStrings(content);
+
     if (entries.length === 0) {
-      return Response.json({ success: true, content, translated: false });
+      return Response.json({
+        success: true,
+        content,
+        translated: false,
+      });
     }
 
     if (entries.length > MAX_TOTAL_STRINGS) {
@@ -176,30 +197,38 @@ export async function POST(request) {
         sourceLocale,
         apiKey,
       });
+
       batch.forEach((entry, index) => {
         setAtPath(translatedContent, entry.path, translated[index]);
       });
     }
 
-    return Response.json({ success: true, content: translatedContent, translated: true });
+    return Response.json({
+      success: true,
+      content: translatedContent,
+      translated: true,
+      provider: "deepl",
+    });
   } catch (error) {
     const safeDiagnostics = {
-      provider: "yandex",
-      providerStatus: Number.isInteger(error?.providerStatus) ? error.providerStatus : null,
-      providerCode: typeof error?.providerCode === "string" ? error.providerCode : null,
-      providerDetails: Array.isArray(error?.providerDetails) ? error.providerDetails : null,
-      apiKeyConfigured: Boolean(process.env.YANDEX_TRANSLATE_API_KEY),
-      apiKeyLast6: process.env.YANDEX_TRANSLATE_API_KEY
-        ? process.env.YANDEX_TRANSLATE_API_KEY.slice(-6)
+      provider: "deepl",
+      providerStatus:
+        Number.isInteger(error?.statusCode) ? error.statusCode : null,
+      apiKeyConfigured: Boolean(process.env.DEEPL_API_KEY),
+      apiKeyLast6: process.env.DEEPL_API_KEY
+        ? process.env.DEEPL_API_KEY.slice(-6)
         : null,
-      folderIdSent: false,
     };
 
-    console.error("YANDEX TRANSLATE API ERROR:", {
+    console.error("DEEPL TRANSLATE API ERROR:", {
       message: error?.message,
       ...safeDiagnostics,
     });
 
-    return jsonError(error?.message || "Translation service failed.", 502, safeDiagnostics);
+    return jsonError(
+      error?.message || "Translation service failed.",
+      502,
+      safeDiagnostics
+    );
   }
 }
