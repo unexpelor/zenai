@@ -1707,6 +1707,7 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
   // =========================
   const aiCanonicalRef = useRef({});
   const aiLocalizationRef = useRef({});
+  const [aiLocalizationVersion, setAiLocalizationVersion] = useState(0);
   const { beginGeneration, isCurrent } = useAILocalization();
 
   const translateAiState = async (value, targetLocale, signal, sourceLocale = null) => {
@@ -1737,11 +1738,21 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
     if (value === null || value === undefined) {
       delete aiCanonicalRef.current[key];
       delete aiLocalizationRef.current[key];
+      setAiLocalizationVersion((v) => v + 1);
       return;
     }
+
     const sourceHash = stableHash(value);
-    aiCanonicalRef.current[key] = { value, sourceLocale, sourceHash };
-    aiLocalizationRef.current[key] = { ...(aiLocalizationRef.current[key] || {}), sourceHash, lastPresentationHash: sourceHash };
+    const previous = aiCanonicalRef.current[key];
+    const changed = !previous || previous.sourceHash !== sourceHash || previous.sourceLocale !== sourceLocale;
+
+    aiCanonicalRef.current[key] = { value, sourceLocale: sourceLocale || null, sourceHash };
+
+    // Reset presentation metadata only when a genuinely new canonical result arrives.
+    if (changed) {
+      aiLocalizationRef.current[key] = { sourceHash, lastPresentationHash: sourceHash, locale: sourceLocale || null };
+      setAiLocalizationVersion((v) => v + 1);
+    }
   };
 
   const canonicalValueForSave = (key, fallback) => aiCanonicalRef.current[key]?.value ?? fallback;
@@ -1771,13 +1782,18 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
         let canonical = aiCanonicalRef.current[key];
         const localization = aiLocalizationRef.current[key] || {};
 
-        // A state update caused by our previous translation must not replace the
-        // canonical source. A genuinely new AI result is registered as canonical.
-        if (!canonical || localization.lastPresentationHash !== currentHash) {
-          if (!canonical || canonical.sourceHash !== currentHash) {
-            canonical = { value: currentValue, sourceLocale: locale || null, sourceHash: currentHash };
-            aiCanonicalRef.current[key] = canonical;
-          }
+        // Presentation state can be translated asynchronously. Never promote a
+        // translated presentation value back into canonical state. If a legacy
+        // value has no registered canonical source yet, capture it once.
+        if (!canonical) {
+          canonical = { value: currentValue, sourceLocale: locale || null, sourceHash: currentHash };
+          aiCanonicalRef.current[key] = canonical;
+          aiLocalizationRef.current[key] = { sourceHash: currentHash, lastPresentationHash: currentHash };
+        } else if (canonical.sourceHash !== currentHash && localization.lastPresentationHash !== currentHash) {
+          // Only an external/new AI state change may replace canonical content.
+          canonical = { value: currentValue, sourceLocale: locale || null, sourceHash: currentHash };
+          aiCanonicalRef.current[key] = canonical;
+          aiLocalizationRef.current[key] = { sourceHash: currentHash, lastPresentationHash: currentHash };
         }
 
         const sourceValue = canonical.value;
@@ -1863,7 +1879,7 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
 
     syncAllAiOutputs();
     return undefined;
-  }, [locale, cloudLoaded, session?.user?.id, business, pulseData, diagnosis, marketData, autopilotData, growthActions, businessUpdates, decisionResult]);
+  }, [locale, cloudLoaded, session?.user?.id, aiLocalizationVersion]);
 
   const askAI = async ({
     prompt,
