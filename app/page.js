@@ -6,7 +6,7 @@ import { createClient } from "../lib/supabase/client";
 import BusinessGrowthLoop from "../components/BusinessGrowthLoop";
 import ZenLanding from "../components/ZenLanding";
 import { useAILocalization } from "../hooks/useAILocalization";
-import { stableHash, translateContent } from "../lib/localization/translateContent";
+import { stableHash } from "../lib/localization/translateContent";
 import { createLocalizationCacheKey, readLocalizationCache, writeLocalizationCache } from "../lib/localization/localizationCache";
 import { AI_LOCALIZATION_KEYS } from "../lib/localization/localizationRegistry";
 
@@ -1709,48 +1709,28 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
   const aiLocalizationRef = useRef({});
   const { beginGeneration, isCurrent } = useAILocalization();
 
-  const translateAiState = async (value, targetLocale, signal) => {
-    const outputLanguage = targetLocale === "en" ? "English" : "Bahasa Indonesia";
-    if (value === null || value === undefined) return value;
-    if (typeof value !== "object") return value;
-
-    const source = JSON.stringify(value);
-    const response = await fetch("/api/ai", {
+  const translateAiState = async (value, targetLocale, signal, sourceLocale = null) => {
+    const response = await fetch("/api/translate", {
       method: "POST",
-      headers: { "Content-Type": "application/json", ...(await getApiAuthHeaders()) },
+      headers: {
+        "Content-Type": "application/json",
+        ...(await getApiAuthHeaders()),
+      },
       body: JSON.stringify({
-        prompt: `LOCALIZATION TASK. Translate this COMPLETE ZENAI AI payload into ${outputLanguage}.\n\nSTRICT RULES:\n- Translate EVERY human-readable string value, including deeply nested objects and arrays.\n- Preserve the EXACT JSON structure and every JSON key.\n- Preserve IDs, enums, URLs, numbers, booleans, null, dates, currency codes, technical identifiers and code.\n- Do not add, remove, summarize, infer, reorder, or rename anything.\n- Return ONLY valid JSON.\n\nSOURCE JSON:\n${source}`,
-        system: `You are ZENAI's strict JSON localization engine. Convert every human-readable string value to ${outputLanguage}. Preserve the exact structure and all non-human-readable values. Output JSON only.`,
-        jsonMode: true,
-        locale: targetLocale,
-        outputLanguage
+        content: value,
+        sourceLocale,
+        targetLocale,
       }),
       cache: "no-store",
-      signal
+      signal,
     });
 
     const data = await response.json().catch(() => null);
-    if (!response.ok || !data?.success) throw new Error(data?.error || data?.message || "Output translation failed.");
+    if (!response.ok || !data?.success) {
+      throw new Error(data?.message || "Translation service failed.");
+    }
 
-    const translated = extractJson(data.text || data.result || "");
-    if (!translated || typeof translated !== "object") throw new Error("Translation response is not valid JSON.");
-
-    // Translation must not silently corrupt the payload shape.
-    const sameShape = (a, b) => {
-      if (Array.isArray(a) || Array.isArray(b)) {
-        return Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((v, i) => sameShape(v, b[i]));
-      }
-      if (a && typeof a === "object" || b && typeof b === "object") {
-        if (!a || !b || Array.isArray(a) || Array.isArray(b)) return false;
-        const ak = Object.keys(a).sort();
-        const bk = Object.keys(b).sort();
-        return ak.length === bk.length && ak.every((k, i) => k === bk[i] && sameShape(a[k], b[k]));
-      }
-      return typeof a === typeof b || (a == null && b == null);
-    };
-    if (!sameShape(value, translated)) throw new Error("Translation changed the AI payload structure.");
-
-    return translated;
+    return data.content;
   };
 
   const registerCanonicalAi = (key, value, sourceLocale = locale) => {
@@ -1767,11 +1747,12 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
   const canonicalValueForSave = (key, fallback) => aiCanonicalRef.current[key]?.value ?? fallback;
 
   useEffect(() => {
-    // AI presentation localization is independent from cloud persistence.
-    // It must also work in local/no-Supabase sessions.
+    // Global AI presentation localization. Canonical values remain untouched;
+    // translated values are only presentation state.
     if (!cloudLoaded && supabase && session?.user?.id) return;
 
     const { generation, signal } = beginGeneration();
+
     const stateMap = { business, pulseData, diagnosis, marketData, autopilotData, growthActions, businessUpdates, decisionResult };
     const setterMap = { business: setBusiness, pulseData: setPulseData, diagnosis: setDiagnosis, marketData: setMarketData, autopilotData: setAutopilotData, growthActions: setGrowthActions, businessUpdates: setBusinessUpdates, decisionResult: setDecisionResult };
     const targets = AI_LOCALIZATION_KEYS
@@ -1779,25 +1760,32 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
       .filter(([, value, setter]) => value !== null && value !== undefined && typeof setter === "function");
 
     const syncAllAiOutputs = async () => {
-      const pending = {};
-      const pendingMeta = {};
+      const pending = [];
+      const cached = [];
 
-      for (const [key, currentValue] of targets) {
+      // First resolve canonical sources and cache hits without making API calls.
+      for (const [key, currentValue, setter] of targets) {
+        if (!isCurrent(generation)) return;
+
+        const currentHash = stableHash(currentValue);
         let canonical = aiCanonicalRef.current[key];
         const localization = aiLocalizationRef.current[key] || {};
-        const currentHash = stableHash(currentValue);
 
-        // Never promote our own translated presentation back into canonical data.
-        if (!canonical || (localization.lastPresentationHash !== currentHash && canonical.sourceHash !== currentHash)) {
-          canonical = { value: currentValue, sourceLocale: locale, sourceHash: currentHash };
-          aiCanonicalRef.current[key] = canonical;
+        // A state update caused by our previous translation must not replace the
+        // canonical source. A genuinely new AI result is registered as canonical.
+        if (!canonical || localization.lastPresentationHash !== currentHash) {
+          if (!canonical || canonical.sourceHash !== currentHash) {
+            canonical = { value: currentValue, sourceLocale: locale || null, sourceHash: currentHash };
+            aiCanonicalRef.current[key] = canonical;
+          }
         }
 
         const sourceValue = canonical.value;
         const sourceHash = canonical.sourceHash;
+        const sourceLocale = canonical.sourceLocale;
 
-        if (canonical.sourceLocale === locale) {
-          if (currentHash !== sourceHash) setterMap[key](sourceValue);
+        if (sourceLocale === locale) {
+          if (currentHash !== sourceHash) setter(sourceValue);
           aiLocalizationRef.current[key] = { ...localization, locale, sourceHash, lastPresentationHash: sourceHash };
           continue;
         }
@@ -1808,49 +1796,75 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
           userId: session?.user?.id || "anonymous",
           sourceHash,
           locale,
-          key
+          key,
         });
-        const cached = readLocalizationCache(cacheKey);
-        if (cached !== null) {
-          setterMap[key](cached);
-          aiLocalizationRef.current[key] = { locale, sourceHash, lastPresentationHash: stableHash(cached) };
-          continue;
-        }
+        const translated = readLocalizationCache(cacheKey);
 
-        pending[key] = sourceValue;
-        pendingMeta[key] = { sourceHash, cacheKey };
+        if (translated !== null) {
+          cached.push({ key, setter, translated, sourceHash });
+        } else {
+          pending.push({ key, value: sourceValue, sourceLocale, setter, sourceHash, cacheKey });
+        }
       }
 
-      if (!Object.keys(pending).length) return;
       if (!isCurrent(generation)) return;
 
-      try {
-        // One translation request for all currently untranslated AI output.
-        const translatedPayload = await translateAiState(pending, locale, signal);
+      for (const item of cached) {
+        if (!isCurrent(generation)) return;
+        item.setter(item.translated);
+        aiLocalizationRef.current[item.key] = {
+          locale,
+          sourceHash: item.sourceHash,
+          lastPresentationHash: stableHash(item.translated),
+        };
+      }
+
+      if (!pending.length) return;
+
+      // Group only when source languages differ. Normally all ZENAI AI output
+      // shares one source locale, so this becomes one translation request for
+      // the complete AI presentation payload.
+      const groups = new Map();
+      for (const item of pending) {
+        const groupKey = item.sourceLocale === "id" || item.sourceLocale === "en" ? item.sourceLocale : "auto";
+        if (!groups.has(groupKey)) groups.set(groupKey, []);
+        groups.get(groupKey).push(item);
+      }
+
+      for (const [, group] of groups) {
         if (!isCurrent(generation)) return;
 
-        for (const [key, translated] of Object.entries(translatedPayload || {})) {
-          if (!Object.prototype.hasOwnProperty.call(pendingMeta, key)) continue;
+        const content = Object.fromEntries(group.map((item) => [item.key, item.value]));
+        const sourceLocale = group.every((item) => item.sourceLocale === group[0].sourceLocale)
+          ? group[0].sourceLocale
+          : null;
+
+        try {
+          const translatedContent = await translateAiState(content, locale, signal, sourceLocale);
           if (!isCurrent(generation)) return;
-          const { sourceHash, cacheKey } = pendingMeta[key];
-          writeLocalizationCache(cacheKey, translated);
-          setterMap[key](translated);
-          aiLocalizationRef.current[key] = {
-            locale,
-            sourceHash,
-            lastPresentationHash: stableHash(translated)
-          };
+
+          for (const item of group) {
+            const translated = translatedContent?.[item.key];
+            if (translated === undefined) continue;
+            writeLocalizationCache(item.cacheKey, translated);
+            item.setter(translated);
+            aiLocalizationRef.current[item.key] = {
+              locale,
+              sourceHash: item.sourceHash,
+              lastPresentationHash: stableHash(translated),
+            };
+          }
+        } catch (error) {
+          if (error?.name === "AbortError") return;
+          console.warn("Global Yandex localization failed:", error);
         }
-      } catch (error) {
-        if (error?.name === "AbortError") return;
-        console.warn("Global output localization failed:", error);
-        // Keep canonical presentation on failure. Never blank or corrupt AI output.
       }
     };
 
     syncAllAiOutputs();
     return undefined;
   }, [locale, cloudLoaded, session?.user?.id, business, pulseData, diagnosis, marketData, autopilotData, growthActions, businessUpdates, decisionResult]);
+ctions, businessUpdates, decisionResult]);
 
   const askAI = async ({
     prompt,
