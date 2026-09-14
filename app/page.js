@@ -6,7 +6,7 @@ import { createClient } from "../lib/supabase/client";
 import BusinessGrowthLoop from "../components/BusinessGrowthLoop";
 import ZenLanding from "../components/ZenLanding";
 import { useAILocalization } from "../hooks/useAILocalization";
-import { stableHash, translateContent } from "../lib/localization/translateContent";
+import { stableHash } from "../lib/localization/translateContent";
 import { createLocalizationCacheKey, readLocalizationCache, writeLocalizationCache } from "../lib/localization/localizationCache";
 import { AI_LOCALIZATION_KEYS } from "../lib/localization/localizationRegistry";
 
@@ -1710,26 +1710,26 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
   const { beginGeneration, isCurrent } = useAILocalization();
 
   const translateAiState = async (value, targetLocale, signal) => {
-    const outputLanguage = targetLocale === "en" ? "English" : "Bahasa Indonesia";
-    const translateChunk = async (chunk) => {
-      const source = JSON.stringify(chunk);
-      const response = await fetch("/api/ai", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...(await getApiAuthHeaders()) },
-        body: JSON.stringify({
-          prompt: `Translate this COMPLETE ZENAI AI payload into ${outputLanguage}.\n\nRULES:\n- Translate EVERY human-readable string value, including deeply nested values.\n- Preserve JSON keys, structure, IDs, enum values, URLs, numbers, dates, currency codes and technical identifiers.\n- Do not add, remove, summarize, or reorder data.\n- Return ONLY valid JSON with the EXACT same structure.\n\nSOURCE JSON:\n${source}`,
-          system: `You are ZENAI's strict localization engine. Translate the COMPLETE JSON payload to ${outputLanguage}. Every human-readable string must use the target language. Preserve the exact JSON structure.`,
-          jsonMode: true, locale: targetLocale, outputLanguage
-        }),
-        cache: "no-store", signal
-      });
-      const data = await response.json().catch(() => null);
-      if (!response.ok || !data?.success) throw new Error(data?.error || data?.message || "Output translation failed.");
-      const translated = extractJson(data.text || "");
-      if (translated === null || translated === undefined) throw new Error("Translation response is not valid JSON.");
-      return translated;
-    };
-    return translateContent(value, translateChunk);
+    const response = await fetch("/api/translate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(await getApiAuthHeaders()),
+      },
+      body: JSON.stringify({
+        payload: value,
+        locale: targetLocale,
+      }),
+      cache: "no-store",
+      signal,
+    });
+
+    const data = await response.json().catch(() => null);
+    if (!response.ok || !data?.success) {
+      throw new Error(data?.error || data?.message || "Output translation failed.");
+    }
+
+    return data.payload;
   };
 
   const registerCanonicalAi = (key, value, sourceLocale = locale) => {
@@ -1747,27 +1747,26 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
 
   useEffect(() => {
     // AI presentation localization is independent from cloud persistence.
-    // It must also work in local/no-Supabase sessions.
     if (!cloudLoaded && supabase && session?.user?.id) return;
 
     const { generation, signal } = beginGeneration();
-
     const stateMap = { business, pulseData, diagnosis, marketData, autopilotData, growthActions, businessUpdates, decisionResult };
     const setterMap = { business: setBusiness, pulseData: setPulseData, diagnosis: setDiagnosis, marketData: setMarketData, autopilotData: setAutopilotData, growthActions: setGrowthActions, businessUpdates: setBusinessUpdates, decisionResult: setDecisionResult };
-    const targets = AI_LOCALIZATION_KEYS
-      .map((key) => [key, stateMap[key], setterMap[key]])
-      .filter(([, value]) => value !== null && value !== undefined);
 
     const syncAllAiOutputs = async () => {
-      for (const [key, currentValue, setter] of targets) {
-        if (!isCurrent(generation)) return;
+      const pending = [];
+      const cached = [];
+
+      for (const key of AI_LOCALIZATION_KEYS) {
+        const currentValue = stateMap[key];
+        const setter = setterMap[key];
+        if (currentValue === null || currentValue === undefined || typeof setter !== "function") continue;
 
         const currentHash = stableHash(currentValue);
         let canonical = aiCanonicalRef.current[key];
         const localization = aiLocalizationRef.current[key] || {};
 
-        // If the current value is the presentation we previously applied, keep
-        // the canonical source. Otherwise this is a genuinely new AI result.
+        // If current state is not the last presentation, treat it as a new canonical AI result.
         if (!canonical || localization.lastPresentationHash !== currentHash) {
           if (!canonical || canonical.sourceHash !== currentHash) {
             canonical = { value: currentValue, sourceLocale: locale, sourceHash: currentHash };
@@ -1786,28 +1785,63 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
 
         if (localization.locale === locale && localization.sourceHash === sourceHash) continue;
 
-        const cacheKey = createLocalizationCacheKey({ userId: session?.user?.id || "anonymous", sourceHash, locale, key });
-        let translated = readLocalizationCache(cacheKey);
+        const cacheKey = createLocalizationCacheKey({
+          userId: session?.user?.id || "anonymous",
+          sourceHash,
+          locale,
+          key,
+        });
+        const translated = readLocalizationCache(cacheKey);
 
-        try {
-          if (translated === null) {
-            translated = await translateAiState(sourceValue, locale, signal);
-            writeLocalizationCache(cacheKey, translated);
-          }
-          if (!isCurrent(generation)) return;
-          setter(translated);
-          aiLocalizationRef.current[key] = { locale, sourceHash, lastPresentationHash: stableHash(translated) };
-        } catch (error) {
-          if (error?.name === "AbortError") return;
-          console.warn(`Global output localization failed for ${key}:`, error);
+        if (translated !== null) {
+          cached.push({ key, setter, translated, sourceHash });
+        } else {
+          pending.push({ key, setter, sourceValue, sourceHash, cacheKey });
         }
+      }
+
+      if (!isCurrent(generation)) return;
+
+      for (const item of cached) {
+        item.setter(item.translated);
+        aiLocalizationRef.current[item.key] = {
+          locale,
+          sourceHash: item.sourceHash,
+          lastPresentationHash: stableHash(item.translated),
+        };
+      }
+
+      if (!pending.length || !isCurrent(generation)) return;
+
+      // One translation request for all uncached AI payloads.
+      const batchSource = Object.fromEntries(
+        pending.map(({ key, sourceValue }) => [key, sourceValue])
+      );
+
+      try {
+        const translatedBatch = await translateAiState(batchSource, locale, signal);
+        if (!isCurrent(generation)) return;
+
+        for (const item of pending) {
+          const translated = translatedBatch?.[item.key];
+          if (translated === undefined) throw new Error(`Missing translated payload: ${item.key}`);
+          writeLocalizationCache(item.cacheKey, translated);
+          item.setter(translated);
+          aiLocalizationRef.current[item.key] = {
+            locale,
+            sourceHash: item.sourceHash,
+            lastPresentationHash: stableHash(translated),
+          };
+        }
+      } catch (error) {
+        if (error?.name === "AbortError") return;
+        console.warn("Global output localization failed:", error);
+        // Keep canonical/presentation state intact as fallback.
       }
     };
 
     syncAllAiOutputs();
     return undefined;
-    // AI states are intentionally dependencies so newly generated outputs are
-    // registered automatically. Canonical/presentation hashes prevent loops.
   }, [locale, cloudLoaded, session?.user?.id, business, pulseData, diagnosis, marketData, autopilotData, growthActions, businessUpdates, decisionResult]);
 
   const askAI = async ({
