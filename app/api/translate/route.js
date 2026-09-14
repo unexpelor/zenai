@@ -75,7 +75,7 @@ function chunkEntries(entries) {
   return batches;
 }
 
-async function translateBatch(entries, { targetLocale, sourceLocale, apiKey, folderId }) {
+async function translateBatch(entries, { targetLocale, sourceLocale, apiKey }) {
   const body = {
     targetLanguageCode: targetLocale,
     format: "PLAIN_TEXT",
@@ -86,9 +86,10 @@ async function translateBatch(entries, { targetLocale, sourceLocale, apiKey, fol
     body.sourceLanguageCode = sourceLocale;
   }
 
-  // Yandex only needs folderId for user-account authorization. For a service
-  // account API key it must be omitted, so keep it optional.
-  if (folderId) body.folderId = folderId;
+  // This endpoint authenticates with a service-account API key.
+  // Yandex resolves the service account's folder automatically, so do not
+  // send folderId here. This also avoids accidentally forcing a different
+  // folder through a deployment environment variable.
 
   const response = await fetch(YANDEX_TRANSLATE_URL, {
     method: "POST",
@@ -102,7 +103,23 @@ async function translateBatch(entries, { targetLocale, sourceLocale, apiKey, fol
 
   const data = await response.json().catch(() => null);
   if (!response.ok) {
-    throw new Error(data?.message || data?.error?.message || "Yandex Translation API failed.");
+    const providerError = new Error(
+      data?.message || data?.error?.message || "Yandex Translation API failed."
+    );
+    providerError.providerStatus = response.status;
+    providerError.providerCode = data?.code || data?.error?.code || null;
+    providerError.providerDetails = Array.isArray(data?.details)
+      ? data.details.map((detail) => {
+          if (typeof detail === "string") return detail.slice(0, 500);
+          if (!detail || typeof detail !== "object") return String(detail);
+          return {
+            type: typeof detail.type === "string" ? detail.type : undefined,
+            message: typeof detail.message === "string" ? detail.message.slice(0, 500) : undefined,
+            field: typeof detail.field === "string" ? detail.field : undefined,
+          };
+        })
+      : null;
+    throw providerError;
   }
 
   const translations = data?.translations;
@@ -133,8 +150,6 @@ export async function POST(request) {
     const content = body?.content;
     const targetLocale = body?.targetLocale === "en" ? "en" : body?.targetLocale === "id" ? "id" : null;
     const sourceLocale = body?.sourceLocale === "en" || body?.sourceLocale === "id" ? body.sourceLocale : null;
-    const folderId = process.env.YANDEX_TRANSLATE_FOLDER_ID || "";
-
     if (!content || typeof content !== "object" || !targetLocale) {
       return jsonError("Payload translation tidak valid.", 400);
     }
@@ -160,7 +175,6 @@ export async function POST(request) {
         targetLocale,
         sourceLocale,
         apiKey,
-        folderId,
       });
       batch.forEach((entry, index) => {
         setAtPath(translatedContent, entry.path, translated[index]);
@@ -169,7 +183,23 @@ export async function POST(request) {
 
     return Response.json({ success: true, content: translatedContent, translated: true });
   } catch (error) {
-    console.error("YANDEX TRANSLATE API ERROR:", error);
-    return jsonError(error?.message || "Translation service failed.", 500);
+    const safeDiagnostics = {
+      provider: "yandex",
+      providerStatus: Number.isInteger(error?.providerStatus) ? error.providerStatus : null,
+      providerCode: typeof error?.providerCode === "string" ? error.providerCode : null,
+      providerDetails: Array.isArray(error?.providerDetails) ? error.providerDetails : null,
+      apiKeyConfigured: Boolean(process.env.YANDEX_TRANSLATE_API_KEY),
+      apiKeyLast6: process.env.YANDEX_TRANSLATE_API_KEY
+        ? process.env.YANDEX_TRANSLATE_API_KEY.slice(-6)
+        : null,
+      folderIdSent: false,
+    };
+
+    console.error("YANDEX TRANSLATE API ERROR:", {
+      message: error?.message,
+      ...safeDiagnostics,
+    });
+
+    return jsonError(error?.message || "Translation service failed.", 502, safeDiagnostics);
   }
 }
