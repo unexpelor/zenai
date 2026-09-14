@@ -1864,7 +1864,6 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
     syncAllAiOutputs();
     return undefined;
   }, [locale, cloudLoaded, session?.user?.id, business, pulseData, diagnosis, marketData, autopilotData, growthActions, businessUpdates, decisionResult]);
-ctions, businessUpdates, decisionResult]);
 
   const askAI = async ({
     prompt,
