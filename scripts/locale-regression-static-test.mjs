@@ -21,7 +21,7 @@ check("Abort stale translations", localizationHook.includes("new AbortController
 check("Cache uses source hash + locale", localizationCache.includes("${sourceHash}_${locale}") && page.includes("sourceHash"));
 check("New AI states are registered", page.includes('registerCanonicalAi("growthActions"') && page.includes("lastPresentationHash"));
 check("Persisted AI source locale metadata", page.includes("aiSourceLocales") && page.includes("saved.aiSourceLocales"));
-check("Yandex translation server", translateRoute.includes("YANDEX_TRANSLATE_API_KEY") && translateRoute.includes("translate.api.cloud.yandex.net") && translateRoute.includes("Authorization: `Api-Key"));
+check("DeepL Node translation server", translateRoute.includes("deepl-node") && translateRoute.includes("DEEPL_API_KEY") && translateRoute.includes("DeepLClient") && translateRoute.includes("translateText"));
 check("No legacy Google translation", !translateRoute.includes("GOOGLE_TRANSLATE") && !translateRoute.includes("translation.googleapis.com"));
 check("Dashboard state normalization", page.includes("normalizePulse") && page.includes("normalizeDiagnosis") && page.includes("normalizeMarket") && page.includes("normalizeAutopilot"));
 check("Corrupt tab cannot select invalid UI", page.includes("validTabs.has(saved.tab)"));
