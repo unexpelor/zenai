@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { useScrollReveal } from "../lib/motion";
 
 /* ZENAI — Sleek landing (CoreShift-inspired).
    Markup only. Styles in app/globals.css under the `cs-*` namespace.
@@ -33,6 +34,14 @@ function Moon() {
 
 export default function ZenLanding({ darkMode = false, onToggleTheme, onLogin, onSignup }) {
   const t = useTranslations("landing");
+
+  /* Reveal saat scroll untuk blok-blok di bawah layar pertama.
+     Elemen hanya disembunyikan setelah JS memastikan ia di luar layar,
+     jadi tidak ada konten yang bisa "hilang" kalau JS gagal. */
+  const [statsRef, statsState] = useScrollReveal();
+  const [gridRef, gridState] = useScrollReveal();
+  const [flowRef, flowState] = useScrollReveal();
+  const [principlesRef, principlesState] = useScrollReveal();
 
   const MENU = [
     ["▦", t("fDashboard")],
@@ -119,7 +128,7 @@ export default function ZenLanding({ darkMode = false, onToggleTheme, onLogin, o
           </div>
         </div>
 
-        <div className="cs-stats">
+        <div className="cs-stats" ref={statsRef} data-state={statsState}>
           <div><b>8</b><span>{t("statModules")}</span></div>
           <div><b>3</b><span>{t("statWays")}</span></div>
           <div><b>7–30</b><span>{t("statDays")}</span></div>
@@ -132,7 +141,7 @@ export default function ZenLanding({ darkMode = false, onToggleTheme, onLogin, o
           <span>{t("featuresKicker")}</span>
           <h2>{t("featuresTitle1")}<br />{t("featuresTitle2")}</h2>
         </div>
-        <div className="cs-grid">
+        <div className="cs-grid" ref={gridRef} data-state={gridState}>
           <article className="cs-card cs-card-wide">
             <div className="cs-ic">▦</div>
             <h3>{t("fDashboard")}</h3>
@@ -155,7 +164,7 @@ export default function ZenLanding({ darkMode = false, onToggleTheme, onLogin, o
           <span>{t("howKicker")}</span>
           <h2>{t("howTitle")}</h2>
         </div>
-        <ol className="cs-flow">
+        <ol className="cs-flow" ref={flowRef} data-state={flowState}>
           <li><em>01</em><h3>{t("how1Title")}</h3><p>{t("how1Desc")}</p></li>
           <li><em>02</em><h3>{t("how2Title")}</h3><p>{t("how2Desc")}</p></li>
           <li><em>03</em><h3>{t("how3Title")}</h3><p>{t("how3Desc")}</p></li>
@@ -167,7 +176,7 @@ export default function ZenLanding({ darkMode = false, onToggleTheme, onLogin, o
       <section id="cs-why" className="cs-why">
         <p className="cs-quote">{t("whyQuote1")}<br />{t("whyQuote2")}</p>
         <p className="cs-why-sub">{t("whySub")}</p>
-        <div className="cs-principles">
+        <div className="cs-principles" ref={principlesRef} data-state={principlesState}>
           <div><b>{t("why1Title")}</b><span>{t("why1Desc")}</span></div>
           <div><b>{t("why2Title")}</b><span>{t("why2Desc")}</span></div>
           <div><b>{t("why3Title")}</b><span>{t("why3Desc")}</span></div>
