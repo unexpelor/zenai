@@ -1,5 +1,40 @@
 @import "tailwindcss";
 
+/* =========================================================
+   Tailwind v4 — token tema (menggantikan tailwind.config.js,
+   yang TIDAK lagi dibaca otomatis oleh Tailwind v4 tanpa @config).
+   Tanpa blok ini utility `brand-*`, `font-display`, dan
+   `animate-*` tidak akan pernah dihasilkan.
+   ========================================================= */
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --color-brand-50: #eef2ff;
+  --color-brand-100: #e0e7ff;
+  --color-brand-200: #c7d2fe;
+  --color-brand-300: #a5b4fc;
+  --color-brand-400: #818cf8;
+  --color-brand-500: #6366f1;
+  --color-brand-600: #4f46e5;
+  --color-brand-700: #4338ca;
+  --color-brand-800: #3730a3;
+  --color-brand-900: #312e81;
+  --color-brand-950: #1e1b4b;
+
+  --animate-fade-in: fadeIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-slide-up: slideUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-scale-in: scaleIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-shimmer: shimmer 2s linear infinite;
+  --animate-float-slow: floatSlow 6s ease-in-out infinite;
+  --animate-gradient-shift: gradientShift 8s ease-in-out infinite;
+}
+
+/* Dark mode ZENAI ditandai DUA cara: kelas `.dark` dan atribut
+   `data-theme="dark"` (dipasang app/page.js ke <html> & <body>).
+   Keduanya harus dianggap sebagai mode gelap. */
+@custom-variant dark (&:where(.dark, .dark *, [data-theme="dark"], [data-theme="dark"] *));
+
 /* ==============================
    ZENAI Design System Tokens
    ============================== */
@@ -508,14 +543,547 @@
     opacity 0.2s ease, border-color 0.2s ease;
 }
 
-/* ---------- Reduced motion ---------- */
+/* =========================================================
+   ZENAI — LAYER MOTION & VISUAL IMPACT (v5)
+   ---------------------------------------------------------
+   Lapisan tambahan: animasi, micro-interaction, kedalaman,
+   dan penguat kontras. Prinsip kerja:
+
+   1. Hanya menyentuh transform / opacity / animation / filter /
+      box-shadow / outline / pseudo-element. Warna & background
+      inline milik app/page.js (banyak yang `!important`) TIDAK
+      diganggu, supaya tidak ada elemen yang kehilangan warna.
+   2. Animasi masuk memakai `animation-fill-mode: backwards`
+      (bukan `both`) supaya setelah selesai elemen kembali ke
+      keadaan alaminya: hover transform tetap bekerja dan tidak
+      ada transform permanen yang merusak position: fixed.
+   3. Semua animasi dimatikan otomatis saat pengguna memilih
+      prefers-reduced-motion.
+   ========================================================= */
+
+/* ---------- 1. Nilai motion terpusat (samakan dgn lib/motion.js) ---------- */
+:root {
+  --eas-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --eas-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-micro: 160ms;
+  --dur-fast: 240ms;
+  --dur-base: 320ms;
+  --dur-reveal: 620ms;
+
+  --ring-brand: rgba(99, 102, 241, 0.38);
+  --glow-brand: 0 14px 34px rgba(79, 70, 229, 0.26);
+  --glow-brand-strong: 0 18px 44px rgba(79, 70, 229, 0.34);
+  --shadow-lift: 0 18px 42px rgba(15, 23, 42, 0.14);
+  --shadow-lift-dark: 0 18px 44px rgba(0, 0, 0, 0.55);
+  --sheen: linear-gradient(105deg, transparent 0%, rgba(255, 255, 255, 0.55) 50%, transparent 100%);
+}
+
+/* ---------- 2. Mode gelap: dukung `.dark` DAN `data-theme="dark"` ----------
+   app/page.js menandai tema lewat document.documentElement.dataset.theme,
+   jadi atribut itulah sinyal utama. Tanpa blok ini token dasar tetap
+   memakai nilai terang meski aplikasi sedang di mode gelap. */
+.dark,
+:root[data-theme="dark"],
+body[data-theme="dark"] {
+  --bg-primary: #0b1120;
+  --bg-secondary: #111827;
+  --bg-tertiary: #1e293b;
+
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+
+  --border-light: #334155;
+  --border-medium: #475569;
+
+  --glass-bg: rgba(17, 24, 39, 0.78);
+  --glass-bg-hover: rgba(30, 41, 59, 0.88);
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.24);
+
+  /* Teks brand versi terang: #6366f1 gagal kontras di latar gelap */
+  --brand-text: #a5b4fc;
+  --brand-text-strong: #c7d2fe;
+  --ring-brand: rgba(129, 140, 248, 0.45);
+
+  /* Token --z-* dipromosikan ke root supaya komponen di luar
+     .zenai-app (mis. LanguageSwitcher) juga ikut bertema. */
+  --z-bg: #0a0f1c;
+  --z-bg-2: #0e1526;
+  --z-surface: #131a2a;
+  --z-surface-2: #0f1624;
+  --z-ink: #f1f5f9;
+  --z-ink-2: #cbd5e1;
+  --z-muted: #8b98ad;
+  --z-border: #1e293b;
+  --z-border-2: #2a3950;
+  --z-primary: #818cf8;
+  --z-primary-2: #22d3ee;
+  --z-primary-3: #a78bfa;
+
+  color-scheme: dark;
+}
+
+:root,
+:root[data-theme="light"],
+body[data-theme="light"] {
+  /* Teks paling redup di mode terang dinaikkan dari #94a3b8 (2,6:1)
+     ke #64748b (4,8:1) supaya lolos WCAG AA. */
+  --text-muted: #64748b;
+  --brand-text: #4f46e5;
+  --brand-text-strong: #4338ca;
+  --shine-surface: rgba(255, 255, 255, 0.75);
+
+  --z-bg: #f5f7fb;
+  --z-bg-2: #eef1f8;
+  --z-surface: #ffffff;
+  --z-surface-2: #f8fafc;
+  --z-ink: #0f172a;
+  --z-ink-2: #334155;
+  --z-muted: #64748b;
+  --z-border: #e5e9f2;
+  --z-border-2: #d7dded;
+  --z-primary: #4f46e5;
+  --z-primary-2: #06b6d4;
+  --z-primary-3: #8b5cf6;
+
+  color-scheme: light;
+}
+
+/* ---------- 3. Keyframes ---------- */
+@keyframes zenRise {
+  from { opacity: 0; transform: translateY(18px) scale(0.988); filter: blur(6px); }
+  to   { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+@keyframes zenRiseDown {
+  from { opacity: 0; transform: translateY(-12px); filter: blur(4px); }
+  to   { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+@keyframes zenPop {
+  0%   { opacity: 0; transform: scale(0.94); }
+  60%  { opacity: 1; transform: scale(1.012); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes zenDriftA {
+  0%   { transform: translate3d(0, 0, 0) scale(1); opacity: 0.85; }
+  50%  { transform: translate3d(-4%, 3%, 0) scale(1.16); opacity: 1; }
+  100% { transform: translate3d(2%, -3%, 0) scale(1.06); opacity: 0.9; }
+}
+
+@keyframes zenDriftB {
+  0%   { transform: translate3d(0, 0, 0) scale(1); opacity: 0.75; }
+  50%  { transform: translate3d(3%, -4%, 0) scale(1.2); opacity: 0.95; }
+  100% { transform: translate3d(-3%, 2%, 0) scale(1.08); opacity: 0.8; }
+}
+
+@keyframes zenGridPan {
+  from { background-position: 0 0, 0 0; }
+  to   { background-position: 52px 52px, 52px 52px; }
+}
+
+@keyframes zenGlowPulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--ring-brand); }
+  70%      { box-shadow: 0 0 0 10px rgba(99, 102, 241, 0); }
+}
+
+@keyframes zenSheen {
+  from { transform: translateX(-130%) skewX(-18deg); }
+  to   { transform: translateX(240%) skewX(-18deg); }
+}
+
+@keyframes zenFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+@keyframes zenBarGrow {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+
+@keyframes zenDashDraw {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes zenDotPulse {
+  0%, 100% { opacity: 0.5; transform: scale(0.85); }
+  50%      { opacity: 1; transform: scale(1.2); }
+}
+
+@keyframes zenMarquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* Keyframes yang dirujuk utility lama (.animate-enter, .shimmer,
+   .bg-gradient-brand, .text-gradient-brand) tetapi belum pernah
+   didefinisikan: keyframes di tailwind.config.js tidak pernah ikut
+   ke output karena Tailwind v4 tidak lagi membacanya. */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-12px); }
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+
+/* ---------- 4. Utility animasi siap pakai ---------- */
+.zen-anim-rise { animation: zenRise var(--dur-reveal) var(--eas-out) backwards; }
+.zen-anim-pop { animation: zenPop var(--dur-base) var(--eas-out) backwards; }
+.zen-anim-float { animation: zenFloat 6s ease-in-out infinite; }
+.zen-anim-glow { animation: zenGlowPulse 2.8s ease-out infinite; }
+.zen-delay-1 { animation-delay: 60ms; }
+.zen-delay-2 { animation-delay: 120ms; }
+.zen-delay-3 { animation-delay: 180ms; }
+.zen-delay-4 { animation-delay: 240ms; }
+.zen-delay-5 { animation-delay: 300ms; }
+.zen-delay-6 { animation-delay: 360ms; }
+
+.zen-shimmer {
+  background-image: linear-gradient(
+    100deg,
+    transparent 20%,
+    var(--shine-surface, rgba(255, 255, 255, 0.6)) 50%,
+    transparent 80%
+  );
+  background-size: 220% 100%;
+  animation: zenShimmerSweep 1.8s linear infinite;
+}
+
+@keyframes zenShimmerSweep {
+  from { background-position: -150% 0; }
+  to   { background-position: 250% 0; }
+}
+
+.zen-gradient-text {
+  background-image: var(--brand-gradient);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.zen-lift {
+  transition: transform var(--dur-fast) var(--eas-out), box-shadow var(--dur-fast) var(--eas-out);
+}
+.zen-lift:hover { transform: translateY(-3px); box-shadow: var(--shadow-lift); }
+
+.zen-marquee {
+  display: flex;
+  gap: 24px;
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+.zen-marquee > * { animation: zenMarquee 26s linear infinite; }
+
+/* =========================================================
+   5. DASHBOARD (.zenai-app) — dibangun di app/page.js
+   ========================================================= */
+
+/* --- 5a. Latar ambien: orb bergerak lambat + grid yang mengalir --- */
+.zenai-app::before { animation: zenDriftA 26s ease-in-out infinite alternate; }
+.zenai-app::after { animation: zenDriftB 32s ease-in-out infinite alternate; }
+
+.zenai-app .zenai-content::before { animation: zenGridPan 60s linear infinite; }
+
+/* --- 5b. Animasi masuk yang benar (backwards, bukan both) --- */
+.zenai-page-header { animation: zenRiseDown var(--dur-reveal) var(--eas-out) backwards; }
+
+.zenai-content > * {
+  animation: zenRise var(--dur-reveal) var(--eas-out) backwards;
+}
+.zenai-content > *:nth-child(2) { animation-delay: 70ms; }
+.zenai-content > *:nth-child(3) { animation-delay: 140ms; }
+.zenai-content > *:nth-child(4) { animation-delay: 210ms; }
+.zenai-content > *:nth-child(5) { animation-delay: 280ms; }
+.zenai-content > *:nth-child(6) { animation-delay: 350ms; }
+.zenai-content > *:nth-child(7) { animation-delay: 420ms; }
+.zenai-content > *:nth-child(n + 8) { animation-delay: 480ms; }
+
+/* --- 5c. Kartu: angkat halus + glow gradient di tepi atas --- */
+.zenai-content section {
+  transition: transform var(--dur-base) var(--eas-out),
+    box-shadow var(--dur-base) var(--eas-out),
+    border-color var(--dur-base) var(--eas-out);
+}
+
+.zenai-content section:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lift), inset 0 2px 0 0 rgba(99, 102, 241, 0.85) !important;
+}
+
+.zenai-dark .zenai-content section:hover {
+  box-shadow: var(--shadow-lift-dark), inset 0 2px 0 0 rgba(129, 140, 248, 0.9) !important;
+}
+
+/* --- 5d. Navigasi sidebar: indikator aktif + micro-motion ikon --- */
+.zenai-nav-item { position: relative; }
+
+.zenai-nav-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 3px;
+  height: 0;
+  border-radius: 999px;
+  background: var(--brand-gradient);
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: height var(--dur-base) var(--eas-out), opacity var(--dur-base) var(--eas-out);
+}
+
+.zenai-nav-item.is-active::before { height: 58%; opacity: 1; }
+
+.zenai-nav-item.is-active { animation: zenGlowPulse 2.6s ease-out infinite; }
+
+.zenai-nav-icon {
+  transition: transform var(--dur-fast) var(--eas-out);
+}
+
+.zenai-nav-item:hover .zenai-nav-icon {
+  transform: translateX(2px) scale(1.08);
+}
+
+.zenai-nav-item:hover .zenai-nav-icon svg {
+  transform: rotate(-6deg);
+}
+
+.zenai-nav-icon svg { transition: transform var(--dur-fast) var(--eas-out); }
+
+/* --- 5e. Tombol: angkat saat hover, tekan saat klik, sheen lembut --- */
+.zenai-app button:not(.zenai-sidebar-overlay) {
+  transition: transform var(--dur-micro) var(--eas-out),
+    box-shadow var(--dur-fast) var(--eas-out),
+    background var(--dur-fast) ease,
+    border-color var(--dur-fast) ease,
+    opacity var(--dur-fast) ease;
+}
+
+.zenai-app button:not(.zenai-sidebar-overlay):not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: var(--glow-brand);
+}
+
+.zenai-app button:not(.zenai-sidebar-overlay):not(:disabled):active {
+  transform: translateY(0) scale(0.975);
+  box-shadow: none;
+}
+
+.zenai-app button:disabled { cursor: not-allowed; }
+
+/* --- 5f. Input: cincin fokus yang terlihat di dua mode --- */
+.zenai-app input,
+.zenai-app textarea,
+.zenai-app select {
+  transition: box-shadow var(--dur-fast) var(--eas-out), border-color var(--dur-fast) ease;
+}
+
+.zenai-app input:focus,
+.zenai-app textarea:focus,
+.zenai-app select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--ring-brand) !important;
+}
+
+/* Di layar kecil, font input dinaikkan ke minimal 16px supaya iOS
+   tidak memperbesar halaman sendiri saat input difokuskan — teks
+   tetap pada ukuran yang nyaman dibaca. */
+@media (max-width: 640px) {
+  .zenai-app input,
+  .zenai-app textarea,
+  .zenai-app select {
+    font-size: 16px !important;
+  }
+}
+
+/* --- 5g. Baris tabel: sorotan tanpa layout shift --- */
+.zenai-app tbody tr {
+  transition: box-shadow var(--dur-fast) ease, background-color var(--dur-fast) ease;
+}
+
+.zenai-app tbody tr:hover {
+  box-shadow: inset 3px 0 0 0 var(--z-primary);
+}
+
+/* --- 5h. Cincin fokus keyboard: kontras di terang & gelap --- */
+.zenai-app :focus-visible,
+.cs :focus-visible {
+  outline: 2px solid var(--z-primary, #6366f1);
+  outline-offset: 2px;
+}
+
+.zenai-dark :focus-visible,
+[data-theme="dark"] .zenai-app :focus-visible {
+  outline-color: #a5b4fc;
+}
+
+/* --- 5i. Scrollbar tematik (terang & gelap) --- */
+.zenai-app *::-webkit-scrollbar { width: 8px; height: 8px; }
+.zenai-app *::-webkit-scrollbar-track { background: transparent; }
+.zenai-app *::-webkit-scrollbar-thumb {
+  background: var(--z-border-2, #d7dded);
+  border-radius: 999px;
+}
+.zenai-app *::-webkit-scrollbar-thumb:hover { background: var(--z-primary, #6366f1); }
+
+/* =========================================================
+   6. LANDING (.cs) — animasi masuk & kedalaman
+   ========================================================= */
+
+.cs-glow-a { animation: zenDriftA 24s ease-in-out infinite alternate; }
+.cs-glow-b { animation: zenDriftB 30s ease-in-out infinite alternate; }
+
+.cs-hero > .cs-badge { animation: zenPop 600ms var(--eas-out) backwards; }
+.cs-hero > h1 { animation: zenRise 820ms var(--eas-out) 90ms backwards; }
+.cs-hero > .cs-sub { animation: zenRise 760ms var(--eas-out) 190ms backwards; }
+.cs-hero > .cs-ctas { animation: zenRise 760ms var(--eas-out) 280ms backwards; }
+.cs-hero > .cs-mock { animation: zenRise 900ms var(--eas-out) 360ms backwards; }
+.cs-hero > .cs-stats { animation: zenRise 760ms var(--eas-out) 470ms backwards; }
+
+/* Batang chart di mock: tumbuh dari bawah, bertahap */
+.cs-mock-chart i,
+.cs-spark i {
+  transform-origin: bottom center;
+  animation: zenBarGrow 720ms var(--eas-out) backwards;
+}
+.cs-mock-chart i:nth-child(1), .cs-spark i:nth-child(1) { animation-delay: 120ms; }
+.cs-mock-chart i:nth-child(2), .cs-spark i:nth-child(2) { animation-delay: 190ms; }
+.cs-mock-chart i:nth-child(3), .cs-spark i:nth-child(3) { animation-delay: 260ms; }
+.cs-mock-chart i:nth-child(4), .cs-spark i:nth-child(4) { animation-delay: 330ms; }
+.cs-mock-chart i:nth-child(5), .cs-spark i:nth-child(5) { animation-delay: 400ms; }
+.cs-mock-chart i:nth-child(6) { animation-delay: 470ms; }
+.cs-mock-chart i:nth-child(7) { animation-delay: 540ms; }
+
+/* Titik status hidup (pulse halus) */
+.cs-pill i,
+.cs-badge i,
+.cs-mock-head .cs-pill i { animation: zenDotPulse 2.4s ease-in-out infinite; }
+
+/* Tombol gradient: kilau bergerak saat hover */
+.cs-btn { position: relative; overflow: hidden; }
+.cs-btn-grad::after {
+  content: "";
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  left: 0;
+  width: 45%;
+  background: var(--sheen);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-130%) skewX(-18deg);
+}
+.cs-btn-grad:hover::after { opacity: 1; animation: zenSheen 900ms var(--eas-out); }
+.cs-btn-grad:hover { box-shadow: var(--glow-brand-strong); }
+
+/* Ikon panah ikut bergerak di dalam tombol CTA */
+.cs-btn svg { transition: transform var(--dur-fast) var(--eas-out); }
+.cs-btn:hover svg { transform: translateX(3px); }
+
+/* Kartu fitur: lift + glow (reveal ditangani framer-motion) */
+.cs-card {
+  transition: box-shadow var(--dur-base) var(--eas-out), border-color var(--dur-base) var(--eas-out);
+}
+.cs-card:hover { box-shadow: var(--shadow-lift); }
+
+/* Reveal saat scroll — progresif & tidak pernah membuat konten hilang.
+   `data-state="hidden"` hanya dipasang JS setelah elemen dipastikan
+   masih di luar layar; tanpa JS, atau saat state "idle"/"shown",
+   elemen tampil normal. */
+.cs [data-state] > * {
+  transition: opacity var(--dur-reveal) var(--eas-out),
+    transform var(--dur-reveal) var(--eas-out),
+    filter var(--dur-reveal) var(--eas-out);
+}
+
+.cs [data-state="hidden"] > * {
+  opacity: 0;
+  transform: translateY(20px);
+  filter: blur(7px);
+}
+
+/* Stagger: maksimal 8 anak, sisanya tampil tanpa delay */
+.cs [data-state] > *:nth-child(1) { transition-delay: 0ms; }
+.cs [data-state] > *:nth-child(2) { transition-delay: 60ms; }
+.cs [data-state] > *:nth-child(3) { transition-delay: 120ms; }
+.cs [data-state] > *:nth-child(4) { transition-delay: 180ms; }
+.cs [data-state] > *:nth-child(5) { transition-delay: 240ms; }
+.cs [data-state] > *:nth-child(6) { transition-delay: 300ms; }
+.cs [data-state] > *:nth-child(7) { transition-delay: 360ms; }
+.cs [data-state] > *:nth-child(n + 8) { transition-delay: 420ms; }
+
+/* =========================================================
+   7. Reduced motion — semua tambahan di atas dimatikan
+   ========================================================= */
 @media (prefers-reduced-motion: reduce) {
   .zenai-app::before,
   .zenai-app::after,
+  .zenai-app .zenai-content::before,
   .zenai-page-header,
   .zenai-content > *,
-  .zenai-sidebar-overlay {
+  .zenai-nav-item.is-active,
+  .cs-glow-a,
+  .cs-glow-b,
+  .cs-hero > *,
+  .cs-mock-chart i,
+  .cs-spark i,
+  .cs-pill i,
+  .cs-badge i,
+  .cs-btn-grad::after,
+  .zen-anim-float,
+  .zen-anim-glow,
+  .zen-shimmer {
     animation: none !important;
+  }
+
+  .zenai-content section:hover,
+  .zenai-app button:not(.zenai-sidebar-overlay):not(:disabled):hover,
+  .zenai-app button:not(.zenai-sidebar-overlay):not(:disabled):active,
+  .zenai-nav-item:hover .zenai-nav-icon,
+  .zenai-nav-item:hover .zenai-nav-icon svg,
+  .cs-btn:hover svg,
+  .zen-lift:hover {
+    transform: none !important;
+  }
+
+  /* Reveal scroll: pastikan tidak ada konten yang tetap tersembunyi */
+  .cs [data-state="hidden"] > * {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
     transition: none !important;
   }
 }
+
