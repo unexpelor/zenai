@@ -1872,7 +1872,7 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
           }
         } catch (error) {
           if (error?.name === "AbortError") return;
-          console.warn("Global Yandex localization failed:", error);
+          console.warn("Global DeepL localization failed:", error);
         }
       }
     };
