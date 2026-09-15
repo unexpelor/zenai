@@ -105,11 +105,11 @@ function buildTranslationPrompt(entries, sourceLocale, targetLocale) {
   ].join("\n");
 }
 
-async function requestOpenRouter({ models, entries, sourceLocale, targetLocale, apiKey, maxTokensBoost = 1 }) {
+async function requestOpenRouter({ model, entries, sourceLocale, targetLocale, apiKey, maxTokensBoost = 1 }) {
   const prompt = buildTranslationPrompt(entries, sourceLocale, targetLocale);
   const inputChars = entries.reduce((sum, item) => sum + item.value.length, 0);
   const body = {
-    models,
+    model,
     messages: [
       { role: "system", content: "You are a precise professional translation engine. Translate the JSON values and return ONLY one valid JSON object using the numeric keys exactly as provided." },
       { role: "user", content: prompt },
@@ -157,7 +157,7 @@ async function requestOpenRouter({ models, entries, sourceLocale, targetLocale, 
   const error = new Error(providerError || `OpenRouter returned no text (finish_reason: ${finishReason || "unknown"}).`);
   error.status = 502;
   error.providerData = {
-    model: data?.model || models?.[0] || DEFAULT_MODEL,
+    model: data?.model || model || DEFAULT_MODEL,
     finish_reason: finishReason,
     choice_count: Array.isArray(data?.choices) ? data.choices.length : 0,
     error: data?.error,
@@ -193,24 +193,40 @@ function parseTranslationJson(text, entries) {
 }
 
 async function translateBatch(entries, { targetLocale, sourceLocale, apiKey }) {
-  // Fixed FREE models across different upstream providers. OpenRouter handles
-  // provider/model failover; the app never uses the random openrouter/free router.
-  try {
-    const text = await requestOpenRouter({
-      models: TRANSLATION_MODELS,
-      entries,
-      sourceLocale,
-      targetLocale,
-      apiKey,
-    });
-    return parseTranslationJson(text, entries);
-  } catch (error) {
-    // A structured-output retry is intentionally omitted: on the free tier it
-    // can create another long-running provider request without improving the
-    // user's experience. The route returns promptly with the real provider
-    // diagnostic so the frontend can keep the original output visible.
-    throw error;
+  // Do not rely on OpenRouter models[] for empty 200 responses: a provider can
+  // return HTTP 200 with no usable text, which does not trigger model fallback.
+  // Try each fixed FREE model sequentially and validate its actual text/JSON.
+  const failures = [];
+  for (const model of TRANSLATION_MODELS) {
+    try {
+      const text = await requestOpenRouter({
+        model,
+        entries,
+        sourceLocale,
+        targetLocale,
+        apiKey,
+      });
+      return parseTranslationJson(text, entries);
+    } catch (error) {
+      failures.push({
+        model,
+        message: error?.message || "Translation provider failed.",
+        status: error?.status,
+        providerData: error?.providerData,
+      });
+    }
   }
+
+  const last = failures[failures.length - 1] || {};
+  const error = new Error(
+    `All fixed FREE translation models failed. Last: ${last.message || "unknown error"}`
+  );
+  error.status = last.status || 502;
+  error.providerData = {
+    attempted_models: failures.map((item) => item.model),
+    failures,
+  };
+  throw error;
 }
 
 export async function POST(request) {
