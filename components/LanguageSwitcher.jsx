@@ -1,13 +1,10 @@
 "use client";
 
-import { useLocale } from "next-intl";
 import { useZenLocale } from "../providers/ZenLocaleProvider";
 import { Languages } from "lucide-react";
 
 export default function LanguageSwitcher() {
-  const locale = useLocale();
-
-  const { setLocale } = useZenLocale();
+  const { locale, setLocale } = useZenLocale();
 
   const switchTo = (next) => {
     if (!["id", "en"].includes(next) || next === locale) return;
