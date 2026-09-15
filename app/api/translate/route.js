@@ -1,16 +1,11 @@
 import { jsonError, rateLimit, requireApiUser } from "../../../lib/api-security";
 
 const MAX_STRING_LENGTH = 12000;
-const MAX_BATCH_CHARS = 3000;
-const MAX_BATCH_STRINGS = 20;
+const MAX_BATCH_CHARS = 2400;
+const MAX_BATCH_STRINGS = 12;
 const MAX_TOTAL_STRINGS = 1500;
-const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const TRANSLATION_MODELS = [
-  "thinkingmachines/inkling:free",
-  "poolside/laguna-s-2.1:free",
-  "nvidia/nemotron-3-super-120b-a12b:free",
-];
-const DEFAULT_MODEL = TRANSLATION_MODELS[0];
+const DEEPL_API_KEY = process.env.DEEPL_API_KEY || "";
+const DEEPL_API_URL = (process.env.DEEPL_API_URL || "https://api-free.deepl.com").replace(/\/$/, "");
 
 const TECHNICAL_KEYS = new Set([
   "id", "_id", "uuid", "key", "code", "slug", "url", "uri", "href",
@@ -82,151 +77,73 @@ function chunkEntries(entries) {
   return batches;
 }
 
-function languageName(locale) {
-  return locale === "en" ? "English" : "Bahasa Indonesia";
+function mapLocale(locale) {
+  return locale === "en" ? "EN" : "ID";
 }
 
-function buildTranslationPrompt(entries, sourceLocale, targetLocale) {
-  const source = sourceLocale ? languageName(sourceLocale) : "the source language";
-  const target = languageName(targetLocale);
-
-  return [
-    "Translate ONLY the values in the JSON object below.",
-    `Source language: ${source}. Target language: ${target}.`,
-    "Return ONLY a valid JSON object with exactly the same keys.",
-    "Rules:",
-    "- Preserve meaning and context; do not summarize or add information.",
-    "- Preserve Markdown, bullets, headings, tables, line breaks, numbers, currencies, percentages and dates.",
-    "- Preserve URLs, code, identifiers, product/business names and proper nouns unless they are ordinary prose that should naturally be translated.",
-    "- Do not translate JSON keys.",
-    "- Do not mix languages in the translated values.",
-    "",
-    JSON.stringify(Object.fromEntries(entries.map((entry, index) => [String(index), entry.value])))
-  ].join("\n");
-}
-
-async function requestOpenRouter({ model, entries, sourceLocale, targetLocale, apiKey, maxTokensBoost = 1 }) {
-  const prompt = buildTranslationPrompt(entries, sourceLocale, targetLocale);
-  const inputChars = entries.reduce((sum, item) => sum + item.value.length, 0);
-  const body = {
-    model,
-    messages: [
-      { role: "system", content: "You are a precise professional translation engine. Translate the JSON values and return ONLY one valid JSON object using the numeric keys exactly as provided." },
-      { role: "user", content: prompt },
-    ],
-    temperature: 0.1,
-    max_tokens: Math.min(8000, Math.max(3000, Math.ceil((inputChars / 2.2) * maxTokensBoost))),
-    stream: false,
-  };
-  // Keep the provider request deliberately minimal for free endpoints.
-  // JSON is enforced by the prompt and validated by parseTranslationJson().
-
-  const response = await fetch(OPENROUTER_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
-      "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL || "https://zenai.app",
-      "X-Title": "ZENAI",
-    },
-    body: JSON.stringify(body),
-    signal: AbortSignal.timeout(15000),
-  });
-
-  const data = await response.json().catch(() => null);
-  if (!response.ok) {
-    const providerMessage = data?.error?.message || data?.error?.metadata?.raw || data?.message || `OpenRouter gagal (${response.status}).`;
-    const error = new Error(providerMessage);
-    error.status = response.status;
-    error.providerData = data?.error || data;
+async function requestDeepL({ entries, sourceLocale, targetLocale }) {
+  if (!DEEPL_API_KEY) {
+    const error = new Error("DEEPL_API_KEY belum dikonfigurasi di server.");
+    error.status = 503;
     throw error;
   }
 
-  const choice = data?.choices?.[0];
-  const message = choice?.message || {};
-  const rawContent = message?.content;
-  const text = Array.isArray(rawContent)
-    ? rawContent
-        .map((part) => (typeof part === "string" ? part : part?.text || ""))
-        .join("")
-    : rawContent;
-  if (typeof text === "string" && text.trim()) return text;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
 
-  const finishReason = choice?.finish_reason || choice?.native_finish_reason;
-  const providerError = data?.error?.message || data?.error?.metadata?.raw || data?.message;
-  const error = new Error(providerError || `OpenRouter returned no text (finish_reason: ${finishReason || "unknown"}).`);
-  error.status = 502;
-  error.providerData = {
-    model: data?.model || model || DEFAULT_MODEL,
-    finish_reason: finishReason,
-    choice_count: Array.isArray(data?.choices) ? data.choices.length : 0,
-    error: data?.error,
-    has_reasoning: typeof message?.reasoning === "string" && message.reasoning.trim().length > 0,
-    content_type: Array.isArray(rawContent) ? "array" : typeof rawContent,
-  };
-  throw error;
-}
-function parseTranslationJson(text, entries) {
-  const cleaned = String(text)
-    .trim()
-    .replace(/^```(?:json)?\s*/i, "")
-    .replace(/\s*```$/i, "");
-
-  let parsed;
   try {
-    parsed = JSON.parse(cleaned);
-  } catch {
-    const match = cleaned.match(/\{[\s\S]*\}/);
-    if (!match) throw new Error("OpenRouter mengembalikan JSON terjemahan yang tidak valid.");
-    try {
-      parsed = JSON.parse(match[0]);
-    } catch {
-      throw new Error("OpenRouter mengembalikan JSON terjemahan yang tidak valid.");
-    }
-  }
+    const body = new URLSearchParams();
+    entries.forEach((entry) => body.append("text", entry.value));
+    body.set("source_lang", mapLocale(sourceLocale));
+    body.set("target_lang", mapLocale(targetLocale));
+    body.set("preserve_formatting", "1");
 
-  return entries.map((_, index) => {
-    const translated = parsed?.[String(index)];
-    if (typeof translated !== "string") throw new Error("Hasil terjemahan OpenRouter tidak lengkap.");
-    return translated;
-  });
+    const response = await fetch(`${DEEPL_API_URL}/v2/translate`, {
+      method: "POST",
+      headers: {
+        Authorization: `DeepL-Auth-Key ${DEEPL_API_KEY}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body,
+      signal: controller.signal,
+      cache: "no-store",
+    });
+
+    const data = await response.json().catch(() => null);
+    if (!response.ok) {
+      const message = data?.message || data?.error || `DeepL gagal (${response.status}).`;
+      const error = new Error(message);
+      error.status = response.status;
+      error.providerData = data;
+      throw error;
+    }
+
+    const translations = Array.isArray(data?.translations)
+      ? data.translations.map((item) => item?.text)
+      : null;
+
+    if (!translations || translations.length !== entries.length || translations.some((value) => typeof value !== "string")) {
+      const error = new Error("DeepL mengembalikan hasil terjemahan yang tidak lengkap.");
+      error.status = 502;
+      error.providerData = data;
+      throw error;
+    }
+
+    return translations;
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      const timeoutError = new Error("DeepL timeout.");
+      timeoutError.status = 504;
+      throw timeoutError;
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
-async function translateBatch(entries, { targetLocale, sourceLocale, apiKey }) {
-  // Do not rely on OpenRouter models[] for empty 200 responses: a provider can
-  // return HTTP 200 with no usable text, which does not trigger model fallback.
-  // Try each fixed FREE model sequentially and validate its actual text/JSON.
-  const failures = [];
-  for (const model of TRANSLATION_MODELS) {
-    try {
-      const text = await requestOpenRouter({
-        model,
-        entries,
-        sourceLocale,
-        targetLocale,
-        apiKey,
-      });
-      return parseTranslationJson(text, entries);
-    } catch (error) {
-      failures.push({
-        model,
-        message: error?.message || "Translation provider failed.",
-        status: error?.status,
-        providerData: error?.providerData,
-      });
-    }
-  }
-
-  const last = failures[failures.length - 1] || {};
-  const error = new Error(
-    `All fixed FREE translation models failed. Last: ${last.message || "unknown error"}`
-  );
-  error.status = last.status || 502;
-  error.providerData = {
-    attempted_models: failures.map((item) => item.model),
-    failures,
-  };
-  throw error;
+async function translateBatch(entries, { targetLocale, sourceLocale }) {
+  return requestDeepL({ entries, sourceLocale, targetLocale });
 }
 
 export async function POST(request) {
@@ -244,8 +161,7 @@ export async function POST(request) {
       );
     }
 
-    const apiKey = process.env.OPENROUTER_TRANSLATE_API_KEY;
-    if (!apiKey) return jsonError("OPENROUTER_TRANSLATE_API_KEY belum dikonfigurasi di server.", 503);
+    if (!DEEPL_API_KEY) return jsonError("DEEPL_API_KEY belum dikonfigurasi di server.", 503);
 
     const body = await request.json().catch(() => null);
     const content = body?.content;
@@ -257,12 +173,12 @@ export async function POST(request) {
     }
 
     if (sourceLocale === targetLocale) {
-      return Response.json({ success: true, content, translated: false, provider: "openrouter" });
+      return Response.json({ success: true, content, translated: false, provider: "deepl" });
     }
 
     const entries = collectStrings(content);
     if (entries.length === 0) {
-      return Response.json({ success: true, content, translated: false, provider: "openrouter" });
+      return Response.json({ success: true, content, translated: false, provider: "deepl" });
     }
     if (entries.length > MAX_TOTAL_STRINGS) return jsonError("Payload translation terlalu besar.", 413);
 
@@ -270,7 +186,7 @@ export async function POST(request) {
     const batches = chunkEntries(entries);
 
     for (const batch of batches) {
-      const translated = await translateBatch(batch, { targetLocale, sourceLocale, apiKey });
+      const translated = await translateBatch(batch, { targetLocale, sourceLocale });
       batch.forEach((entry, index) => setAtPath(translatedContent, entry.path, translated[index]));
     }
 
@@ -278,18 +194,17 @@ export async function POST(request) {
       success: true,
       content: translatedContent,
       translated: true,
-      provider: "openrouter",
-      model: DEFAULT_MODEL,
+      provider: "deepl",
     });
   } catch (error) {
-    console.error("OPENROUTER TRANSLATION ERROR:", {
+    console.error("DEEPL ERROR:", {
       message: error?.message,
       status: error?.status,
       provider: error?.providerData,
     });
     return jsonError(error?.message || "Translation service failed.", 502, {
-      provider: "openrouter",
-      apiKeyConfigured: Boolean(process.env.OPENROUTER_TRANSLATE_API_KEY),
+      provider: "deepl",
+      configured: Boolean(DEEPL_API_KEY),
     });
   }
 }
