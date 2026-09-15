@@ -2,14 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { useZenLocale } from "../providers/ZenLocaleProvider";
 import { createClient } from "../lib/supabase/client";
 import BusinessGrowthLoop from "../components/BusinessGrowthLoop";
 import ZenLanding from "../components/ZenLanding";
 import { useAILocalization } from "../hooks/useAILocalization";
 import { stableHash } from "../lib/localization/translateContent";
 import { createLocalizationCacheKey, readLocalizationCache, writeLocalizationCache } from "../lib/localization/localizationCache";
-import { AI_LOCALIZATION_KEYS } from "../lib/localization/localizationRegistry";
 
 function safeArray(value) {
   return Array.isArray(value) ? value : [];
@@ -114,9 +112,7 @@ function ZenIcon({ name, size = 18, strokeWidth = 1.9 }) {
 }
 export default function Home() {
   const t = useTranslations();
-  const nextIntlLocale = useLocale();
-  const { locale: zenLocale } = useZenLocale();
-  const locale = zenLocale || nextIntlLocale;
+  const locale = useLocale();
   const uiText = (id, en) => (locale === "en" ? en : id);
 
   // UI translations are rendered through next-intl/uiText directly.
@@ -1705,12 +1701,12 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
   };
 
   // =========================
-  // GLOBAL AI OUTPUT LANGUAGE SYNC
-  // Canonical AI source is kept separate from localized presentation.
+  // CLICK-TO-TRANSLATE OUTPUT SCANNER
+  // The language button is the ONLY trigger for AI-output translation.
+  // Canonical AI values are never replaced by translated presentation values.
   // =========================
   const aiCanonicalRef = useRef({});
   const aiLocalizationRef = useRef({});
-  const [aiLocalizationVersion, setAiLocalizationVersion] = useState(0);
   const { beginGeneration, isCurrent } = useAILocalization();
 
   const translateAiState = async (value, targetLocale, signal, sourceLocale = null) => {
@@ -1731,9 +1727,8 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
 
     const data = await response.json().catch(() => null);
     if (!response.ok || !data?.success) {
-      throw new Error(data?.message || "Translation service failed.");
+      throw new Error(data?.message || data?.error || "Translation service failed.");
     }
-
     return data.content;
   };
 
@@ -1741,7 +1736,6 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
     if (value === null || value === undefined) {
       delete aiCanonicalRef.current[key];
       delete aiLocalizationRef.current[key];
-      setAiLocalizationVersion((v) => v + 1);
       return;
     }
 
@@ -1749,25 +1743,63 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
     const previous = aiCanonicalRef.current[key];
     const changed = !previous || previous.sourceHash !== sourceHash || previous.sourceLocale !== sourceLocale;
 
+    // IMPORTANT: this is the only place where canonical AI output is captured.
+    // A translated presentation value must never become the new canonical source.
     aiCanonicalRef.current[key] = { value, sourceLocale: sourceLocale || null, sourceHash };
 
-    // Reset presentation metadata only when a genuinely new canonical result arrives.
     if (changed) {
-      aiLocalizationRef.current[key] = { sourceHash, lastPresentationHash: sourceHash, locale: sourceLocale || null };
-      setAiLocalizationVersion((v) => v + 1);
+      aiLocalizationRef.current[key] = {
+        sourceHash,
+        lastPresentationHash: sourceHash,
+        locale: sourceLocale || null,
+      };
     }
   };
 
   const canonicalValueForSave = (key, fallback) => aiCanonicalRef.current[key]?.value ?? fallback;
 
-  // =========================
-  // OUTPUT SCANNER TRANSLATION
-  // Scan the canonical AI output states whenever the user clicks a language.
-  // The canonical source is never replaced by a translated presentation.
-  // =========================
-  const scanAndTranslateAiOutput = async (targetLocale) => {
-    const { generation, signal } = beginGeneration();
-    const stateMap = { business, pulseData, diagnosis, marketData, autopilotData, growthActions, businessUpdates, decisionResult };
+  const scanVisibleAiOutputs = () => {
+    if (typeof document === "undefined") return [];
+
+    const nodes = Array.from(document.querySelectorAll("[data-zenai-output]"));
+    const visibleKeys = new Set();
+
+    for (const node of nodes) {
+      const rect = node.getBoundingClientRect();
+      const style = window.getComputedStyle(node);
+      const visible = rect.width > 0 && rect.height > 0 && style.display !== "none" && style.visibility !== "hidden";
+      if (!visible) continue;
+
+      const rawKeys = node.getAttribute("data-zenai-output-key") || "";
+      rawKeys
+        .split(",")
+        .map((key) => key.trim())
+        .filter(Boolean)
+        .forEach((key) => visibleKeys.add(key));
+    }
+
+    return Array.from(visibleKeys);
+  };
+
+  const translateVisibleAiOutputs = async (targetLocale) => {
+    if (!targetLocale || !["id", "en"].includes(targetLocale)) return;
+
+    // Wait one paint so React has committed the newly selected language/UI state.
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+
+    const visibleKeys = scanVisibleAiOutputs();
+    if (!visibleKeys.length) return;
+
+    const stateMap = {
+      business,
+      pulseData,
+      diagnosis,
+      marketData,
+      autopilotData,
+      growthActions,
+      businessUpdates,
+      decisionResult,
+    };
     const setterMap = {
       business: setBusiness,
       pulseData: setPulseData,
@@ -1779,38 +1811,35 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
       decisionResult: setDecisionResult,
     };
 
+    const { generation, signal } = beginGeneration();
     const pending = [];
-    const cached = [];
 
-    for (const key of AI_LOCALIZATION_KEYS) {
+    for (const key of visibleKeys) {
       if (!isCurrent(generation)) return;
+
       const setter = setterMap[key];
-      const currentValue = stateMap[key];
-      if (typeof setter !== "function" || currentValue === null || currentValue === undefined) continue;
+      if (typeof setter !== "function") continue;
 
-      const currentHash = stableHash(currentValue);
+      // Canonical source comes from the immutable AI source ref first.
       let canonical = aiCanonicalRef.current[key];
-      const presentation = aiLocalizationRef.current[key] || {};
+      const currentValue = stateMap[key];
 
-      // New AI output: capture it once as canonical. A translated presentation
-      // is recognized by lastPresentationHash and is never promoted to source.
-      if (!canonical) {
-        canonical = { value: currentValue, sourceLocale: locale || null, sourceHash: currentHash };
-        aiCanonicalRef.current[key] = canonical;
-      } else if (canonical.sourceHash !== currentHash && presentation.lastPresentationHash !== currentHash) {
-        canonical = { value: currentValue, sourceLocale: locale || null, sourceHash: currentHash };
+      if (!canonical && currentValue !== null && currentValue !== undefined) {
+        const sourceHash = stableHash(currentValue);
+        canonical = { value: currentValue, sourceLocale: locale || null, sourceHash };
         aiCanonicalRef.current[key] = canonical;
       }
 
+      if (!canonical) continue;
+
       const sourceHash = canonical.sourceHash;
       const sourceLocale = canonical.sourceLocale;
-      const sourceValue = canonical.value;
 
       if (sourceLocale === targetLocale) {
-        setter(sourceValue);
+        setter(canonical.value);
         aiLocalizationRef.current[key] = {
-          locale: targetLocale,
           sourceHash,
+          locale: targetLocale,
           lastPresentationHash: sourceHash,
         };
         continue;
@@ -1822,88 +1851,74 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
         locale: targetLocale,
         key,
       });
-      const translated = readLocalizationCache(cacheKey);
+      const cached = readLocalizationCache(cacheKey);
 
-      if (translated !== null) {
-        cached.push({ key, setter, translated, sourceHash });
-      } else {
-        pending.push({ key, value: sourceValue, sourceLocale, setter, sourceHash, cacheKey });
+      if (cached !== null) {
+        setter(cached);
+        aiLocalizationRef.current[key] = {
+          sourceHash,
+          locale: targetLocale,
+          lastPresentationHash: stableHash(cached),
+        };
+        continue;
       }
+
+      pending.push({ key, setter, value: canonical.value, sourceLocale, sourceHash, cacheKey });
     }
-
-    if (!isCurrent(generation)) return;
-
-    cached.forEach(({ key, setter, translated, sourceHash }) => {
-      setter(translated);
-      aiLocalizationRef.current[key] = {
-        locale: targetLocale,
-        sourceHash,
-        lastPresentationHash: stableHash(translated),
-      };
-    });
 
     if (!pending.length || !isCurrent(generation)) return;
 
-    // One request per source-language group, so clicking a language translates
-    // all currently available AI output instead of waiting for regeneration.
-    const groups = new Map();
-    pending.forEach((item) => {
-      const groupKey = item.sourceLocale === "id" || item.sourceLocale === "en" ? item.sourceLocale : "auto";
-      if (!groups.has(groupKey)) groups.set(groupKey, []);
-      groups.get(groupKey).push(item);
-    });
+    // One request can translate all visible AI output objects while preserving
+    // their individual keys. This minimizes OpenRouter calls.
+    const content = Object.fromEntries(pending.map((item) => [item.key, item.value]));
+    const sourceLocales = new Set(pending.map((item) => item.sourceLocale).filter(Boolean));
+    const sourceLocale = sourceLocales.size === 1 ? [...sourceLocales][0] : null;
 
-    for (const group of groups.values()) {
+    try {
+      const translatedContent = await translateAiState(content, targetLocale, signal, sourceLocale);
       if (!isCurrent(generation)) return;
-      const content = Object.fromEntries(group.map((item) => [item.key, item.value]));
-      const sourceLocale = group.every((item) => item.sourceLocale === group[0].sourceLocale)
-        ? group[0].sourceLocale
-        : null;
 
-      try {
-        const translatedContent = await translateAiState(content, targetLocale, signal, sourceLocale);
-        if (!isCurrent(generation)) return;
+      for (const item of pending) {
+        const translated = translatedContent?.[item.key];
+        if (translated === undefined) continue;
 
-        group.forEach((item) => {
-          const translated = translatedContent?.[item.key];
-          if (translated === undefined) return;
-          writeLocalizationCache(item.cacheKey, translated);
-          item.setter(translated);
-          aiLocalizationRef.current[item.key] = {
-            locale: targetLocale,
-            sourceHash: item.sourceHash,
-            lastPresentationHash: stableHash(translated),
-          };
-        });
-      } catch (error) {
-        if (error?.name === "AbortError") return;
-        console.warn("ZENAI output scanner translation failed:", error);
+        writeLocalizationCache(item.cacheKey, translated);
+        item.setter(translated);
+        aiLocalizationRef.current[item.key] = {
+          sourceHash: item.sourceHash,
+          locale: targetLocale,
+          lastPresentationHash: stableHash(translated),
+        };
       }
+    } catch (error) {
+      if (error?.name === "AbortError") return;
+      console.warn("ZENAI output translation failed:", error);
     }
   };
 
-  // Explicit event from the language switcher. This is the primary trigger;
-  // it does not depend on generating a module again or refreshing the page.
+  // Translation is intentionally NOT triggered by locale/useEffect/generation.
+  // The language switcher dispatches this event explicitly after a click.
   useEffect(() => {
     const handleOutputLanguageChange = (event) => {
       const targetLocale = event?.detail?.locale;
-      if (targetLocale === "id" || targetLocale === "en") {
-        scanAndTranslateAiOutput(targetLocale);
-      }
+      if (!targetLocale) return;
+      void translateVisibleAiOutputs(targetLocale);
     };
 
     window.addEventListener("zenai:output-language-change", handleOutputLanguageChange);
     return () => window.removeEventListener("zenai:output-language-change", handleOutputLanguageChange);
-  }, [locale, session?.user?.id]);
-
-  // Initial/restored locale sync. A language click uses the explicit event above;
-  // this only covers state restored from persistence or a non-click locale change.
-  const initialLocaleSyncRef = useRef(false);
-  useEffect(() => {
-    if (initialLocaleSyncRef.current || !locale) return;
-    initialLocaleSyncRef.current = true;
-    scanAndTranslateAiOutput(locale);
-  }, [locale]);
+  }, [
+    business,
+    pulseData,
+    diagnosis,
+    marketData,
+    autopilotData,
+    growthActions,
+    businessUpdates,
+    decisionResult,
+    locale,
+    session?.user?.id,
+  ]);
 
   const askAI = async ({
     prompt,
@@ -4547,7 +4562,7 @@ padding: isMobile ? "16px 12px" : "32px",
         ========================== */}
 
         {tab === "home" && (
-          <div>
+          <div data-zenai-output data-zenai-output-key="business">
             {!business ? (
               <div
                 style={{
@@ -4979,7 +4994,7 @@ padding: isMobile ? "16px 12px" : "32px",
         ========================== */}
 
         {tab === "capture" && (
-          <div
+          <div data-zenai-output data-zenai-output-key="business,businessUpdates"
             style={{
               maxWidth: "850px"
             }}
@@ -5308,7 +5323,7 @@ padding: isMobile ? "16px 12px" : "32px",
         ========================== */}
 
         {tab === "pulse" && (
-          <div
+          <div data-zenai-output data-zenai-output-key="pulseData"
             style={{
               maxWidth: "1000px"
             }}
@@ -5896,7 +5911,7 @@ padding: isMobile ? "16px 12px" : "32px",
         ========================== */}
 
         {tab === "diagnosis" && (
-          <div
+          <div data-zenai-output data-zenai-output-key="diagnosis"
             style={{
               maxWidth: "1000px"
             }}
@@ -6522,7 +6537,7 @@ padding: isMobile ? "16px 12px" : "32px",
 ========================= */}
 
 {tab === "market" && (
-  <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
+  <div data-zenai-output data-zenai-output-key="marketData" style={{ maxWidth: "1000px", margin: "0 auto" }}>
     {marketData && (
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "14px" }}>
         <button type="button" onClick={exportMarketPdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}>{uiText('Ekspor PDF','Export PDF')}</button>
@@ -7854,7 +7869,7 @@ padding: isMobile ? "16px 12px" : "32px",
 
           const renderAssumptionFields = () => {
             if (decisionType === "pricing") return (
-              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)", gap: "13px" }}>
+              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)", gap: "13px" }} data-zenai-output data-zenai-output-key="decisionResult">
                 {field("currentPrice", uiText("Harga saat ini","Current Price"), "Rp", uiText("Contoh: 25000","Example: 25000"))}
                 {field("plannedPrice", uiText("Harga rencana","Planned Price"), "Rp", uiText("Contoh: 28000","Example: 28000"))}
                 {field("volumeChange", uiText("Perubahan volume penjualan","Sales volume change"), "%", uiText("Contoh: -10","Example: -10"))}
@@ -8018,7 +8033,7 @@ padding: isMobile ? "16px 12px" : "32px",
         })()}
 
         {tab === "autopilot" && (
-          <div
+          <div data-zenai-output data-zenai-output-key="autopilotData,growthActions"
             style={{
               maxWidth: "1000px"
             }}
