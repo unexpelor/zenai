@@ -383,14 +383,14 @@ const [marketError, setMarketError] =
     setBusiness(null);
     setPulseData(null);
     setDiagnosis(null);
-    ["business", "pulseData", "diagnosis"].forEach((key) => { delete aiCanonicalRef.current[key]; delete aiLocalizationRef.current[key]; });
+    ["business", "pulseData", "diagnosis"].forEach((key) => { delete aiCanonicalRef.current[key]; });
     setAutopilotData(null);
     setMarketData(null);
-    ["autopilotData", "marketData"].forEach((key) => { delete aiCanonicalRef.current[key]; delete aiLocalizationRef.current[key]; });
+    ["autopilotData", "marketData"].forEach((key) => { delete aiCanonicalRef.current[key]; });
     setMarketError("");
     setBusinessUpdates([]);
     setGrowthActions([]);
-    ["businessUpdates", "growthActions", "decisionResult"].forEach((key) => { delete aiCanonicalRef.current[key]; delete aiLocalizationRef.current[key]; });
+    ["businessUpdates", "growthActions", "decisionResult"].forEach((key) => { delete aiCanonicalRef.current[key]; });
     setFinanceTransactions([]);
     setFinancePeriod(new Date().toISOString().slice(0, 7));
     setText("");
@@ -437,11 +437,22 @@ const [marketError, setMarketError] =
         setSession(currentSession);
       }
 
-      const { data, error } = await supabase
-        .from("zenai_user_state")
-        .select("state")
-        .eq("user_id", currentSession.user.id)
-        .maybeSingle();
+      let data = null;
+      let error = null;
+      try {
+        const result = await Promise.race([
+          supabase
+            .from("zenai_user_state")
+            .select("state")
+            .eq("user_id", currentSession.user.id)
+            .maybeSingle(),
+          new Promise((resolve) => setTimeout(() => resolve({ data: null, error: new Error("Cloud state timeout") }), 10000)),
+        ]);
+        data = result?.data ?? null;
+        error = result?.error ?? null;
+      } catch (loadError) {
+        error = loadError;
+      }
 
       if (error) {
         console.error("Gagal memuat data ZenAI:", error);
@@ -1706,6 +1717,25 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
   const aiCanonicalRef = useRef({});
   const translationRequestRef = useRef({ id: 0, controller: null });
 
+  // Stable refs keep the click-only translation listener from closing over
+  // the first render. The event listener is intentionally registered once,
+  // while these refs always point to the latest React state/locale/session.
+  const aiStateRef = useRef({});
+  const localeRef = useRef(locale);
+  const sessionRef = useRef(session);
+  aiStateRef.current = {
+    business,
+    pulseData,
+    diagnosis,
+    marketData,
+    autopilotData,
+    growthActions,
+    businessUpdates,
+    decisionResult,
+  };
+  localeRef.current = locale;
+  sessionRef.current = session;
+
   const translateAiPayload = async (content, targetLocale, signal, sourceLocale) => {
     const response = await fetch("/api/translate", {
       method: "POST",
@@ -1784,16 +1814,7 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
     if (!["id", "en"].includes(targetLocale)) return;
     if (typeof window === "undefined") return;
 
-    const stateMap = {
-      business,
-      pulseData,
-      diagnosis,
-      marketData,
-      autopilotData,
-      growthActions,
-      businessUpdates,
-      decisionResult,
-    };
+    const stateMap = aiStateRef.current;
     const setterMap = {
       business: setBusiness,
       pulseData: setPulseData,
@@ -1834,7 +1855,7 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
 
       // Canonical source is captured before any translation can be rendered.
       if (!canonical && currentValue !== null && currentValue !== undefined) {
-        registerCanonicalAi(key, currentValue, locale);
+        registerCanonicalAi(key, currentValue, localeRef.current);
         canonical = aiCanonicalRef.current[key];
       }
       if (!canonical) continue;
@@ -1845,7 +1866,7 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
       }
 
       const cacheKey = createLocalizationCacheKey({
-        userId: session?.user?.id || "anonymous",
+        userId: sessionRef.current?.user?.id || "anonymous",
         sourceHash: canonical.sourceHash,
         locale: targetLocale,
         key,
