@@ -5951,7 +5951,7 @@ padding: isMobile ? "16px 12px" : "32px",
               <div
                 style={{
                   background: darkMode ? "#111827" : "#FFFFFF",
-                  border: "1px solid #E2E8F0",
+                  border: darkMode ? "1px solid #334155" : "1px solid #E2E8F0",
                   borderRadius: "20px",
                   padding: "40px",
                   textAlign: "center"
@@ -6010,7 +6010,7 @@ padding: isMobile ? "16px 12px" : "32px",
                 <div
                   style={{
                     background: darkMode ? "#111827" : "#FFFFFF",
-                    border: "1px solid #E2E8F0",
+                    border: darkMode ? "1px solid #334155" : "1px solid #E2E8F0",
                     borderRadius: "20px",
                     padding: "28px",
                     marginBottom: "20px"
@@ -6088,7 +6088,7 @@ padding: isMobile ? "16px 12px" : "32px",
                       style={{
                         background: darkMode ? "#111827" : "#FFFFFF",
                         border:
-                          "1px solid #E2E8F0",
+                          (darkMode ? "1px solid #334155" : "1px solid #E2E8F0"),
                         borderRadius:
                           "18px",
                         padding: "24px",
@@ -6113,9 +6113,9 @@ padding: isMobile ? "16px 12px" : "32px",
                               key={index}
                               style={{
                                 background:
-                                  "#EFF6FF",
+                                  (darkMode ? "#172033" : "#EFF6FF"),
                                 border:
-                                  "1px solid #BFDBFE",
+                                  (darkMode ? "1px solid #1D4ED8" : "1px solid #BFDBFE"),
                                 padding:
                                   "16px",
                                 borderRadius:
@@ -6156,7 +6156,7 @@ padding: isMobile ? "16px 12px" : "32px",
                       style={{
                         background: darkMode ? "#111827" : "#FFFFFF",
                         border:
-                          "1px solid #E2E8F0",
+                          (darkMode ? "1px solid #334155" : "1px solid #E2E8F0"),
                         borderRadius:
                           "18px",
                         padding: "24px",
@@ -6271,7 +6271,7 @@ padding: isMobile ? "16px 12px" : "32px",
                       style={{
                         background: darkMode ? "#111827" : "#FFFFFF",
                         border:
-                          "1px solid #E2E8F0",
+                          (darkMode ? "1px solid #334155" : "1px solid #E2E8F0"),
                         borderRadius:
                           "18px",
                         padding: "24px",
@@ -6330,7 +6330,7 @@ padding: isMobile ? "16px 12px" : "32px",
                                       "10px",
                                     fontSize:
                                       "13px",
-                                    color: darkMode ? "#60A5FA" : "#2563EB"
+                                    color: darkMode ? "#93C5FD" : "#2563EB"
                                   }}
                                 >
                                   Potensi:{" "}
@@ -6354,7 +6354,7 @@ padding: isMobile ? "16px 12px" : "32px",
                       style={{
                         background: darkMode ? "#111827" : "#FFFFFF",
                         border:
-                          "1px solid #E2E8F0",
+                          (darkMode ? "1px solid #334155" : "1px solid #E2E8F0"),
                         borderRadius:
                           "18px",
                         padding: "24px",
@@ -6379,7 +6379,9 @@ padding: isMobile ? "16px 12px" : "32px",
                               key={index}
                               style={{
                                 border:
-                                  "1px solid #E2E8F0",
+                                  (darkMode ? "1px solid #334155" : "1px solid #E2E8F0"),
+                                background:
+                                  darkMode ? "#111827" : "#FFFFFF",
                                 padding:
                                   "18px",
                                 borderRadius:
@@ -6402,8 +6404,8 @@ padding: isMobile ? "16px 12px" : "32px",
                                     borderRadius:
                                       "50%",
                                     background:
-                                      "#EFF6FF",
-                                    color: darkMode ? "#60A5FA" : "#2563EB",
+                                      (darkMode ? "#172033" : "#EFF6FF"),
+                                    color: darkMode ? "#93C5FD" : "#2563EB",
                                     display:
                                       "flex",
                                     alignItems:
@@ -6512,10 +6514,10 @@ padding: isMobile ? "16px 12px" : "32px",
                     disabled={busy}
                     style={{
                       border:
-                        "1px solid #CBD5E1",
+                        (darkMode ? "1px solid #475569" : "1px solid #CBD5E1"),
                       background: darkMode ? "#111827" : "#FFFFFF",
                       color:
-                        "#334155",
+                        (darkMode ? "#E2E8F0" : "#334155"),
                       padding:
                         "12px 18px",
                       borderRadius:
