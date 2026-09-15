@@ -383,14 +383,14 @@ const [marketError, setMarketError] =
     setBusiness(null);
     setPulseData(null);
     setDiagnosis(null);
-    ["business", "pulseData", "diagnosis"].forEach((key) => { delete aiCanonicalRef.current[key]; delete aiLocalizationRef.current[key]; });
+    ["business", "pulseData", "diagnosis"].forEach((key) => { delete aiCanonicalRef.current[key]; });
     setAutopilotData(null);
     setMarketData(null);
-    ["autopilotData", "marketData"].forEach((key) => { delete aiCanonicalRef.current[key]; delete aiLocalizationRef.current[key]; });
+    ["autopilotData", "marketData"].forEach((key) => { delete aiCanonicalRef.current[key]; });
     setMarketError("");
     setBusinessUpdates([]);
     setGrowthActions([]);
-    ["businessUpdates", "growthActions", "decisionResult"].forEach((key) => { delete aiCanonicalRef.current[key]; delete aiLocalizationRef.current[key]; });
+    ["businessUpdates", "growthActions", "decisionResult"].forEach((key) => { delete aiCanonicalRef.current[key]; });
     setFinanceTransactions([]);
     setFinancePeriod(new Date().toISOString().slice(0, 7));
     setText("");
