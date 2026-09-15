@@ -5,8 +5,8 @@ const MAX_BATCH_CHARS = 7000;
 const MAX_BATCH_STRINGS = 50;
 const MAX_TOTAL_STRINGS = 1500;
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const DEFAULT_MODEL = "google/gemma-4-31b-it:free";
-const FALLBACK_MODEL = "google/gemma-4-26b-a4b-it:free";
+const DEFAULT_MODEL = "google/gemma-4-26b-a4b-it:free";
+const FALLBACK_MODEL = "google/gemma-4-31b-it:free";
 
 const TECHNICAL_KEYS = new Set([
   "id", "_id", "uuid", "key", "code", "slug", "url", "uri", "href",
@@ -113,10 +113,11 @@ async function requestOpenRouter({ model, fallbackModels = [], entries, sourceLo
     ],
     temperature: 0.1,
     max_tokens: Math.min(8000, Math.max(3000, Math.ceil((inputChars / 2.2) * maxTokensBoost))),
-    reasoning: { effort: "none" },
     stream: false,
+    provider: { sort: "throughput", allow_fallbacks: true },
   };
-  if (useJsonFormat) body.response_format = { type: "json_object" };
+  // Do not force response_format on free providers; prompt-level JSON is more compatible across endpoints.
+  // The parser below validates the returned JSON before accepting it.
 
   const response = await fetch(OPENROUTER_URL, {
     method: "POST",
@@ -132,7 +133,7 @@ async function requestOpenRouter({ model, fallbackModels = [], entries, sourceLo
 
   const data = await response.json().catch(() => null);
   if (!response.ok) {
-    const providerMessage = data?.error?.message || data?.message || `OpenRouter gagal (${response.status}).`;
+    const providerMessage = data?.error?.message || data?.error?.metadata?.raw || data?.message || `OpenRouter gagal (${response.status}).`;
     const error = new Error(providerMessage);
     error.status = response.status;
     error.providerData = data?.error || data;
@@ -203,7 +204,7 @@ async function translateBatch(entries, { targetLocale, sourceLocale, apiKey }) {
       sourceLocale,
       targetLocale,
       apiKey,
-      useJsonFormat: true,
+      useJsonFormat: false,
     });
     return parseTranslationJson(text, entries);
   } catch (error) {
