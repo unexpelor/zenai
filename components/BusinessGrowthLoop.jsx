@@ -164,7 +164,7 @@ export default function BusinessGrowthLoop({
               : "#15803D",
           }}
         >
-          BUSINESS GROWTH LOOP
+          {uiText("SIKLUS PENGEMBANGAN BISNIS", "BUSINESS GROWTH LOOP")}
         </div>
 
         <h2
@@ -176,7 +176,7 @@ export default function BusinessGrowthLoop({
               : "#0F172A",
           }}
         >
-          Dari Strategi Menjadi Tindakan
+          {uiText("Dari Strategi Menjadi Tindakan", "From Strategy to Action")}
         </h2>
 
         <p
@@ -293,7 +293,7 @@ export default function BusinessGrowthLoop({
                     cursor: "pointer",
                   }}
                 >
-                  + Jadikan Tindakan
+                  {uiText("+ Jadikan Tindakan", "+ Make This an Action")}
                 </button>
               </div>
             ))}
