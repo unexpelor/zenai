@@ -6,6 +6,7 @@ const MAX_BATCH_STRINGS = 100;
 const MAX_TOTAL_STRINGS = 1500;
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const DEFAULT_MODEL = "google/gemma-4-26b-a4b-it:free";
+const FALLBACK_MODEL = "openrouter/free";
 
 const TECHNICAL_KEYS = new Set([
   "id", "_id", "uuid", "key", "code", "slug", "url", "uri", "href",
@@ -100,10 +101,21 @@ function buildTranslationPrompt(entries, sourceLocale, targetLocale) {
   ].join("\n");
 }
 
-async function translateBatch(entries, { targetLocale, sourceLocale, apiKey }) {
-  const model = process.env.OPENROUTER_TRANSLATE_MODEL || DEFAULT_MODEL;
-  const system = "You are a precise professional translation engine for an AI application. Output valid JSON only. Never explain your work.";
+async function requestOpenRouter({ model, entries, sourceLocale, targetLocale, apiKey, useJsonFormat = false }) {
+  const source = sourceLocale ? languageName(sourceLocale) : "the source language";
+  const target = languageName(targetLocale);
   const prompt = buildTranslationPrompt(entries, sourceLocale, targetLocale);
+  const body = {
+    model,
+    messages: [
+      { role: "system", content: "You are a precise professional translation engine for an AI application. Output valid JSON only. Never explain your work." },
+      { role: "user", content: prompt },
+    ],
+    temperature: 0.1,
+    max_tokens: Math.min(12000, Math.max(1500, entries.reduce((sum, item) => sum + item.value.length, 0))),
+  };
+
+  if (useJsonFormat) body.response_format = { type: "json_object" };
 
   const response = await fetch(OPENROUTER_URL, {
     method: "POST",
@@ -113,32 +125,41 @@ async function translateBatch(entries, { targetLocale, sourceLocale, apiKey }) {
       "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL || "https://zenai.app",
       "X-Title": "ZENAI",
     },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: prompt },
-      ],
-      temperature: 0.1,
-      max_tokens: Math.min(12000, Math.max(1500, entries.reduce((sum, item) => sum + item.value.length, 0))),
-      response_format: { type: "json_object" },
-    }),
+    body: JSON.stringify(body),
     signal: AbortSignal.timeout(30000),
   });
 
   const data = await response.json().catch(() => null);
   if (!response.ok) {
-    throw new Error(data?.error?.message || data?.message || `OpenRouter gagal (${response.status}).`);
+    const providerMessage = data?.error?.message || data?.message || `OpenRouter gagal (${response.status}).`;
+    const error = new Error(providerMessage);
+    error.status = response.status;
+    error.providerData = data?.error || data;
+    throw error;
   }
 
   const text = data?.choices?.[0]?.message?.content;
   if (!text) throw new Error("OpenRouter tidak mengembalikan hasil terjemahan.");
+  return text;
+}
+
+function parseTranslationJson(text, entries) {
+  const cleaned = String(text)
+    .trim()
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/i, "");
 
   let parsed;
   try {
-    parsed = JSON.parse(text);
+    parsed = JSON.parse(cleaned);
   } catch {
-    throw new Error("OpenRouter mengembalikan JSON terjemahan yang tidak valid.");
+    const match = cleaned.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error("OpenRouter mengembalikan JSON terjemahan yang tidak valid.");
+    try {
+      parsed = JSON.parse(match[0]);
+    } catch {
+      throw new Error("OpenRouter mengembalikan JSON terjemahan yang tidak valid.");
+    }
   }
 
   return entries.map((_, index) => {
@@ -146,6 +167,54 @@ async function translateBatch(entries, { targetLocale, sourceLocale, apiKey }) {
     if (typeof translated !== "string") throw new Error("Hasil terjemahan OpenRouter tidak lengkap.");
     return translated;
   });
+}
+
+async function translateBatch(entries, { targetLocale, sourceLocale, apiKey }) {
+  const model = process.env.OPENROUTER_TRANSLATE_MODEL || DEFAULT_MODEL;
+  let lastError = null;
+
+  // First attempt: structured JSON on the configured model.
+  try {
+    const text = await requestOpenRouter({ model, entries, sourceLocale, targetLocale, apiKey, useJsonFormat: true });
+    return parseTranslationJson(text, entries);
+  } catch (error) {
+    lastError = error;
+    console.warn("Translation structured request failed; retrying without response_format:", {
+      model,
+      status: error?.status,
+      message: error?.message,
+    });
+  }
+
+  // Some free providers reject structured-output parameters even when the model advertises support.
+  try {
+    const text = await requestOpenRouter({ model, entries, sourceLocale, targetLocale, apiKey, useJsonFormat: false });
+    return parseTranslationJson(text, entries);
+  } catch (error) {
+    lastError = error;
+    console.warn("Translation plain request failed; trying OpenRouter free router:", {
+      model,
+      status: error?.status,
+      message: error?.message,
+    });
+  }
+
+  // Final free fallback. OpenRouter routes to a currently available free model.
+  if (model !== FALLBACK_MODEL) {
+    try {
+      const text = await requestOpenRouter({ model: FALLBACK_MODEL, entries, sourceLocale, targetLocale, apiKey, useJsonFormat: false });
+      return parseTranslationJson(text, entries);
+    } catch (error) {
+      lastError = error;
+      console.error("Translation fallback failed:", {
+        model: FALLBACK_MODEL,
+        status: error?.status,
+        message: error?.message,
+      });
+    }
+  }
+
+  throw lastError || new Error("Translation provider failed.");
 }
 
 export async function POST(request) {
@@ -201,7 +270,11 @@ export async function POST(request) {
       model: process.env.OPENROUTER_TRANSLATE_MODEL || DEFAULT_MODEL,
     });
   } catch (error) {
-    console.error("OPENROUTER TRANSLATION ERROR:", { message: error?.message });
+    console.error("OPENROUTER TRANSLATION ERROR:", {
+      message: error?.message,
+      status: error?.status,
+      provider: error?.providerData,
+    });
     return jsonError(error?.message || "Translation service failed.", 502, {
       provider: "openrouter",
       apiKeyConfigured: Boolean(process.env.OPENROUTER_TRANSLATE_API_KEY),
