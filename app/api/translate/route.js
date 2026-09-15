@@ -1,8 +1,8 @@
 import { jsonError, rateLimit, requireApiUser } from "../../../lib/api-security";
 
 const MAX_STRING_LENGTH = 12000;
-const MAX_BATCH_CHARS = 10000;
-const MAX_BATCH_STRINGS = 40;
+const MAX_BATCH_CHARS = 24000;
+const MAX_BATCH_STRINGS = 100;
 const MAX_TOTAL_STRINGS = 1500;
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const DEFAULT_MODEL = "google/gemma-4-26b-a4b-it:free";
@@ -126,7 +126,7 @@ async function requestOpenRouter({ model, entries, sourceLocale, targetLocale, a
       "X-Title": "ZENAI",
     },
     body: JSON.stringify(body),
-    signal: AbortSignal.timeout(18000),
+    signal: AbortSignal.timeout(30000),
   });
 
   const data = await response.json().catch(() => null);
@@ -257,20 +257,10 @@ export async function POST(request) {
     const translatedContent = structuredClone(content);
     const batches = chunkEntries(entries);
 
-    // Run at most two provider batches concurrently. This prevents large
-    // Business Perspective / Strategy payloads from becoming a long serial
-    // chain while still keeping pressure on the free provider reasonable.
-    const queue = batches.map((batch, index) => ({ batch, index }));
-    const runWorker = async () => {
-      while (queue.length) {
-        const job = queue.shift();
-        if (!job) return;
-        const translated = await translateBatch(job.batch, { targetLocale, sourceLocale, apiKey });
-        job.batch.forEach((entry, index) => setAtPath(translatedContent, entry.path, translated[index]));
-      }
-    };
-
-    await Promise.all([runWorker(), runWorker()]);
+    for (const batch of batches) {
+      const translated = await translateBatch(batch, { targetLocale, sourceLocale, apiKey });
+      batch.forEach((entry, index) => setAtPath(translatedContent, entry.path, translated[index]));
+    }
 
     return Response.json({
       success: true,
