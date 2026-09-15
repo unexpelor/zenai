@@ -7,9 +7,8 @@ const MAX_TOTAL_STRINGS = 1500;
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const TRANSLATION_MODELS = [
   "thinkingmachines/inkling:free",
-  "nvidia/nemotron-3-super-120b-a12b:free",
   "poolside/laguna-s-2.1:free",
-  "google/gemma-4-31b-it:free",
+  "nvidia/nemotron-3-super-120b-a12b:free",
 ];
 const DEFAULT_MODEL = TRANSLATION_MODELS[0];
 
