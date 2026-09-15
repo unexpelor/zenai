@@ -383,14 +383,14 @@ const [marketError, setMarketError] =
     setBusiness(null);
     setPulseData(null);
     setDiagnosis(null);
-    ["business", "pulseData", "diagnosis"].forEach((key) => { delete aiCanonicalRef.current[key]; });
+    ["business", "pulseData", "diagnosis"].forEach((key) => { delete aiCanonicalRef.current[key]; delete aiLocalizationRef.current[key]; });
     setAutopilotData(null);
     setMarketData(null);
-    ["autopilotData", "marketData"].forEach((key) => { delete aiCanonicalRef.current[key]; });
+    ["autopilotData", "marketData"].forEach((key) => { delete aiCanonicalRef.current[key]; delete aiLocalizationRef.current[key]; });
     setMarketError("");
     setBusinessUpdates([]);
     setGrowthActions([]);
-    ["businessUpdates", "growthActions", "decisionResult"].forEach((key) => { delete aiCanonicalRef.current[key]; });
+    ["businessUpdates", "growthActions", "decisionResult"].forEach((key) => { delete aiCanonicalRef.current[key]; delete aiLocalizationRef.current[key]; });
     setFinanceTransactions([]);
     setFinancePeriod(new Date().toISOString().slice(0, 7));
     setText("");
@@ -1832,8 +1832,7 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
       const currentValue = stateMap[key];
       let canonical = aiCanonicalRef.current[key];
 
-      // Fallback only when canonical has never been captured. This runs before
-      // any translation request and therefore cannot use a translated result.
+      // Canonical source is captured before any translation can be rendered.
       if (!canonical && currentValue !== null && currentValue !== undefined) {
         registerCanonicalAi(key, currentValue, locale);
         canonical = aiCanonicalRef.current[key];
@@ -1870,34 +1869,39 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
 
     if (!pending.length || !isLatest()) return;
 
-    try {
-      // One API request for all currently visible AI outputs.
-      const payload = Object.fromEntries(pending.map((item) => [item.key, item.value]));
-      const sourceLocales = [...new Set(pending.map((item) => item.sourceLocale).filter(Boolean))];
-      const sourceLocale = sourceLocales.length === 1 ? sourceLocales[0] : null;
+    // Translate each output independently. Large outputs such as Business
+    // Perspective and Strategy can otherwise make one giant provider request
+    // wait 20–30s and hold every other output hostage. Two concurrent requests
+    // keep latency low while avoiding a burst against the free provider.
+    const queue = [...pending];
+    const worker = async () => {
+      while (queue.length && isLatest()) {
+        const item = queue.shift();
+        if (!item) return;
 
-      const translatedPayload = await translateAiPayload(
-        payload,
-        targetLocale,
-        controller.signal,
-        sourceLocale
-      );
+        try {
+          const translatedPayload = await translateAiPayload(
+            { [item.key]: item.value },
+            targetLocale,
+            controller.signal,
+            item.sourceLocale
+          );
 
-      if (!isLatest()) return;
+          if (!isLatest()) return;
+          const translated = translatedPayload?.[item.key];
+          if (translated === undefined) continue;
 
-      for (const item of pending) {
-        if (!isLatest()) return;
-        const translated = translatedPayload?.[item.key];
-        if (translated === undefined) continue;
-
-        writeLocalizationCache(item.cacheKey, translated);
-        item.setter(translated);
+          writeLocalizationCache(item.cacheKey, translated);
+          item.setter(translated);
+        } catch (error) {
+          if (error?.name !== "AbortError" && isLatest()) {
+            console.error(`ZENAI translation failed for ${item.key}:`, error);
+          }
+        }
       }
-    } catch (error) {
-      if (error?.name !== "AbortError" && isLatest()) {
-        console.error("ZENAI translation failed:", error);
-      }
-    }
+    };
+
+    await Promise.all([worker(), worker()]);
   };
 
   // Explicit click event only. No locale/useEffect translation trigger.
@@ -1912,7 +1916,7 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
       window.removeEventListener("zenai:output-language-change", handleOutputLanguageChange);
       translationRequestRef.current.controller?.abort();
     };
-  });
+  }, []);
 
   const askAI = async ({
     prompt,
