@@ -9,6 +9,12 @@ export default function LanguageSwitcher() {
   const switchTo = (next) => {
     if (!["id", "en"].includes(next) || next === locale) return;
     setLocale(next);
+    // The click itself is the sole trigger for AI-output translation.
+    // Dispatch after the locale state is requested; the page scanner waits one
+    // animation frame so it reads the currently rendered output boundary.
+    window.dispatchEvent(new CustomEvent("zenai:output-language-change", {
+      detail: { locale: next },
+    }));
   };
 
   return (
