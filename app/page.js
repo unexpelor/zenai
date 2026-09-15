@@ -1760,8 +1760,9 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
   useEffect(() => {
     // Global AI presentation localization. Canonical values remain untouched;
     // translated values are only presentation state.
-    if (!cloudLoaded && supabase && session?.user?.id) return;
-
+    // Translation must react immediately to a locale click. Do not block this
+    // presentation sync on cloud hydration; canonical AI refs are independent
+    // of persistence and cloudLoaded may legitimately still be false.
     const { generation, signal } = beginGeneration();
 
     const stateMap = { business, pulseData, diagnosis, marketData, autopilotData, growthActions, businessUpdates, decisionResult };
@@ -1872,7 +1873,7 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
           }
         } catch (error) {
           if (error?.name === "AbortError") return;
-          console.warn("Global DeepL localization failed:", error);
+          console.warn("Global OpenRouter localization failed:", error);
         }
       }
     };
