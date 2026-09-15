@@ -1,8 +1,8 @@
 import { jsonError, rateLimit, requireApiUser } from "../../../lib/api-security";
 
 const MAX_STRING_LENGTH = 12000;
-const MAX_BATCH_CHARS = 7000;
-const MAX_BATCH_STRINGS = 50;
+const MAX_BATCH_CHARS = 2800;
+const MAX_BATCH_STRINGS = 20;
 const MAX_TOTAL_STRINGS = 1500;
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const DEFAULT_MODEL = "google/gemma-4-26b-a4b-it:free";
@@ -114,7 +114,7 @@ async function requestOpenRouter({ model, fallbackModels = [], entries, sourceLo
     temperature: 0.1,
     max_tokens: Math.min(8000, Math.max(3000, Math.ceil((inputChars / 2.2) * maxTokensBoost))),
     stream: false,
-    provider: { sort: "throughput", allow_fallbacks: true },
+    provider: { allow_fallbacks: true },
   };
   // Do not force response_format on free providers; prompt-level JSON is more compatible across endpoints.
   // The parser below validates the returned JSON before accepting it.
@@ -128,7 +128,7 @@ async function requestOpenRouter({ model, fallbackModels = [], entries, sourceLo
       "X-Title": "ZENAI",
     },
     body: JSON.stringify(body),
-    signal: AbortSignal.timeout(12000),
+    signal: AbortSignal.timeout(10000),
   });
 
   const data = await response.json().catch(() => null);
@@ -194,8 +194,8 @@ async function translateBatch(entries, { targetLocale, sourceLocale, apiKey }) {
   const configuredModel = DEFAULT_MODEL;
   const fallbackModels = [FALLBACK_MODEL].filter((value) => value && value !== configuredModel);
 
-  // One provider request only. OpenRouter handles model failover via `models`;
-  // avoid sequential retries that can leave the browser request pending for 30-60s.
+  // One provider request only. OpenRouter handles fixed-model failover via
+  // `models`; the application never uses the dynamic openrouter/free router.
   try {
     const text = await requestOpenRouter({
       model: configuredModel,
