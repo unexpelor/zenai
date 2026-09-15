@@ -8,14 +8,10 @@ export default function LanguageSwitcher() {
 
   const switchTo = (next) => {
     if (!["id", "en"].includes(next) || next === locale) return;
+    // ZenLocaleProvider is the single source of truth and dispatches the
+    // output-language-change event exactly once. Do not duplicate the event
+    // here; duplicate dispatches can start competing translation requests.
     setLocale(next);
-    // The click is the sole trigger. Delay only until React commits the new
-    // locale so the output scanner sees the current DOM.
-    requestAnimationFrame(() => {
-      window.dispatchEvent(new CustomEvent("zenai:output-language-change", {
-        detail: { locale: next },
-      }));
-    });
   };
 
   return (
