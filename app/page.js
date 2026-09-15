@@ -1711,15 +1711,15 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
   };
 
   // ================================================================
-  // AI OUTPUT TRANSLATION — CLICK ONLY
+  // AI OUTPUT TRANSLATION — GLOBAL LOCALE
   // Canonical AI data is immutable. Translation is presentation-only.
   // ================================================================
   const aiCanonicalRef = useRef({});
   const translationRequestRef = useRef({ id: 0, controller: null });
+  const [canonicalRevision, setCanonicalRevision] = useState(0);
 
-  // Stable refs keep the click-only translation listener from closing over
-  // the first render. The event listener is intentionally registered once,
-  // while these refs always point to the latest React state/locale/session.
+  // Refs keep async translation work aligned with the latest React state,
+  // locale, and session without creating additional language state.
   const aiStateRef = useRef({});
   const localeRef = useRef(locale);
   const sessionRef = useRef(session);
@@ -1772,6 +1772,7 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
         sourceLocale: sourceLocale || locale || "id",
         sourceHash,
       };
+      setCanonicalRevision((revision) => revision + 1);
       return;
     }
 
@@ -1826,11 +1827,10 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
       decisionResult: setDecisionResult,
     };
 
-    // React must commit the selected language before we inspect the output
-    // boundaries. The click remains the only trigger; this is only timing.
+    // Let React commit the locale change before starting translation work.
     await new Promise((resolve) => requestAnimationFrame(resolve));
 
-    const visibleKeys = getVisibleOutputKeys();
+    const visibleKeys = Object.keys(aiCanonicalRef.current);
     if (!visibleKeys.length) return;
 
     translationRequestRef.current.controller?.abort();
@@ -1890,9 +1890,9 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
 
     if (!pending.length || !isLatest()) return;
 
-    // Free providers are sensitive to concurrent bursts. Process visible
-    // outputs sequentially so one language switch creates only one provider
-    // request at a time. A failed output never blocks the next one.
+    // Free providers are sensitive to concurrent bursts. Process outputs
+    // sequentially so one locale change does not create a request burst.
+    // A failed output never blocks the next one.
     for (const item of pending) {
       if (!isLatest()) return;
       try {
@@ -1917,19 +1917,19 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
     }
   };
 
-  // Explicit click event only. No locale/useEffect translation trigger.
+  // Global locale is the single trigger for AI-output presentation updates.
+  // Re-run automatically when the locale changes or when canonical AI data is
+  // restored/created, and translate every registered output instead of only
+  // the currently visible tab. This removes the need for a second language
+  // toggle after navigating to another menu.
   useEffect(() => {
-    const handleOutputLanguageChange = (event) => {
-      const targetLocale = event?.detail?.locale;
-      if (targetLocale) void translateVisibleAiOutputs(targetLocale);
-    };
+    if (!locale || typeof window === "undefined") return;
+    void translateVisibleAiOutputs(locale);
 
-    window.addEventListener("zenai:output-language-change", handleOutputLanguageChange);
     return () => {
-      window.removeEventListener("zenai:output-language-change", handleOutputLanguageChange);
       translationRequestRef.current.controller?.abort();
     };
-  }, []);
+  }, [locale, canonicalRevision]);
 
   const askAI = async ({
     prompt,
