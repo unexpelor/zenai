@@ -1890,39 +1890,31 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
 
     if (!pending.length || !isLatest()) return;
 
-    // Translate each output independently. Large outputs such as Business
-    // Perspective and Strategy can otherwise make one giant provider request
-    // wait 20–30s and hold every other output hostage. Two concurrent requests
-    // keep latency low while avoiding a burst against the free provider.
-    const queue = [...pending];
-    const worker = async () => {
-      while (queue.length && isLatest()) {
-        const item = queue.shift();
-        if (!item) return;
+    // Free providers are sensitive to concurrent bursts. Process visible
+    // outputs sequentially so one language switch creates only one provider
+    // request at a time. A failed output never blocks the next one.
+    for (const item of pending) {
+      if (!isLatest()) return;
+      try {
+        const translatedPayload = await translateAiPayload(
+          { [item.key]: item.value },
+          targetLocale,
+          controller.signal,
+          item.sourceLocale
+        );
 
-        try {
-          const translatedPayload = await translateAiPayload(
-            { [item.key]: item.value },
-            targetLocale,
-            controller.signal,
-            item.sourceLocale
-          );
+        if (!isLatest()) return;
+        const translated = translatedPayload?.[item.key];
+        if (translated === undefined) continue;
 
-          if (!isLatest()) return;
-          const translated = translatedPayload?.[item.key];
-          if (translated === undefined) continue;
-
-          writeLocalizationCache(item.cacheKey, translated);
-          item.setter(translated);
-        } catch (error) {
-          if (error?.name !== "AbortError" && isLatest()) {
-            console.error(`ZENAI translation failed for ${item.key}:`, error);
-          }
+        writeLocalizationCache(item.cacheKey, translated);
+        item.setter(translated);
+      } catch (error) {
+        if (error?.name !== "AbortError" && isLatest()) {
+          console.error(`ZENAI translation failed for ${item.key}:`, error);
         }
       }
-    };
-
-    await Promise.all([worker(), worker()]);
+    }
   };
 
   // Explicit click event only. No locale/useEffect translation trigger.
