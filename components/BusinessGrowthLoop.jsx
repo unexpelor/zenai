@@ -13,6 +13,12 @@ export default function BusinessGrowthLoop({
 }) {
   const locale = useLocale();
   const uiText = (id, en) => (locale === "en" ? en : id);
+  const statusText = (status) => ({
+    Rencana: uiText("Rencana", "Planned"),
+    Berjalan: uiText("Berjalan", "In Progress"),
+    "Menunggu Evaluasi": uiText("Menunggu Evaluasi", "Awaiting Evaluation"),
+    Dievaluasi: uiText("Dievaluasi", "Evaluated"),
+  }[status] || status);
   const [evaluationOpen, setEvaluationOpen] = useState(null);
   const [outcome, setOutcome] = useState("membaik");
   const [note, setNote] = useState("");
@@ -188,9 +194,10 @@ export default function BusinessGrowthLoop({
             lineHeight: 1.6,
           }}
         >
-          Pilih tindakan, jalankan, lalu beri hasil sederhana.
-          ZenAI akan menggunakan hasil tersebut untuk membuat
-          evaluasi dan strategi berikutnya.
+          {uiText(
+            "Pilih tindakan, jalankan, lalu beri hasil sederhana. ZenAI akan menggunakan hasil tersebut untuk membuat evaluasi dan strategi berikutnya.",
+            "Choose an action, run it, then provide a simple result. ZenAI will use that result to create the next evaluation and strategy."
+          )}
         </p>
       </div>
 
@@ -205,7 +212,7 @@ export default function BusinessGrowthLoop({
               marginBottom: 12,
             }}
           >
-            Strategi yang tersedia
+            {uiText("Strategi yang tersedia", "Available strategies")}
           </h3>
 
           <div
@@ -239,7 +246,7 @@ export default function BusinessGrowthLoop({
                 >
                   {strategy.title ||
                     strategy.action ||
-                    `Strategi ${index + 1}`}
+                    uiText(`Strategi ${index + 1}`, `Strategy ${index + 1}`)}
                 </strong>
 
                 {(strategy.description ||
@@ -268,7 +275,7 @@ export default function BusinessGrowthLoop({
                       fontSize: 13,
                     }}
                   >
-                    Tujuan: {strategy.purpose}
+                    {uiText("Tujuan", "Purpose")}: {strategy.purpose}
                   </p>
                 )}
 
@@ -310,7 +317,7 @@ export default function BusinessGrowthLoop({
               : "#0F172A",
           }}
         >
-          Tindakan Aktif
+          {uiText("Tindakan Aktif", "Active Actions")}
         </h3>
 
         {actions.length === 0 ? (
@@ -331,10 +338,15 @@ export default function BusinessGrowthLoop({
                 : "#64748B",
             }}
           >
-            Belum ada tindakan aktif.
+            {uiText(
+              "Belum ada tindakan aktif.",
+              "No active actions yet."
+            )}
             <br />
-            Aktifkan strategi untuk mulai menjalankan
-            Growth Loop.
+            {uiText(
+              "Aktifkan strategi untuk mulai menjalankan Growth Loop.",
+              "Activate a strategy to start the Growth Loop."
+            )}
           </div>
         ) : (
           <div
@@ -424,7 +436,7 @@ export default function BusinessGrowthLoop({
                             : "#64748B",
                     }}
                   >
-                    {item.status}
+                    {statusText(item.status)}
                   </span>
                 </div>
 
@@ -469,7 +481,7 @@ export default function BusinessGrowthLoop({
                       />
 
                       <span>
-                        Saya sudah mulai menjalankan tindakan
+                        {uiText("Saya sudah mulai menjalankan tindakan", "I have started running the action")}
                       </span>
                     </label>
 
@@ -506,7 +518,7 @@ export default function BusinessGrowthLoop({
                         />
 
                         <span>
-                          Saya sudah menyelesaikan tindakan
+                          {uiText("Saya sudah menyelesaikan tindakan", "I have completed the action")}
                         </span>
                       </label>
                     )}
@@ -536,7 +548,7 @@ export default function BusinessGrowthLoop({
                       }}
                     >
                       <strong>
-                        Tindakan selesai.
+                        {uiText("Tindakan selesai.", "Action completed.")}
                       </strong>
 
                       <div
@@ -549,9 +561,10 @@ export default function BusinessGrowthLoop({
                             : "#334155",
                         }}
                       >
-                        Beri tahu ZenAI hasilnya agar
-                        analisis berikutnya tidak hanya
-                        mengulang rekomendasi lama.
+                        {uiText(
+                          "Beri tahu ZenAI hasilnya agar analisis berikutnya tidak hanya mengulang rekomendasi lama.",
+                          "Tell ZenAI the result so the next analysis does not simply repeat the previous recommendation."
+                        )}
                       </div>
 
                       <button
@@ -579,7 +592,7 @@ export default function BusinessGrowthLoop({
                             : "pointer",
                         }}
                       >
-                        Evaluasi Hasil
+                        {uiText("Evaluasi Hasil", "Evaluate Result")}
                       </button>
                     </div>
                   )}
@@ -611,7 +624,7 @@ export default function BusinessGrowthLoop({
                             : "#0F172A",
                         }}
                       >
-                        Hasil tindakan
+                        {uiText("Hasil tindakan", "Action result")}
                       </div>
 
                       <label
@@ -625,7 +638,7 @@ export default function BusinessGrowthLoop({
                             : "#334155",
                         }}
                       >
-                        Kondisi setelah tindakan
+                        {uiText("Kondisi setelah tindakan", "Condition after action")}
 
                         <select
                           value={outcome}
@@ -656,7 +669,7 @@ export default function BusinessGrowthLoop({
                           <option value="membaik">{uiText('Membaik','Improving')}</option>
 
                           <option value="tetap">
-                            Belum terlihat perubahan
+                            {uiText("Belum terlihat perubahan", "No visible change yet")}
                           </option>
 
                           <option value="memburuk">{uiText('Memburuk','Worsening')}</option>
@@ -733,8 +746,8 @@ export default function BusinessGrowthLoop({
     }}
   >
     {evaluating
-      ? "ZENAI sedang mengevaluasi..."
-      : "Simpan & Evaluasi Ulang"}
+      ? uiText("ZENAI sedang mengevaluasi...", "ZENAI is evaluating...")
+      : uiText("Simpan & Evaluasi Ulang", "Save & Re-evaluate")}
   </button>
 
   <button
@@ -756,7 +769,7 @@ export default function BusinessGrowthLoop({
       cursor: "pointer",
     }}
   >
-    Batal
+    {uiText("Batal", "Cancel")}
   </button>
 </div>
 </div>
@@ -787,7 +800,7 @@ export default function BusinessGrowthLoop({
           : "#15803D",
       }}
     >
-      Hasil:{" "}
+      {uiText("Hasil:", "Result:")} {" "}
       {item.evaluation.outcome === uiText('membaik','improving')
         ? uiText('Membaik','Improving')
         : item.evaluation.outcome === "tetap"
@@ -820,8 +833,10 @@ export default function BusinessGrowthLoop({
           : "#64748B",
       }}
     >
-      Evaluasi tersimpan. ZenAI dapat menggunakan
-      hasil ini pada analisis berikutnya.
+      {uiText(
+        "Evaluasi tersimpan. ZenAI dapat menggunakan hasil ini pada analisis berikutnya.",
+        "Evaluation saved. ZenAI can use this result in the next analysis."
+      )}
     </div>
   </div>
 )}
