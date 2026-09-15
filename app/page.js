@@ -3389,11 +3389,19 @@ Aturan:
       return;
     }
 
-    const businessName = business?.name || business?.businessName || "Usaha Anda";
-    const generatedAt = new Intl.DateTimeFormat("id-ID", {
+    const businessName = business?.name || business?.businessName || uiText("Usaha Anda", "Your Business");
+    const printLocale = locale === "en" ? "en-US" : "id-ID";
+    const generatedAt = new Intl.DateTimeFormat(printLocale, {
       dateStyle: "long",
       timeStyle: "short"
     }).format(new Date());
+    const printLanguage = locale === "en" ? "en" : "id";
+    const printActionLabel = uiText("Cetak / Simpan sebagai PDF", "Print / Save as PDF");
+    const printSubtitle = uiText("Pendamping Bisnis Berbasis AI", "AI-Powered Business Assistant");
+    const printFooter = uiText(
+      "ZENAI — AI BUSINESS ASSISTANT · Pahami. Putuskan. Tumbuh.",
+      "ZENAI — AI BUSINESS ASSISTANT · Understand. Decide. Grow."
+    );
 
     const sectionHtml = sections
       .filter((section) => section && section.value !== null && section.value !== undefined)
@@ -3407,7 +3415,7 @@ Aturan:
 
     reportWindow.document.open();
     reportWindow.document.write(`<!doctype html>
-<html lang="id">
+<html lang="${printLanguage}">
 <head>
 <meta charset="utf-8" />
 <title>${escapePdfHtml(title)} — ZENAI</title>
@@ -3446,19 +3454,19 @@ Aturan:
 </style>
 </head>
 <body>
-<div class="print-actions"><button onclick="window.print()">{uiText('Cetak / Simpan sebagai PDF','Print / Save as PDF')}</button></div>
+<div class="print-actions"><button onclick="window.print()">${escapePdfHtml(printActionLabel)}</button></div>
 <header class="pdf-header">
   <img class="pdf-logo" src="${window.location.origin}/zenai-logo.png" alt="ZenAI Logo" onerror="this.style.display='none'" />
   <div>
     <div class="brand">ZENAI</div>
-    <div class="subtitle">{uiText('Pendamping Bisnis Berbasis AI','AI-Powered Business Assistant')}</div>
+    <div class="subtitle">${escapePdfHtml(printSubtitle)}</div>
   </div>
 </header>
 <h1 class="report-title">${escapePdfHtml(title)}</h1>
 <p class="business">Usaha: ${escapePdfHtml(businessName)}</p>
 <p class="meta">Dibuat: ${escapePdfHtml(generatedAt)}</p>
 ${sectionHtml}
-<div class="pdf-footer">{uiText('ZENAI — AI BUSINESS ASSISTANT · Pahami. Putuskan. Tumbuh.','ZENAI — AI BUSINESS ASSISTANT · Understand. Decide. Grow.')}</div>
+<div class="pdf-footer">${escapePdfHtml(printFooter)}</div>
 </body>
 </html>`);
     reportWindow.document.close();
