@@ -5,8 +5,13 @@ const MAX_BATCH_CHARS = 3000;
 const MAX_BATCH_STRINGS = 20;
 const MAX_TOTAL_STRINGS = 1500;
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const DEFAULT_MODEL = "nvidia/nemotron-3-super-120b-a12b:free";
-const FALLBACK_MODEL = "thinkingmachines/inkling:free";
+const TRANSLATION_MODELS = [
+  "thinkingmachines/inkling:free",
+  "nvidia/nemotron-3-super-120b-a12b:free",
+  "poolside/laguna-s-2.1:free",
+  "google/gemma-4-31b-it:free",
+];
+const DEFAULT_MODEL = TRANSLATION_MODELS[0];
 
 const TECHNICAL_KEYS = new Set([
   "id", "_id", "uuid", "key", "code", "slug", "url", "uri", "href",
@@ -101,11 +106,11 @@ function buildTranslationPrompt(entries, sourceLocale, targetLocale) {
   ].join("\n");
 }
 
-async function requestOpenRouter({ model, fallbackModels = [], entries, sourceLocale, targetLocale, apiKey, useJsonFormat = false, maxTokensBoost = 1 }) {
+async function requestOpenRouter({ models, entries, sourceLocale, targetLocale, apiKey, maxTokensBoost = 1 }) {
   const prompt = buildTranslationPrompt(entries, sourceLocale, targetLocale);
   const inputChars = entries.reduce((sum, item) => sum + item.value.length, 0);
   const body = {
-    models: [model, ...fallbackModels].filter(Boolean),
+    models,
     messages: [
       { role: "system", content: "You are a precise professional translation engine. Translate the JSON values and return ONLY one valid JSON object using the numeric keys exactly as provided." },
       { role: "user", content: prompt },
@@ -153,7 +158,7 @@ async function requestOpenRouter({ model, fallbackModels = [], entries, sourceLo
   const error = new Error(providerError || `OpenRouter returned no text (finish_reason: ${finishReason || "unknown"}).`);
   error.status = 502;
   error.providerData = {
-    model: data?.model || model,
+    model: data?.model || models?.[0] || DEFAULT_MODEL,
     finish_reason: finishReason,
     choice_count: Array.isArray(data?.choices) ? data.choices.length : 0,
     error: data?.error,
@@ -189,20 +194,15 @@ function parseTranslationJson(text, entries) {
 }
 
 async function translateBatch(entries, { targetLocale, sourceLocale, apiKey }) {
-  const configuredModel = DEFAULT_MODEL;
-  const fallbackModels = [FALLBACK_MODEL].filter((value) => value && value !== configuredModel);
-
-  // One provider request only. OpenRouter handles fixed-model failover via
-  // `models`; the application never uses the dynamic openrouter/free router.
+  // Fixed FREE models across different upstream providers. OpenRouter handles
+  // provider/model failover; the app never uses the random openrouter/free router.
   try {
     const text = await requestOpenRouter({
-      model: configuredModel,
-      fallbackModels,
+      models: TRANSLATION_MODELS,
       entries,
       sourceLocale,
       targetLocale,
       apiKey,
-      useJsonFormat: false,
     });
     return parseTranslationJson(text, entries);
   } catch (error) {
