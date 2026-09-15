@@ -1,0 +1,1279 @@
+@import "tailwindcss";
+
+/* =========================================================
+   Tailwind v4 — token tema (menggantikan tailwind.config.js,
+   yang TIDAK lagi dibaca otomatis oleh Tailwind v4 tanpa @config).
+   Tanpa blok ini utility `brand-*`, `font-display`, dan
+   `animate-*` tidak akan pernah dihasilkan.
+   ========================================================= */
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Space Grotesk", "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --color-brand-50: #eef2ff;
+  --color-brand-100: #e0e7ff;
+  --color-brand-200: #c7d2fe;
+  --color-brand-300: #a5b4fc;
+  --color-brand-400: #818cf8;
+  --color-brand-500: #6366f1;
+  --color-brand-600: #4f46e5;
+  --color-brand-700: #4338ca;
+  --color-brand-800: #3730a3;
+  --color-brand-900: #312e81;
+  --color-brand-950: #1e1b4b;
+
+  --animate-fade-in: fadeIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-slide-up: slideUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-scale-in: scaleIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  --animate-shimmer: shimmer 2s linear infinite;
+  --animate-float-slow: floatSlow 6s ease-in-out infinite;
+  --animate-gradient-shift: gradientShift 8s ease-in-out infinite;
+}
+
+/* Dark mode ZENAI ditandai DUA cara: kelas `.dark` dan atribut
+   `data-theme="dark"` (dipasang app/page.js ke <html> & <body>).
+   Keduanya harus dianggap sebagai mode gelap. */
+@custom-variant dark (&:where(.dark, .dark *, [data-theme="dark"], [data-theme="dark"] *));
+
+/* ==============================
+   ZENAI Design System Tokens
+   ============================== */
+
+@layer base {
+  :root {
+    /* Background */
+    --bg-primary: #f8fafc;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #f1f5f9;
+
+    /* Text */
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+
+    /* Border */
+    --border-light: #e2e8f0;
+    --border-medium: #cbd5e1;
+
+    /* Brand gradient */
+    --brand-gradient: linear-gradient(135deg, #6366f1, #06b6d4, #8b5cf6);
+    --brand-gradient-hover: linear-gradient(135deg, #4f46e5, #0891b2, #7c3aed);
+
+    /* Accent */
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --info: #3b82f6;
+
+    /* Glass */
+    --glass-bg: rgba(255, 255, 255, 0.72);
+    --glass-bg-hover: rgba(255, 255, 255, 0.88);
+    --glass-border: rgba(148, 163, 184, 0.18);
+    --glass-shadow: 0 8px 32px rgba(15, 23, 42, 0.08);
+    --glass-blur: 16px;
+
+    /* Radius */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 24px;
+  }
+
+  .dark {
+    --bg-primary: #0b1120;
+    --bg-secondary: #111827;
+    --bg-tertiary: #1e293b;
+
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-muted: #64748b;
+
+    --border-light: #334155;
+    --border-medium: #475569;
+
+    --glass-bg: rgba(17, 24, 39, 0.78);
+    --glass-bg-hover: rgba(30, 41, 59, 0.88);
+    --glass-border: rgba(255, 255, 255, 0.06);
+    --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.24);
+  }
+}
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  ::selection {
+    background: rgba(99, 102, 241, 0.18);
+    color: inherit;
+  }
+
+  .dark ::selection {
+    background: rgba(129, 140, 248, 0.28);
+  }
+
+  :focus-visible {
+    outline: 2px solid #6366f1;
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* ==============================
+   Glass utility
+   ============================== */
+
+@layer components {
+  .glass {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+  }
+
+  .glass-hover:hover {
+    background: var(--glass-bg-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--glass-shadow);
+  }
+
+  .card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 12px rgba(15, 23, 42, 0.06);
+  }
+
+  .card-hover {
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  }
+
+  .card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 12px 24px rgba(15, 23, 42, 0.1);
+    border-color: rgba(99, 102, 241, 0.3);
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    color: white;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    padding: 0.625rem 1.25rem;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.25);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(99, 102, 241, 0.35);
+  }
+
+  .btn-primary:active {
+    transform: translateY(0) scale(0.98);
+  }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-secondary);
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    padding: 0.5rem 1rem;
+    transition: all 0.2s ease;
+    border: none;
+    cursor: pointer;
+  }
+
+  .btn-ghost:hover {
+    color: var(--text-primary);
+    background: var(--bg-tertiary);
+  }
+}
+
+/* ==============================
+   Page transitions
+   ============================== */
+
+@layer utilities {
+  .animate-enter {
+    animation: slideUp 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  .animate-enter-delay-1 {
+    animation: slideUp 0.4s 0.08s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  .animate-enter-delay-2 {
+    animation: slideUp 0.4s 0.16s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  .animate-enter-delay-3 {
+    animation: slideUp 0.4s 0.24s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  .bg-grid {
+    background-image: linear-gradient(var(--border-light) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border-light) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+
+  .dark .bg-grid {
+    background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  }
+
+  .bg-gradient-brand {
+    background: linear-gradient(135deg, #6366f1, #06b6d4, #8b5cf6);
+    background-size: 200% 200%;
+    animation: gradientShift 8s ease-in-out infinite;
+  }
+
+  .text-gradient-brand {
+    background: linear-gradient(135deg, #6366f1, #06b6d4, #8b5cf6);
+    background-size: 200% 200%;
+    animation: gradientShift 8s ease-in-out infinite;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      var(--bg-tertiary) 0%,
+      var(--bg-secondary) 50%,
+      var(--bg-tertiary) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  /* Scrollbar styling */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-medium) transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: var(--border-medium);
+    border-radius: 999px;
+  }
+}
+
+/* =========================================================
+   ZENAI — SLEEK DARK LANDING (CoreShift-inspired)
+   Namespace cs-*. Self-contained, dark-only.
+   ========================================================= */
+.cs{--bg:#05070D;--surf:rgba(255,255,255,.03);--surf2:rgba(255,255,255,.06);--line:rgba(255,255,255,.09);--ink:#EEF1F7;--mut:#98A1B3;--b1:#4F7CFF;--b2:#8B5CF6;--b3:#22D3EE;position:relative;min-height:100vh;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased}.cs *{box-sizing:border-box}.cs button{font:inherit;cursor:pointer;border:0;background:none;color:inherit;padding:0}.cs a{color:inherit;text-decoration:none}.cs ::selection{background:rgba(139,92,246,.35)}.cs-glow{position:absolute;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:0}.cs-glow-a{width:640px;height:640px;left:-180px;top:-160px;background:radial-gradient(circle,rgba(79,124,255,.28),transparent 65%)}.cs-glow-b{width:720px;height:720px;right:-220px;top:140px;background:radial-gradient(circle,rgba(139,92,246,.24),transparent 65%)}.cs-grid-bg{position:absolute;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 0),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 0);background-size:56px 56px;mask-image:radial-gradient(ellipse 80% 60% at 50% 0,#000 40%,transparent 100%);-webkit-mask-image:radial-gradient(ellipse 80% 60% at 50% 0,#000 40%,transparent 100%)}.cs-nav{position:-webkit-sticky;position:sticky;top:0;z-index:60;justify-content:space-between;gap:20px;padding:16px 34px;background:rgba(5,7,13,.62);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}.cs-brand,.cs-nav{display:flex;align-items:center}.cs-brand{gap:10px;font-weight:800;letter-spacing:.6px}.cs-mark{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:linear-gradient(135deg,var(--b1),var(--b2));color:#fff;font-weight:900;font-size:15px;box-shadow:0 6px 20px rgba(79,124,255,.35)}.cs-word{font-size:16px}.cs-links{display:flex;gap:30px;font-size:13.5px;font-weight:600;color:var(--mut)}.cs-links a{transition:color .2s ease}.cs-links a:hover{color:var(--ink)}.cs-nav-cta{display:flex;align-items:center;gap:10px}.cs-btn{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;border-radius:10px;padding:10px 16px;transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s ease,filter .2s ease}.cs-btn svg{transition:transform .3s cubic-bezier(.2,.8,.2,1)}.cs-btn:hover svg{transform:translateX(3px)}.cs-btn-ghost{color:var(--mut)}.cs-btn-ghost:hover{color:var(--ink)}.cs-btn-grad{background:linear-gradient(135deg,var(--b1),var(--b2));color:#fff;box-shadow:0 10px 30px rgba(79,124,255,.35)}.cs-btn-grad:hover{transform:translateY(-2px);box-shadow:0 16px 40px rgba(139,92,246,.45);filter:brightness(1.06)}.cs-btn-grad:active{transform:translateY(0) scale(.98)}.cs-btn-lg{font-size:14.5px;padding:14px 22px}.cs-hero{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:96px 24px 0;text-align:center}.cs-badge{display:inline-flex;align-items:center;gap:9px;font-size:10.5px;font-weight:800;letter-spacing:1.8px;color:var(--mut);border:1px solid var(--line);background:var(--surf);border-radius:999px;padding:8px 16px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}.cs-badge i{width:7px;height:7px;border-radius:50%;background:var(--b3);box-shadow:0 0 10px var(--b3);animation:csPulse 2.4s ease-in-out infinite}@keyframes csPulse{0%,to{opacity:.6;transform:scale(1)}50%{opacity:1;transform:scale(1.2)}}.cs-hero h1{font-size:clamp(44px,7vw,86px);line-height:1;letter-spacing:-3.6px;font-weight:760;margin:28px 0 24px;text-wrap:balance}.cs-hero h1 em{font-style:normal;background:linear-gradient(92deg,var(--b1),var(--b2) 50%,var(--b3));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}.cs-sub{max-width:640px;margin:0 auto;font-size:16.5px;line-height:1.8;color:var(--mut)}.cs-ctas{display:flex;justify-content:center;gap:24px;margin-top:36px;flex-wrap:wrap}.cs-ctas,.cs-more{align-items:center}.cs-more{display:inline-flex;gap:8px;font-size:13.5px;font-weight:700;color:var(--mut);transition:color .2s ease}.cs-more:hover{color:var(--ink)}.cs-more svg{transition:transform .3s ease}.cs-more:hover svg{transform:translateX(3px)}.cs-mock{position:relative;z-index:1;max-width:860px;margin:64px auto 0;background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.02));border:1px solid var(--line);border-radius:18px;box-shadow:0 40px 100px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.08);overflow:hidden;text-align:left;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);animation:csRise .8s cubic-bezier(.2,.8,.2,1) .15s both}@keyframes csRise{0%{opacity:0;transform:translateY(28px) scale(.99)}to{opacity:1;transform:none}}.cs-mock-bar{height:42px;display:flex;align-items:center;gap:7px;padding:0 16px;border-bottom:1px solid var(--line);font-size:10px;letter-spacing:.6px;color:var(--mut)}.cs-mock-bar span{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.15)}.cs-mock-bar em{margin-left:auto;font-style:normal}.cs-mock-body{display:grid;grid-template-columns:56px 1fr;min-height:340px}.cs-mock-side{background:rgba(0,0,0,.3);align-items:center;padding:16px 0;gap:16px}.cs-mock-side b{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--b1),var(--b2));color:#fff;display:grid;place-items:center;font-size:12px}.cs-mock-side i{width:16px;height:3px;border-radius:3px;background:rgba(255,255,255,.14)}.cs-mock-side i.on{width:22px;height:22px;border-radius:7px;background:rgba(79,124,255,.22)}.cs-mock-main{padding:26px 28px}.cs-mock-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.cs-mock-head small{display:block;font-size:9px;font-weight:800;letter-spacing:1.6px;color:var(--b1)}.cs-mock-head strong{display:block;font-size:21px;letter-spacing:-.7px;margin-top:5px}.cs-pill{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;color:#4ADE80;border:1px solid rgba(74,222,128,.3);border-radius:999px;padding:6px 11px;white-space:nowrap}.cs-pill i{width:6px;height:6px;border-radius:50%;background:#4ADE80;box-shadow:0 0 8px #4ADE80}.cs-mock-metrics{display:grid;grid-template-columns:repeat(3,1fr);grid-gap:10px;gap:10px;margin-top:22px}.cs-mock-metrics>div{border:1px solid var(--line);background:var(--surf);border-radius:11px;padding:13px}.cs-mock-metrics small{display:block;font-size:8.5px;font-weight:800;letter-spacing:1.2px;color:var(--mut)}.cs-mock-metrics b{display:block;font-size:16px;letter-spacing:-.4px;margin-top:4px;font-feature-settings:"tnum";font-variant-numeric:tabular-nums}.cs-mock-metrics em{display:block;font-size:10px;color:#4ADE80;font-style:normal;margin-top:3px;font-weight:700}.cs-mock-insight{margin-top:14px;border:1px solid var(--line);border-radius:11px;padding:13px 15px;background:linear-gradient(135deg,rgba(79,124,255,.12),rgba(139,92,246,.1))}.cs-mock-insight small{font-size:8.5px;font-weight:800;letter-spacing:1.2px;color:var(--b3)}.cs-mock-insight p{margin:7px 0 0;font-size:12.5px;line-height:1.6;color:var(--ink)}.cs-mock-chart{display:flex;align-items:flex-end;gap:9px;height:80px;margin-top:14px;padding:10px 12px;border:1px solid var(--line);border-radius:11px}.cs-mock-chart i{flex:1 1;border-radius:4px 4px 0 0;background:linear-gradient(180deg,var(--b2),var(--b1));opacity:.85;animation:csBar 2.8s ease-in-out infinite alternate;transform-origin:bottom}.cs-mock-chart i:nth-child(2){animation-delay:.12s}.cs-mock-chart i:nth-child(3){animation-delay:.24s}.cs-mock-chart i:nth-child(4){animation-delay:.36s}.cs-mock-chart i:nth-child(5){animation-delay:.48s}.cs-mock-chart i:nth-child(6){animation-delay:.6s}.cs-mock-chart i:nth-child(7){animation-delay:.72s}@keyframes csBar{0%{transform:scaleY(.85)}to{transform:scaleY(1.05)}}.cs-stats{position:relative;z-index:1;display:flex;justify-content:center;gap:0;margin:40px 0 0;flex-wrap:wrap}.cs-stats>div{padding:0 36px}.cs-stats>div+div{border-left:1px solid var(--line)}.cs-stats b{display:block;font-size:30px;letter-spacing:-1.4px;background:linear-gradient(92deg,var(--ink),var(--mut));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;font-feature-settings:"tnum";font-variant-numeric:tabular-nums}.cs-stats span{display:block;margin-top:5px;font-size:12px;color:var(--mut)}.cs-sec{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:110px 24px 0}.cs-sec-head{max-width:600px;margin-bottom:46px}.cs-sec-head span{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:2px;color:var(--b3)}.cs-sec-head h2{font-size:clamp(30px,4.2vw,50px);line-height:1.08;letter-spacing:-2.2px;margin:14px 0 0;text-wrap:balance}.cs-grid{display:grid;grid-template-columns:repeat(3,1fr);grid-gap:14px;gap:14px}.cs-card{background:var(--surf);border:1px solid var(--line);border-radius:16px;padding:26px;transition:transform .35s cubic-bezier(.2,.8,.2,1),border-color .3s ease,box-shadow .35s ease,background .3s ease}.cs-card:hover{transform:translateY(-5px);border-color:rgba(139,92,246,.4);box-shadow:0 24px 60px rgba(0,0,0,.4);background:var(--surf2)}.cs-card-wide{grid-column:span 2}.cs-ic{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:linear-gradient(135deg,rgba(79,124,255,.2),rgba(139,92,246,.2));color:var(--b3);font-size:18px;margin-bottom:18px}.cs-card h3{font-size:18px;letter-spacing:-.5px;margin:0 0 8px}.cs-card p{font-size:13px;line-height:1.7;color:var(--mut);margin:0}.cs-card-wide{display:grid;grid-template-columns:1fr 1fr;grid-gap:26px;gap:26px;align-items:center}.cs-card-wide>div:not(.cs-ic){grid-column:1}.cs-spark{display:flex;align-items:flex-end;gap:6px;height:120px;padding:12px;border:1px solid var(--line);border-radius:12px}.cs-spark i{flex:1 1;border-radius:4px 4px 0 0;background:linear-gradient(180deg,var(--b2),var(--b1));opacity:.8;transform-origin:bottom}.cs-card:hover .cs-spark i{animation:csBar 2.2s ease-in-out infinite alternate}.cs-card:hover .cs-spark i:nth-child(2){animation-delay:.1s}.cs-card:hover .cs-spark i:nth-child(3){animation-delay:.2s}.cs-card:hover .cs-spark i:nth-child(4){animation-delay:.3s}.cs-card:hover .cs-spark i:nth-child(5){animation-delay:.4s}.cs-flow{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);grid-gap:14px;gap:14px;counter-reset:none}.cs-flow li{position:relative;border:1px solid var(--line);background:var(--surf);border-radius:16px;padding:26px 22px;transition:transform .35s cubic-bezier(.2,.8,.2,1),border-color .3s ease}.cs-flow li:hover{transform:translateY(-5px);border-color:rgba(79,124,255,.4)}.cs-flow li:after{content:"";position:absolute;right:-11px;top:50%;width:8px;height:8px;border-top:1.5px solid var(--line);border-right:1.5px solid var(--line);transform:translateY(-50%) rotate(45deg)}.cs-flow li:last-child:after{display:none}.cs-flow em{display:block;font-style:normal;font-size:11px;font-weight:800;letter-spacing:1.4px;color:var(--b1)}.cs-flow h3{font-size:17px;letter-spacing:-.4px;margin:20px 0 8px}.cs-flow p{font-size:12.5px;line-height:1.65;color:var(--mut);margin:0}.cs-why{position:relative;z-index:1;max-width:1080px;margin:110px auto 0;padding:0 24px;text-align:center}.cs-quote{font-size:clamp(40px,6vw,76px);line-height:1.04;letter-spacing:-3px;font-weight:760;margin:0}.cs-quote em{font-style:normal;background:linear-gradient(92deg,var(--b1),var(--b2) 50%,var(--b3));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}.cs-why-sub{max-width:560px;margin:24px auto 0;font-size:15px;line-height:1.8;color:var(--mut)}.cs-final{position:relative;z-index:1;max-width:1080px;margin:110px auto 0;padding:0 24px 40px}.cs-final-card{position:relative;overflow:hidden;text-align:center;border:1px solid var(--line);border-radius:24px;padding:80px clamp(24px,6vw,80px);background:linear-gradient(135deg,rgba(79,124,255,.14),rgba(139,92,246,.16));box-shadow:0 40px 100px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.08)}.cs-final-card:after{content:"";position:absolute;width:480px;height:480px;border-radius:50%;right:-140px;top:-220px;background:radial-gradient(circle,rgba(34,211,238,.18),transparent 65%)}.cs-final-card h2{position:relative;font-size:clamp(30px,4.4vw,52px);line-height:1.06;letter-spacing:-2.2px;margin:0}.cs-final-card p{max-width:520px;margin:18px auto 30px;font-size:15px;line-height:1.75;color:var(--mut)}.cs-final-card .cs-btn,.cs-final-card p{position:relative}.cs-foot{position:relative;z-index:1;max-width:1080px;margin:0 auto;padding:26px 24px 36px;justify-content:space-between;gap:18px;border-top:1px solid var(--line);font-size:12px;color:var(--mut);flex-wrap:wrap}.cs-fbrand,.cs-foot{display:flex;align-items:center}.cs-fbrand{gap:9px;font-weight:800;color:var(--ink);letter-spacing:.5px}.cs-fbrand .cs-mark{width:24px;height:24px;border-radius:7px;font-size:12px}@media(max-width:920px){.cs-links{display:none}.cs-grid{grid-template-columns:1fr 1fr}.cs-card-wide{grid-column:span 2}.cs-flow{grid-template-columns:1fr 1fr}.cs-flow li:nth-child(2):after{display:none}}@media(max-width:600px){.cs-nav{padding:14px 18px}.cs-hero{padding-top:64px}.cs-stats>div{padding:0 18px}.cs-grid{grid-template-columns:1fr}.cs-card-wide{grid-column:span 1}.cs-card-wide,.cs-flow{grid-template-columns:1fr}.cs-flow li:after{display:none}.cs-mock-body{grid-template-columns:42px 1fr}.cs-mock-main{padding:18px 16px}.cs-sec{padding-top:76px}.cs-final,.cs-why{margin-top:76px}}@media(prefers-reduced-motion:reduce){.cs *{animation:none!important;transition:none!important}}.cs-theme{width:36px;height:36px;display:grid;place-items:center;border-radius:10px;border:1px solid var(--line);background:var(--surf);color:var(--mut);transition:color .2s ease,transform .2s ease,border-color .2s ease}.cs-theme:hover{color:var(--ink);border-color:rgba(139,92,246,.4);transform:translateY(-1px)}.cs{--side:rgba(0,0,0,.28);--menuOn:rgba(79,124,255,.18)}.cs-mock-body{grid-template-columns:200px 1fr}.cs-mock-side{background:var(--side);display:flex;flex-direction:column;align-items:stretch;padding:16px 12px;gap:14px;border-right:1px solid var(--line)}.cs-mock-logo{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;letter-spacing:.6px}.cs-mock-logo b{width:24px;height:24px;border-radius:8px;background:linear-gradient(135deg,var(--b1),var(--b2));color:#fff;display:grid;place-items:center;font-size:11px}.cs-mock-menu{display:flex;flex-direction:column;gap:2px}.cs-mock-menu span{display:flex;align-items:center;gap:9px;font-size:10.5px;font-weight:600;color:var(--mut);padding:6.5px 9px;border-radius:8px;white-space:nowrap;overflow:hidden}.cs-mock-menu span em{font-style:normal;overflow:hidden;text-overflow:ellipsis}.cs-mock-menu span.on{background:var(--menuOn);color:var(--ink)}.cs-mock-menu-sub{margin-top:auto;border-top:1px solid var(--line);padding-top:10px;opacity:.8}.cs-principles{display:grid;grid-template-columns:repeat(3,1fr);grid-gap:14px;gap:14px;max-width:780px;margin:46px auto 0;text-align:left}.cs-principles>div{border:1px solid var(--line);background:var(--surf);border-radius:14px;padding:20px}.cs-principles b{display:block;font-size:14.5px;letter-spacing:-.2px;margin-bottom:6px}.cs-principles span{font-size:12.5px;line-height:1.6;color:var(--mut)}.cs.light{--bg:#F7F8FB;--surf:#FFFFFF;--surf2:#EEF1F6;--line:rgba(15,23,42,.1);--ink:#0E1420;--mut:#5A6474;--b1:#4F7CFF;--b2:#7C3AED;--b3:#0891B2;--side:rgba(15,23,42,.05);--menuOn:rgba(79,124,255,.14)}.cs.light .cs-glow-a{background:radial-gradient(circle,rgba(79,124,255,.16),transparent 65%)}.cs.light .cs-glow-b{background:radial-gradient(circle,rgba(124,58,237,.13),transparent 65%)}.cs.light .cs-grid-bg{background-image:linear-gradient(rgba(15,23,42,.045) 1px,transparent 0),linear-gradient(90deg,rgba(15,23,42,.045) 1px,transparent 0)}.cs.light .cs-nav{background:rgba(247,248,251,.72)}.cs.light .cs-mock{background:linear-gradient(180deg,#FFFFFF,rgba(255,255,255,.62));box-shadow:0 24px 70px rgba(15,23,42,.14),inset 0 1px 0 rgba(255,255,255,.9)}.cs.light .cs-mock-bar span{background:rgba(15,23,42,.18)}.cs.light .cs-mock-insight{background:linear-gradient(135deg,rgba(79,124,255,.08),rgba(124,58,237,.07))}.cs.light .cs-final-card{background:linear-gradient(135deg,rgba(79,124,255,.12),rgba(124,58,237,.14));box-shadow:0 24px 70px rgba(15,23,42,.12),inset 0 1px 0 rgba(255,255,255,.7)}.cs.light .cs-final-card:after{background:radial-gradient(circle,rgba(8,145,178,.12),transparent 65%)}.cs.light .cs-card:hover{box-shadow:0 20px 50px rgba(15,23,42,.12)}@media(max-width:600px){.cs-mock-body{grid-template-columns:44px 1fr}.cs-mock-side{padding:12px 7px;gap:10px}.cs-mock-logo{justify-content:center}.cs-mock-logo span{display:none}.cs-mock-menu span{justify-content:center;padding:7px 4px}.cs-mock-menu span em,.cs-mock-menu-sub{display:none}.cs-mock-main{padding:16px 12px}.cs-mock-head{flex-wrap:wrap}.cs-mock-head strong{font-size:16px}.cs-mock-metrics{grid-template-columns:1fr;gap:8px;margin-top:16px}.cs-mock-metrics>div{padding:11px}.cs-mock-chart,.cs-mock-insight{margin-top:10px}.cs-mock-chart{height:56px}.cs-stats{flex-direction:column;gap:14px}.cs-stats>div{border-left:0;padding:0;text-align:center}.cs-stats span{max-width:none}.cs-principles{grid-template-columns:1fr}}
+
+/* =========================================================
+   ZENAI — CLEAN PROFESSIONAL DASHBOARD (v4)
+   Namespace .zenai-*. Visual-only layer over inline styles.
+   Light + dark, animated ambient background, micro-motions.
+   ========================================================= */
+
+/* ---------- Design tokens ---------- */
+.zenai-app {
+  --z-bg: #f5f7fb;
+  --z-bg-2: #eef1f8;
+  --z-surface: #ffffff;
+  --z-surface-2: #f8fafc;
+  --z-ink: #0f172a;
+  --z-ink-2: #334155;
+  --z-muted: #64748b;
+  --z-border: #e5e9f2;
+  --z-border-2: #d7dded;
+  --z-primary: #4f46e5;
+  --z-primary-2: #06b6d4;
+  --z-primary-3: #8b5cf6;
+  --z-ring: rgba(99, 102, 241, 0.14);
+  --z-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
+  --z-shadow-lg: 0 12px 40px rgba(15, 23, 42, 0.10);
+  position: relative;
+  isolation: isolate;
+  transition: background 0.4s ease, color 0.4s ease;
+}
+
+.zenai-app.zenai-dark {
+  --z-bg: #0a0f1c;
+  --z-bg-2: #0e1526;
+  --z-surface: #131a2a;
+  --z-surface-2: #0f1624;
+  --z-ink: #f1f5f9;
+  --z-ink-2: #cbd5e1;
+  --z-muted: #8b98ad;
+  --z-border: #1e293b;
+  --z-border-2: #2a3950;
+  --z-primary: #818cf8;
+  --z-primary-2: #22d3ee;
+  --z-primary-3: #a78bfa;
+  --z-ring: rgba(129, 140, 248, 0.18);
+  --z-shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+  --z-shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.45);
+}
+
+/* ---------- Animated ambient background (orbs + grid) ---------- */
+.zenai-app::before,
+.zenai-app::after {
+  content: "";
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(110px);
+  z-index: 0;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.zenai-app::before {
+  width: 520px;
+  height: 520px;
+  top: -180px;
+  right: -140px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.20), transparent 68%);
+  animation: zenOrbA 16s ease-in-out infinite alternate;
+}
+
+.zenai-app::after {
+  width: 460px;
+  height: 460px;
+  bottom: -160px;
+  left: -140px;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.16), transparent 68%);
+  animation: zenOrbB 20s ease-in-out infinite alternate;
+}
+
+.zenai-app.zenai-dark::before {
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.22), transparent 68%);
+}
+
+.zenai-app.zenai-dark::after {
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.12), transparent 68%);
+}
+
+@keyframes zenOrbA {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(-60px, 50px) scale(1.18); }
+}
+
+@keyframes zenOrbB {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(50px, -60px) scale(1.14); }
+}
+
+/* Subtle grid overlay so the background is never flat */
+.zenai-app .zenai-content::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(99, 102, 241, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99, 102, 241, 0.035) 1px, transparent 1px);
+  background-size: 52px 52px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 100%);
+}
+
+.zenai-app.zenai-dark .zenai-content::before {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+}
+
+/* Lift content above the ambient layer */
+.zenai-content {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* ---------- Shell layout helpers (restored, clean) ---------- */
+.zenai-nav-icon {
+  width: 20px;
+  height: 20px;
+  display: grid;
+  place-items: center;
+  flex: 0 0 20px;
+  opacity: 0.95;
+}
+
+.zenai-sidebar-overlay {
+  display: none;
+}
+
+.zenai-mobile-menu {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .zenai-sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 15, 28, 0.5);
+    border: 0;
+    z-index: 999;
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+    animation: zenFade 0.25s ease both;
+  }
+
+  .zenai-mobile-menu {
+    display: grid;
+    place-items: center;
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    width: 42px;
+    height: 42px;
+    border: 1px solid var(--z-border);
+    border-radius: 12px;
+    background: var(--z-surface);
+    color: var(--z-ink);
+    z-index: 900;
+    box-shadow: var(--z-shadow);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+}
+
+/* ---------- Sidebar nav items: hover + active ---------- */
+.zenai-sidebar button,
+.zenai-nav-item {
+  transition: transform 0.18s ease, box-shadow 0.22s ease, border-color 0.22s ease,
+    background 0.22s ease, color 0.22s ease !important;
+}
+
+.zenai-sidebar button:hover,
+.zenai-nav-item:hover {
+  transform: translateX(3px);
+}
+
+.zenai-sidebar button:active,
+.zenai-nav-item:active {
+  transform: scale(0.985);
+}
+
+.zenai-nav-item.is-active {
+  box-shadow: 0 4px 16px var(--z-ring) !important;
+}
+
+/* ---------- Header / content entrance motion ---------- */
+.zenai-page-header {
+  animation: zenFadeDown 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.zenai-content > * {
+  animation: zenFadeUp 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.zenai-content > *:nth-child(2) { animation-delay: 0.05s; }
+.zenai-content > *:nth-child(3) { animation-delay: 0.1s; }
+.zenai-content > *:nth-child(4) { animation-delay: 0.15s; }
+
+@keyframes zenFadeDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes zenFadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes zenFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ---------- Card polish: soft shadow + gentle hover lift ---------- */
+.zenai-content section {
+  box-shadow: var(--z-shadow);
+  transition: box-shadow 0.28s ease, transform 0.28s ease, border-color 0.28s ease;
+  border: 1px solid var(--z-border) !important;
+}
+
+.zenai-content section:hover {
+  box-shadow: var(--z-shadow-lg);
+  transform: translateY(-2px);
+}
+
+/* Buttons: smooth + consistent */
+.zenai-app button {
+  transition: transform 0.16s ease, box-shadow 0.2s ease, background 0.2s ease,
+    opacity 0.2s ease, border-color 0.2s ease;
+}
+
+/* =========================================================
+   ZENAI — LAYER MOTION & VISUAL IMPACT (v5)
+   ---------------------------------------------------------
+   Lapisan tambahan: animasi, micro-interaction, kedalaman,
+   dan penguat kontras. Prinsip kerja:
+
+   1. Hanya menyentuh transform / opacity / animation / filter /
+      box-shadow / outline / pseudo-element. Warna & background
+      inline milik app/page.js (banyak yang `!important`) TIDAK
+      diganggu, supaya tidak ada elemen yang kehilangan warna.
+   2. Animasi masuk memakai `animation-fill-mode: backwards`
+      (bukan `both`) supaya setelah selesai elemen kembali ke
+      keadaan alaminya: hover transform tetap bekerja dan tidak
+      ada transform permanen yang merusak position: fixed.
+   3. Semua animasi dimatikan otomatis saat pengguna memilih
+      prefers-reduced-motion.
+   ========================================================= */
+
+/* ---------- 1. Nilai motion terpusat (samakan dgn lib/motion.js) ---------- */
+:root {
+  --eas-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --eas-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-micro: 160ms;
+  --dur-fast: 240ms;
+  --dur-base: 320ms;
+  --dur-reveal: 620ms;
+
+  --ring-brand: rgba(99, 102, 241, 0.38);
+  --glow-brand: 0 14px 34px rgba(79, 70, 229, 0.26);
+  --glow-brand-strong: 0 18px 44px rgba(79, 70, 229, 0.34);
+  --shadow-lift: 0 18px 42px rgba(15, 23, 42, 0.14);
+  --shadow-lift-dark: 0 18px 44px rgba(0, 0, 0, 0.55);
+  --sheen: linear-gradient(105deg, transparent 0%, rgba(255, 255, 255, 0.55) 50%, transparent 100%);
+}
+
+/* ---------- 2. Mode gelap: dukung `.dark` DAN `data-theme="dark"` ----------
+   app/page.js menandai tema lewat document.documentElement.dataset.theme,
+   jadi atribut itulah sinyal utama. Tanpa blok ini token dasar tetap
+   memakai nilai terang meski aplikasi sedang di mode gelap. */
+.dark,
+:root[data-theme="dark"],
+body[data-theme="dark"] {
+  --bg-primary: #0b1120;
+  --bg-secondary: #111827;
+  --bg-tertiary: #1e293b;
+
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+
+  --border-light: #334155;
+  --border-medium: #475569;
+
+  --glass-bg: rgba(17, 24, 39, 0.78);
+  --glass-bg-hover: rgba(30, 41, 59, 0.88);
+  --glass-border: rgba(255, 255, 255, 0.06);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.24);
+
+  /* Teks brand versi terang: #6366f1 gagal kontras di latar gelap */
+  --brand-text: #a5b4fc;
+  --brand-text-strong: #c7d2fe;
+  --ring-brand: rgba(129, 140, 248, 0.45);
+
+  /* Token --z-* dipromosikan ke root supaya komponen di luar
+     .zenai-app (mis. LanguageSwitcher) juga ikut bertema. */
+  --z-bg: #0a0f1c;
+  --z-bg-2: #0e1526;
+  --z-surface: #131a2a;
+  --z-surface-2: #0f1624;
+  --z-ink: #f1f5f9;
+  --z-ink-2: #cbd5e1;
+  --z-muted: #8b98ad;
+  --z-border: #1e293b;
+  --z-border-2: #2a3950;
+  --z-primary: #818cf8;
+  --z-primary-2: #22d3ee;
+  --z-primary-3: #a78bfa;
+
+  color-scheme: dark;
+}
+
+:root,
+:root[data-theme="light"],
+body[data-theme="light"] {
+  /* Teks paling redup di mode terang dinaikkan dari #94a3b8 (2,6:1)
+     ke #64748b (4,8:1) supaya lolos WCAG AA. */
+  --text-muted: #64748b;
+  --brand-text: #4f46e5;
+  --brand-text-strong: #4338ca;
+  --shine-surface: rgba(255, 255, 255, 0.75);
+
+  --z-bg: #f5f7fb;
+  --z-bg-2: #eef1f8;
+  --z-surface: #ffffff;
+  --z-surface-2: #f8fafc;
+  --z-ink: #0f172a;
+  --z-ink-2: #334155;
+  --z-muted: #64748b;
+  --z-border: #e5e9f2;
+  --z-border-2: #d7dded;
+  --z-primary: #4f46e5;
+  --z-primary-2: #06b6d4;
+  --z-primary-3: #8b5cf6;
+
+  color-scheme: light;
+}
+
+/* ---------- 3. Keyframes ---------- */
+@keyframes zenRise {
+  from { opacity: 0; transform: translateY(18px) scale(0.988); filter: blur(6px); }
+  to   { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+@keyframes zenRiseDown {
+  from { opacity: 0; transform: translateY(-12px); filter: blur(4px); }
+  to   { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+@keyframes zenPop {
+  0%   { opacity: 0; transform: scale(0.94); }
+  60%  { opacity: 1; transform: scale(1.012); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes zenDriftA {
+  0%   { transform: translate3d(0, 0, 0) scale(1); opacity: 0.85; }
+  50%  { transform: translate3d(-4%, 3%, 0) scale(1.16); opacity: 1; }
+  100% { transform: translate3d(2%, -3%, 0) scale(1.06); opacity: 0.9; }
+}
+
+@keyframes zenDriftB {
+  0%   { transform: translate3d(0, 0, 0) scale(1); opacity: 0.75; }
+  50%  { transform: translate3d(3%, -4%, 0) scale(1.2); opacity: 0.95; }
+  100% { transform: translate3d(-3%, 2%, 0) scale(1.08); opacity: 0.8; }
+}
+
+@keyframes zenGridPan {
+  from { background-position: 0 0, 0 0; }
+  to   { background-position: 52px 52px, 52px 52px; }
+}
+
+@keyframes zenGlowPulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--ring-brand); }
+  70%      { box-shadow: 0 0 0 10px rgba(99, 102, 241, 0); }
+}
+
+@keyframes zenSheen {
+  from { transform: translateX(-130%) skewX(-18deg); }
+  to   { transform: translateX(240%) skewX(-18deg); }
+}
+
+@keyframes zenFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+
+@keyframes zenBarGrow {
+  from { transform: scaleY(0); }
+  to   { transform: scaleY(1); }
+}
+
+@keyframes zenDashDraw {
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes zenDotPulse {
+  0%, 100% { opacity: 0.5; transform: scale(0.85); }
+  50%      { opacity: 1; transform: scale(1.2); }
+}
+
+@keyframes zenMarquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* Keyframes yang dirujuk utility lama (.animate-enter, .shimmer,
+   .bg-gradient-brand, .text-gradient-brand) tetapi belum pernah
+   didefinisikan: keyframes di tailwind.config.js tidak pernah ikut
+   ke output karena Tailwind v4 tidak lagi membacanya. */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to   { background-position: -200% 0; }
+}
+
+@keyframes floatSlow {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-12px); }
+}
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+
+/* ---------- 4. Utility animasi siap pakai ---------- */
+.zen-anim-rise { animation: zenRise var(--dur-reveal) var(--eas-out) backwards; }
+.zen-anim-pop { animation: zenPop var(--dur-base) var(--eas-out) backwards; }
+.zen-anim-float { animation: zenFloat 6s ease-in-out infinite; }
+.zen-anim-glow { animation: zenGlowPulse 2.8s ease-out infinite; }
+.zen-delay-1 { animation-delay: 60ms; }
+.zen-delay-2 { animation-delay: 120ms; }
+.zen-delay-3 { animation-delay: 180ms; }
+.zen-delay-4 { animation-delay: 240ms; }
+.zen-delay-5 { animation-delay: 300ms; }
+.zen-delay-6 { animation-delay: 360ms; }
+
+.zen-shimmer {
+  background-image: linear-gradient(
+    100deg,
+    transparent 20%,
+    var(--shine-surface, rgba(255, 255, 255, 0.6)) 50%,
+    transparent 80%
+  );
+  background-size: 220% 100%;
+  animation: zenShimmerSweep 1.8s linear infinite;
+}
+
+@keyframes zenShimmerSweep {
+  from { background-position: -150% 0; }
+  to   { background-position: 250% 0; }
+}
+
+.zen-gradient-text {
+  background-image: var(--brand-gradient);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.zen-lift {
+  transition: transform var(--dur-fast) var(--eas-out), box-shadow var(--dur-fast) var(--eas-out);
+}
+.zen-lift:hover { transform: translateY(-3px); box-shadow: var(--shadow-lift); }
+
+.zen-marquee {
+  display: flex;
+  gap: 24px;
+  overflow: hidden;
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+.zen-marquee > * { animation: zenMarquee 26s linear infinite; }
+
+/* =========================================================
+   5. DASHBOARD (.zenai-app) — dibangun di app/page.js
+   ========================================================= */
+
+/* --- 5a. Latar ambien: orb bergerak lambat + grid yang mengalir --- */
+.zenai-app::before { animation: zenDriftA 26s ease-in-out infinite alternate; }
+.zenai-app::after { animation: zenDriftB 32s ease-in-out infinite alternate; }
+
+.zenai-app .zenai-content::before { animation: zenGridPan 60s linear infinite; }
+
+/* --- 5b. Animasi masuk yang benar (backwards, bukan both) --- */
+.zenai-page-header { animation: zenRiseDown var(--dur-reveal) var(--eas-out) backwards; }
+
+.zenai-content > * {
+  animation: zenRise var(--dur-reveal) var(--eas-out) backwards;
+}
+.zenai-content > *:nth-child(2) { animation-delay: 70ms; }
+.zenai-content > *:nth-child(3) { animation-delay: 140ms; }
+.zenai-content > *:nth-child(4) { animation-delay: 210ms; }
+.zenai-content > *:nth-child(5) { animation-delay: 280ms; }
+.zenai-content > *:nth-child(6) { animation-delay: 350ms; }
+.zenai-content > *:nth-child(7) { animation-delay: 420ms; }
+.zenai-content > *:nth-child(n + 8) { animation-delay: 480ms; }
+
+/* --- 5c. Kartu: angkat halus + glow gradient di tepi atas --- */
+.zenai-content section {
+  transition: transform var(--dur-base) var(--eas-out),
+    box-shadow var(--dur-base) var(--eas-out),
+    border-color var(--dur-base) var(--eas-out);
+}
+
+.zenai-content section:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lift), inset 0 2px 0 0 rgba(99, 102, 241, 0.85) !important;
+}
+
+.zenai-dark .zenai-content section:hover {
+  box-shadow: var(--shadow-lift-dark), inset 0 2px 0 0 rgba(129, 140, 248, 0.9) !important;
+}
+
+/* --- 5d. Navigasi sidebar: indikator aktif + micro-motion ikon --- */
+.zenai-nav-item { position: relative; }
+
+.zenai-nav-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 3px;
+  height: 0;
+  border-radius: 999px;
+  background: var(--brand-gradient);
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: height var(--dur-base) var(--eas-out), opacity var(--dur-base) var(--eas-out);
+}
+
+.zenai-nav-item.is-active::before { height: 58%; opacity: 1; }
+
+.zenai-nav-item.is-active { animation: zenGlowPulse 2.6s ease-out infinite; }
+
+.zenai-nav-icon {
+  transition: transform var(--dur-fast) var(--eas-out);
+}
+
+.zenai-nav-item:hover .zenai-nav-icon {
+  transform: translateX(2px) scale(1.08);
+}
+
+.zenai-nav-item:hover .zenai-nav-icon svg {
+  transform: rotate(-6deg);
+}
+
+.zenai-nav-icon svg { transition: transform var(--dur-fast) var(--eas-out); }
+
+/* --- 5e. Tombol: angkat saat hover, tekan saat klik, sheen lembut --- */
+.zenai-app button:not(.zenai-sidebar-overlay) {
+  transition: transform var(--dur-micro) var(--eas-out),
+    box-shadow var(--dur-fast) var(--eas-out),
+    background var(--dur-fast) ease,
+    border-color var(--dur-fast) ease,
+    opacity var(--dur-fast) ease;
+}
+
+.zenai-app button:not(.zenai-sidebar-overlay):not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: var(--glow-brand);
+}
+
+.zenai-app button:not(.zenai-sidebar-overlay):not(:disabled):active {
+  transform: translateY(0) scale(0.975);
+  box-shadow: none;
+}
+
+.zenai-app button:disabled { cursor: not-allowed; }
+
+/* --- 5f. Input: cincin fokus yang terlihat di dua mode --- */
+.zenai-app input,
+.zenai-app textarea,
+.zenai-app select {
+  transition: box-shadow var(--dur-fast) var(--eas-out), border-color var(--dur-fast) ease;
+}
+
+.zenai-app input:focus,
+.zenai-app textarea:focus,
+.zenai-app select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--ring-brand) !important;
+}
+
+/* Di layar kecil, font input dinaikkan ke minimal 16px supaya iOS
+   tidak memperbesar halaman sendiri saat input difokuskan — teks
+   tetap pada ukuran yang nyaman dibaca. */
+@media (max-width: 640px) {
+  .zenai-app input,
+  .zenai-app textarea,
+  .zenai-app select {
+    font-size: 16px !important;
+  }
+}
+
+/* --- 5g. Baris tabel: sorotan tanpa layout shift --- */
+.zenai-app tbody tr {
+  transition: box-shadow var(--dur-fast) ease, background-color var(--dur-fast) ease;
+}
+
+.zenai-app tbody tr:hover {
+  box-shadow: inset 3px 0 0 0 var(--z-primary);
+}
+
+/* --- 5h. Cincin fokus keyboard: kontras di terang & gelap --- */
+.zenai-app :focus-visible,
+.cs :focus-visible {
+  outline: 2px solid var(--z-primary, #6366f1);
+  outline-offset: 2px;
+}
+
+.zenai-dark :focus-visible,
+[data-theme="dark"] .zenai-app :focus-visible {
+  outline-color: #a5b4fc;
+}
+
+/* --- 5i. Scrollbar tematik (terang & gelap) --- */
+.zenai-app *::-webkit-scrollbar { width: 8px; height: 8px; }
+.zenai-app *::-webkit-scrollbar-track { background: transparent; }
+.zenai-app *::-webkit-scrollbar-thumb {
+  background: var(--z-border-2, #d7dded);
+  border-radius: 999px;
+}
+.zenai-app *::-webkit-scrollbar-thumb:hover { background: var(--z-primary, #6366f1); }
+
+/* =========================================================
+   6. LANDING (.cs) — animasi masuk & kedalaman
+   ========================================================= */
+
+.cs-glow-a { animation: zenDriftA 24s ease-in-out infinite alternate; }
+.cs-glow-b { animation: zenDriftB 30s ease-in-out infinite alternate; }
+
+.cs-hero > .cs-badge { animation: zenPop 600ms var(--eas-out) backwards; }
+.cs-hero > h1 { animation: zenRise 820ms var(--eas-out) 90ms backwards; }
+.cs-hero > .cs-sub { animation: zenRise 760ms var(--eas-out) 190ms backwards; }
+.cs-hero > .cs-ctas { animation: zenRise 760ms var(--eas-out) 280ms backwards; }
+.cs-hero > .cs-mock { animation: zenRise 900ms var(--eas-out) 360ms backwards; }
+.cs-hero > .cs-stats { animation: zenRise 760ms var(--eas-out) 470ms backwards; }
+
+/* Batang chart di mock: tumbuh dari bawah, bertahap */
+.cs-mock-chart i,
+.cs-spark i {
+  transform-origin: bottom center;
+  animation: zenBarGrow 720ms var(--eas-out) backwards;
+}
+.cs-mock-chart i:nth-child(1), .cs-spark i:nth-child(1) { animation-delay: 120ms; }
+.cs-mock-chart i:nth-child(2), .cs-spark i:nth-child(2) { animation-delay: 190ms; }
+.cs-mock-chart i:nth-child(3), .cs-spark i:nth-child(3) { animation-delay: 260ms; }
+.cs-mock-chart i:nth-child(4), .cs-spark i:nth-child(4) { animation-delay: 330ms; }
+.cs-mock-chart i:nth-child(5), .cs-spark i:nth-child(5) { animation-delay: 400ms; }
+.cs-mock-chart i:nth-child(6) { animation-delay: 470ms; }
+.cs-mock-chart i:nth-child(7) { animation-delay: 540ms; }
+
+/* Titik status hidup (pulse halus) */
+.cs-pill i,
+.cs-badge i,
+.cs-mock-head .cs-pill i { animation: zenDotPulse 2.4s ease-in-out infinite; }
+
+/* Tombol gradient: kilau bergerak saat hover */
+.cs-btn { position: relative; overflow: hidden; }
+.cs-btn-grad::after {
+  content: "";
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  left: 0;
+  width: 45%;
+  background: var(--sheen);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-130%) skewX(-18deg);
+}
+.cs-btn-grad:hover::after { opacity: 1; animation: zenSheen 900ms var(--eas-out); }
+.cs-btn-grad:hover { box-shadow: var(--glow-brand-strong); }
+
+/* Ikon panah ikut bergerak di dalam tombol CTA */
+.cs-btn svg { transition: transform var(--dur-fast) var(--eas-out); }
+.cs-btn:hover svg { transform: translateX(3px); }
+
+/* Kartu fitur: lift + glow (reveal ditangani framer-motion) */
+.cs-card {
+  transition: box-shadow var(--dur-base) var(--eas-out), border-color var(--dur-base) var(--eas-out);
+}
+.cs-card:hover { box-shadow: var(--shadow-lift); }
+
+/* Reveal saat scroll — progresif & tidak pernah membuat konten hilang.
+   `data-state="hidden"` hanya dipasang JS setelah elemen dipastikan
+   masih di luar layar; tanpa JS, atau saat state "idle"/"shown",
+   elemen tampil normal. */
+.cs [data-state] > * {
+  transition: opacity var(--dur-reveal) var(--eas-out),
+    transform var(--dur-reveal) var(--eas-out),
+    filter var(--dur-reveal) var(--eas-out);
+}
+
+.cs [data-state="hidden"] > * {
+  opacity: 0;
+  transform: translateY(20px);
+  filter: blur(7px);
+}
+
+/* Stagger: maksimal 8 anak, sisanya tampil tanpa delay */
+.cs [data-state] > *:nth-child(1) { transition-delay: 0ms; }
+.cs [data-state] > *:nth-child(2) { transition-delay: 60ms; }
+.cs [data-state] > *:nth-child(3) { transition-delay: 120ms; }
+.cs [data-state] > *:nth-child(4) { transition-delay: 180ms; }
+.cs [data-state] > *:nth-child(5) { transition-delay: 240ms; }
+.cs [data-state] > *:nth-child(6) { transition-delay: 300ms; }
+.cs [data-state] > *:nth-child(7) { transition-delay: 360ms; }
+.cs [data-state] > *:nth-child(n + 8) { transition-delay: 420ms; }
+
+
+/* =========================================================
+   ZENAI — PROFESSIONAL BROWSER PRINT
+   Screen UI and printed document are intentionally separated.
+   ========================================================= */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 15mm;
+  }
+
+  html,
+  body {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: #fff !important;
+    color: #111827 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Never print application chrome or floating controls. */
+  .no-print,
+  .zenai-sidebar,
+  .zenai-sidebar-overlay,
+  .zenai-mobile-menu,
+  .zenai-language-switcher,
+  .zenai-page-header,
+  button,
+  input,
+  textarea,
+  select,
+  [role="button"] {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* Remove the dashboard shell constraints. */
+  .zenai-app {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: #fff !important;
+    color: #111827 !important;
+    isolation: auto !important;
+  }
+
+  .zenai-app::before,
+  .zenai-app::after,
+  .zenai-content::before {
+    display: none !important;
+    content: none !important;
+  }
+
+  .zenai-content {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    transform: none !important;
+    transition: none !important;
+    background: #fff !important;
+    color: #111827 !important;
+  }
+
+  /* Disable screen-only motion, hover states and clipping. */
+  .zenai-content,
+  .zenai-content * {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    filter: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    max-height: none !important;
+  }
+
+  .zenai-content * {
+    overflow: visible !important;
+  }
+
+  /* Force readable output even when the app is in dark mode.
+     Inline dark-mode colors otherwise win over the print stylesheet. */
+  .zenai-content,
+  .zenai-content * {
+    color: #111827 !important;
+  }
+
+  .zenai-content a {
+    color: #1d4ed8 !important;
+    text-decoration: none !important;
+  }
+
+  .zenai-content svg {
+    color: #475569 !important;
+  }
+
+  /* Convert dashboard cards into clean document sections. */
+  .zenai-content section,
+  .zenai-content article,
+  .zenai-content [class*="card"],
+  .zenai-content [class*="panel"] {
+    background: #fff !important;
+    border-color: #d1d5db !important;
+    border-radius: 8px !important;
+    box-shadow: none !important;
+  }
+
+  .zenai-content table {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-collapse: collapse !important;
+    table-layout: auto !important;
+    page-break-inside: auto !important;
+  }
+
+  .zenai-content th,
+  .zenai-content td {
+    border-color: #cbd5e1 !important;
+    vertical-align: top !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+  }
+
+  .zenai-content thead {
+    display: table-header-group;
+  }
+
+  .zenai-content tr {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .zenai-content h1,
+  .zenai-content h2,
+  .zenai-content h3,
+  .zenai-content h4 {
+    color: #0f172a !important;
+    break-after: avoid !important;
+    page-break-after: avoid !important;
+  }
+
+  .zenai-content p,
+  .zenai-content li {
+    orphans: 3;
+    widows: 3;
+  }
+
+  .zenai-content section,
+  .zenai-content article,
+  .zenai-content table,
+  .zenai-content .card,
+  .zenai-content [class*="card"] {
+    break-inside: avoid-page;
+    page-break-inside: avoid;
+  }
+
+  /* Avoid print-time horizontal clipping. */
+  .zenai-content > div,
+  .zenai-content > section,
+  .zenai-content [style*="width"] {
+    max-width: 100% !important;
+  }
+
+  /* Inputs may be present in interactive tabs but are never part of a
+     printed report. Their companion labels/content remain printable. */
+  .zenai-content [contenteditable="true"] {
+    overflow: visible !important;
+    white-space: normal !important;
+  }
+}
+
+/* =========================================================
+   7. Reduced motion — semua tambahan di atas dimatikan
+   ========================================================= */
+@media (prefers-reduced-motion: reduce) {
+  .zenai-app::before,
+  .zenai-app::after,
+  .zenai-app .zenai-content::before,
+  .zenai-page-header,
+  .zenai-content > *,
+  .zenai-nav-item.is-active,
+  .cs-glow-a,
+  .cs-glow-b,
+  .cs-hero > *,
+  .cs-mock-chart i,
+  .cs-spark i,
+  .cs-pill i,
+  .cs-badge i,
+  .cs-btn-grad::after,
+  .zen-anim-float,
+  .zen-anim-glow,
+  .zen-shimmer {
+    animation: none !important;
+  }
+
+  .zenai-content section:hover,
+  .zenai-app button:not(.zenai-sidebar-overlay):not(:disabled):hover,
+  .zenai-app button:not(.zenai-sidebar-overlay):not(:disabled):active,
+  .zenai-nav-item:hover .zenai-nav-icon,
+  .zenai-nav-item:hover .zenai-nav-icon svg,
+  .cs-btn:hover svg,
+  .zen-lift:hover {
+    transform: none !important;
+  }
+
+  /* Reveal scroll: pastikan tidak ada konten yang tetap tersembunyi */
+  .cs [data-state="hidden"] > * {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    transition: none !important;
+  }
+}
+
