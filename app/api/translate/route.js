@@ -1,8 +1,8 @@
 import { jsonError, rateLimit, requireApiUser } from "../../../lib/api-security";
 
 const MAX_STRING_LENGTH = 12000;
-const MAX_BATCH_CHARS = 24000;
-const MAX_BATCH_STRINGS = 100;
+const MAX_BATCH_CHARS = 9000;
+const MAX_BATCH_STRINGS = 50;
 const MAX_TOTAL_STRINGS = 1500;
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 const DEFAULT_MODEL = "google/gemma-4-26b-a4b-it:free";
@@ -101,20 +101,20 @@ function buildTranslationPrompt(entries, sourceLocale, targetLocale) {
   ].join("\n");
 }
 
-async function requestOpenRouter({ model, entries, sourceLocale, targetLocale, apiKey, useJsonFormat = false }) {
-  const source = sourceLocale ? languageName(sourceLocale) : "the source language";
-  const target = languageName(targetLocale);
+async function requestOpenRouter({ model, fallbackModels = [], entries, sourceLocale, targetLocale, apiKey, useJsonFormat = false, maxTokensBoost = 1 }) {
   const prompt = buildTranslationPrompt(entries, sourceLocale, targetLocale);
+  const inputChars = entries.reduce((sum, item) => sum + item.value.length, 0);
   const body = {
     model,
+    ...(fallbackModels.length ? { models: fallbackModels } : {}),
     messages: [
-      { role: "system", content: "You are a precise professional translation engine for an AI application. Output valid JSON only. Never explain your work." },
+      { role: "system", content: "You are a precise professional translation engine. Translate the JSON values and return ONLY one valid JSON object using the numeric keys exactly as provided." },
       { role: "user", content: prompt },
     ],
     temperature: 0.1,
-    max_tokens: Math.min(12000, Math.max(1500, entries.reduce((sum, item) => sum + item.value.length, 0))),
+    max_tokens: Math.min(8000, Math.max(1600, Math.ceil((inputChars / 2.2) * maxTokensBoost))),
+    stream: false,
   };
-
   if (useJsonFormat) body.response_format = { type: "json_object" };
 
   const response = await fetch(OPENROUTER_URL, {
@@ -126,7 +126,7 @@ async function requestOpenRouter({ model, entries, sourceLocale, targetLocale, a
       "X-Title": "ZENAI",
     },
     body: JSON.stringify(body),
-    signal: AbortSignal.timeout(30000),
+    signal: AbortSignal.timeout(25000),
   });
 
   const data = await response.json().catch(() => null);
@@ -138,11 +138,30 @@ async function requestOpenRouter({ model, entries, sourceLocale, targetLocale, a
     throw error;
   }
 
-  const text = data?.choices?.[0]?.message?.content;
-  if (!text) throw new Error("OpenRouter tidak mengembalikan hasil terjemahan.");
-  return text;
-}
+  const choice = data?.choices?.[0];
+  const message = choice?.message || {};
+  const rawContent = message?.content;
+  const text = Array.isArray(rawContent)
+    ? rawContent
+        .map((part) => (typeof part === "string" ? part : part?.text || ""))
+        .join("")
+    : rawContent;
+  if (typeof text === "string" && text.trim()) return text;
 
+  const finishReason = choice?.finish_reason || choice?.native_finish_reason;
+  const providerError = data?.error?.message || data?.error?.metadata?.raw || data?.message;
+  const error = new Error(providerError || `OpenRouter returned no text (finish_reason: ${finishReason || "unknown"}).`);
+  error.status = 502;
+  error.providerData = {
+    model: data?.model || model,
+    finish_reason: finishReason,
+    choice_count: Array.isArray(data?.choices) ? data.choices.length : 0,
+    error: data?.error,
+    has_reasoning: typeof message?.reasoning === "string" && message.reasoning.trim().length > 0,
+    content_type: Array.isArray(rawContent) ? "array" : typeof rawContent,
+  };
+  throw error;
+}
 function parseTranslationJson(text, entries) {
   const cleaned = String(text)
     .trim()
@@ -170,48 +189,72 @@ function parseTranslationJson(text, entries) {
 }
 
 async function translateBatch(entries, { targetLocale, sourceLocale, apiKey }) {
-  const model = process.env.OPENROUTER_TRANSLATE_MODEL || DEFAULT_MODEL;
+  const configuredModel = process.env.OPENROUTER_TRANSLATE_MODEL || DEFAULT_MODEL;
+  const fallbackModels = [FALLBACK_MODEL].filter((value) => value && value !== configuredModel);
   let lastError = null;
 
-  // First attempt: structured JSON on the configured model.
+  // Let OpenRouter perform model-level failover in one request instead of
+  // making several sequential provider calls. This is both faster and more
+  // reliable when the free provider returns a transient failure.
   try {
-    const text = await requestOpenRouter({ model, entries, sourceLocale, targetLocale, apiKey, useJsonFormat: true });
+    const text = await requestOpenRouter({
+      model: configuredModel,
+      fallbackModels,
+      entries,
+      sourceLocale,
+      targetLocale,
+      apiKey,
+      useJsonFormat: false,
+    });
     return parseTranslationJson(text, entries);
   } catch (error) {
     lastError = error;
-    console.warn("Translation structured request failed; retrying without response_format:", {
-      model,
+    console.warn("Translation provider attempt failed:", {
+      model: configuredModel,
+      fallbacks: fallbackModels,
       status: error?.status,
       message: error?.message,
+      provider: error?.providerData,
     });
   }
 
-  // Some free providers reject structured-output parameters even when the model advertises support.
-  try {
-    const text = await requestOpenRouter({ model, entries, sourceLocale, targetLocale, apiKey, useJsonFormat: false });
-    return parseTranslationJson(text, entries);
-  } catch (error) {
-    lastError = error;
-    console.warn("Translation plain request failed; trying OpenRouter free router:", {
-      model,
-      status: error?.status,
-      message: error?.message,
-    });
-  }
-
-  // Final free fallback. OpenRouter routes to a currently available free model.
-  if (model !== FALLBACK_MODEL) {
+  // If the provider exhausted its output budget, retry once with a larger
+  // budget. This specifically prevents an otherwise valid JSON translation
+  // from ending as an empty/truncated completion.
+  if (lastError?.providerData?.finish_reason === "length") {
     try {
-      const text = await requestOpenRouter({ model: FALLBACK_MODEL, entries, sourceLocale, targetLocale, apiKey, useJsonFormat: false });
+      const text = await requestOpenRouter({
+        model: configuredModel,
+        fallbackModels,
+        entries,
+        sourceLocale,
+        targetLocale,
+        apiKey,
+        useJsonFormat: false,
+        maxTokensBoost: 1.8,
+      });
       return parseTranslationJson(text, entries);
     } catch (error) {
       lastError = error;
-      console.error("Translation fallback failed:", {
-        model: FALLBACK_MODEL,
-        status: error?.status,
-        message: error?.message,
-      });
     }
+  }
+
+  // Structured output is a final compatibility fallback for providers that
+  // support JSON mode but fail the plain prompt.
+  try {
+    const text = await requestOpenRouter({
+      model: configuredModel,
+      fallbackModels,
+      entries,
+      sourceLocale,
+      targetLocale,
+      apiKey,
+      useJsonFormat: true,
+      maxTokensBoost: 1.3,
+    });
+    return parseTranslationJson(text, entries);
+  } catch (error) {
+    lastError = error;
   }
 
   throw lastError || new Error("Translation provider failed.");
