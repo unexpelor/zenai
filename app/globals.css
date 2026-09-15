@@ -1044,6 +1044,196 @@ body[data-theme="light"] {
 .cs [data-state] > *:nth-child(7) { transition-delay: 360ms; }
 .cs [data-state] > *:nth-child(n + 8) { transition-delay: 420ms; }
 
+
+/* =========================================================
+   ZENAI — PROFESSIONAL BROWSER PRINT
+   Screen UI and printed document are intentionally separated.
+   ========================================================= */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 15mm;
+  }
+
+  html,
+  body {
+    width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: #fff !important;
+    color: #111827 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Never print application chrome or floating controls. */
+  .no-print,
+  .zenai-sidebar,
+  .zenai-sidebar-overlay,
+  .zenai-mobile-menu,
+  .zenai-language-switcher,
+  .zenai-page-header,
+  button,
+  input,
+  textarea,
+  select,
+  [role="button"] {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* Remove the dashboard shell constraints. */
+  .zenai-app {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: #fff !important;
+    color: #111827 !important;
+    isolation: auto !important;
+  }
+
+  .zenai-app::before,
+  .zenai-app::after,
+  .zenai-content::before {
+    display: none !important;
+    content: none !important;
+  }
+
+  .zenai-content {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    transform: none !important;
+    transition: none !important;
+    background: #fff !important;
+    color: #111827 !important;
+  }
+
+  /* Disable screen-only motion, hover states and clipping. */
+  .zenai-content,
+  .zenai-content * {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    filter: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+    max-height: none !important;
+  }
+
+  .zenai-content * {
+    overflow: visible !important;
+  }
+
+  /* Force readable output even when the app is in dark mode.
+     Inline dark-mode colors otherwise win over the print stylesheet. */
+  .zenai-content,
+  .zenai-content * {
+    color: #111827 !important;
+  }
+
+  .zenai-content a {
+    color: #1d4ed8 !important;
+    text-decoration: none !important;
+  }
+
+  .zenai-content svg {
+    color: #475569 !important;
+  }
+
+  /* Convert dashboard cards into clean document sections. */
+  .zenai-content section,
+  .zenai-content article,
+  .zenai-content [class*="card"],
+  .zenai-content [class*="panel"] {
+    background: #fff !important;
+    border-color: #d1d5db !important;
+    border-radius: 8px !important;
+    box-shadow: none !important;
+  }
+
+  .zenai-content table {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-collapse: collapse !important;
+    table-layout: auto !important;
+    page-break-inside: auto !important;
+  }
+
+  .zenai-content th,
+  .zenai-content td {
+    border-color: #cbd5e1 !important;
+    vertical-align: top !important;
+    overflow-wrap: anywhere !important;
+    word-break: normal !important;
+  }
+
+  .zenai-content thead {
+    display: table-header-group;
+  }
+
+  .zenai-content tr {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  .zenai-content h1,
+  .zenai-content h2,
+  .zenai-content h3,
+  .zenai-content h4 {
+    color: #0f172a !important;
+    break-after: avoid !important;
+    page-break-after: avoid !important;
+  }
+
+  .zenai-content p,
+  .zenai-content li {
+    orphans: 3;
+    widows: 3;
+  }
+
+  .zenai-content section,
+  .zenai-content article,
+  .zenai-content table,
+  .zenai-content .card,
+  .zenai-content [class*="card"] {
+    break-inside: avoid-page;
+    page-break-inside: avoid;
+  }
+
+  /* Avoid print-time horizontal clipping. */
+  .zenai-content > div,
+  .zenai-content > section,
+  .zenai-content [style*="width"] {
+    max-width: 100% !important;
+  }
+
+  /* Inputs may be present in interactive tabs but are never part of a
+     printed report. Their companion labels/content remain printable. */
+  .zenai-content [contenteditable="true"] {
+    overflow: visible !important;
+    white-space: normal !important;
+  }
+}
+
 /* =========================================================
    7. Reduced motion — semua tambahan di atas dimatikan
    ========================================================= */
