@@ -16,6 +16,7 @@ export default function LanguageSwitcher() {
 
   return (
     <div
+      className="zenai-language-switcher no-print"
       style={{
         position: "fixed",
         bottom: 20,
