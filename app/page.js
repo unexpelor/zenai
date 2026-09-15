@@ -3422,20 +3422,27 @@ Aturan:
   .report-title { margin:0 0 4px; font-size:20px; color:#0f172a; }
   .business { margin:0; color:#475569; font-size:11px; font-weight:600; }
   .meta { margin-top:5px; color:#64748b; font-size:9px; }
-  .pdf-section { page-break-inside: avoid; margin:0 0 18px; }
-  .pdf-section h2 { margin:0 0 8px; padding:7px 10px; background:#f8fafc; border-left:4px solid #2563eb; color:#1e3a8a; font-size:12px; }
-  .pdf-table { width:100%; border-collapse:collapse; margin-top:4px; }
-  .pdf-table th, .pdf-table td { border:1px solid #cbd5e1; padding:7px 9px; vertical-align:top; }
+  .pdf-section { margin:0 0 18px; break-inside: avoid-page; page-break-inside: avoid; }
+  .pdf-section h2 { margin:0 0 8px; padding:7px 10px; background:#f8fafc; border-left:4px solid #2563eb; color:#1e3a8a; font-size:12px; break-after:avoid; page-break-after:avoid; }
+  .pdf-table { width:100%; border-collapse:collapse; margin-top:4px; page-break-inside:auto; }
+  .pdf-table th, .pdf-table td { border:1px solid #cbd5e1; padding:7px 9px; vertical-align:top; overflow-wrap:anywhere; }
+  .pdf-table thead { display:table-header-group; }
+  .pdf-table tr { break-inside:avoid; page-break-inside:avoid; }
   .pdf-table th { width:42%; text-align:left; background:#f8fafc; font-weight:700; color:#334155; }
   .pdf-table td { text-align:right; }
   .pdf-table td .pdf-table { margin-top:0; }
   .pdf-table td .pdf-table th, .pdf-table td .pdf-table td { text-align:left; }
   ul { margin:5px 0 5px 20px; padding:0; }
-  li { margin-bottom:4px; }
+  li { margin-bottom:4px; orphans:3; widows:3; }
   .pdf-footer { margin-top:24px; padding-top:10px; border-top:1px solid #cbd5e1; color:#64748b; font-size:8.5px; text-align:center; }
   .print-actions { position:sticky; top:0; padding:10px 0; background:#fff; text-align:right; }
   .print-actions button { border:0; background:#2563eb; color:#fff; padding:9px 14px; border-radius:8px; font-weight:700; cursor:pointer; }
-  @media print { .print-actions { display:none; } }
+  @media print {
+    @page { size:A4 portrait; margin:16mm 15mm 18mm; }
+    html, body { margin:0 !important; padding:0 !important; background:#fff !important; color:#172033 !important; }
+    .print-actions { display:none !important; }
+    .pdf-section, .pdf-header, .report-title, .business, .meta, .pdf-footer { break-inside:avoid-page; }
+  }
 </style>
 </head>
 <body>
@@ -3818,10 +3825,10 @@ padding: isMobile ? "16px 12px" : "32px",
       }}
     >
      {/* MOBILE OVERLAY */}
-     {isMobile && sidebarOpen && <button type="button" className="zenai-sidebar-overlay" aria-label="Tutup menu" onClick={() => setSidebarOpen(false)} />}
+     {isMobile && sidebarOpen && <button type="button" className="zenai-sidebar-overlay no-print" aria-label="Tutup menu" onClick={() => setSidebarOpen(false)} />}
      {/* SIDEBAR */}
 <aside
-  className={`zenai-sidebar ${sidebarOpen ? "open" : "closed"}`}
+  className={`zenai-sidebar no-print ${sidebarOpen ? "open" : "closed"}`}
   style={{
     width: isMobile ? (sidebarOpen ? "220px" : "64px") : (sidebarOpen ? "280px" : "72px"),
     minWidth: isMobile ? (sidebarOpen ? "220px" : "64px") : (sidebarOpen ? "280px" : "72px"),
@@ -4082,7 +4089,7 @@ padding: isMobile ? "16px 12px" : "32px",
 </aside>
 
       {/* KONTEN UTAMA */}
-      {isMobile && <button type="button" className="zenai-mobile-menu" aria-label={uiText("Buka menu","Open menu")} onClick={() => setSidebarOpen(true)}><ZenIcon name="menu" size={20} /></button>}
+      {isMobile && <button type="button" className="zenai-mobile-menu no-print" aria-label={uiText("Buka menu","Open menu")} onClick={() => setSidebarOpen(true)}><ZenIcon name="menu" size={20} /></button>}
       <section
   className="zenai-content"
   style={{
@@ -4104,7 +4111,7 @@ padding: isMobile ? "16px 12px" : "32px",
 >
         {/* HEADER */}
         <header
-          className="zenai-page-header"
+          className="zenai-page-header no-print"
           style={{
             display: "flex",
             justifyContent: "space-between",
@@ -5341,7 +5348,7 @@ padding: isMobile ? "16px 12px" : "32px",
           >
             {pulseData && (
               <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "14px" }}>
-                <button type="button" onClick={exportPulsePdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}>{uiText('Ekspor PDF','Export PDF')}</button>
+                <button type="button" className="no-print" onClick={exportPulsePdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}>{uiText('Ekspor PDF','Export PDF')}</button>
               </div>
             )}
             {!pulseData ? (
@@ -5929,7 +5936,7 @@ padding: isMobile ? "16px 12px" : "32px",
           >
             {diagnosis && (
               <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "14px" }}>
-                <button type="button" onClick={exportDiagnosisPdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}>{uiText('Ekspor PDF','Export PDF')}</button>
+                <button type="button" className="no-print" onClick={exportDiagnosisPdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}>{uiText('Ekspor PDF','Export PDF')}</button>
               </div>
             )}
             {!diagnosis ? (
@@ -6551,7 +6558,7 @@ padding: isMobile ? "16px 12px" : "32px",
   <div data-zenai-output data-zenai-output-key="marketData" style={{ maxWidth: "1000px", margin: "0 auto" }}>
     {marketData && (
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "14px" }}>
-        <button type="button" onClick={exportMarketPdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}>{uiText('Ekspor PDF','Export PDF')}</button>
+        <button type="button" className="no-print" onClick={exportMarketPdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}>{uiText('Ekspor PDF','Export PDF')}</button>
       </div>
     )}
     {!marketData && !marketLoading && !marketError && (
@@ -6940,7 +6947,7 @@ padding: isMobile ? "16px 12px" : "32px",
         {tab === "finance" && (
           <div>
             <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "14px" }}>
-              <button type="button" onClick={exportFinancePdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}>{uiText('Ekspor PDF','Export PDF')}</button>
+              <button type="button" className="no-print" onClick={exportFinancePdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}>{uiText('Ekspor PDF','Export PDF')}</button>
             </div>
             <div
               style={{
@@ -8051,7 +8058,7 @@ padding: isMobile ? "16px 12px" : "32px",
           >
             {autopilotData && (
               <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "14px" }}>
-                <button type="button" onClick={exportAutopilotPdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}>{uiText('Ekspor PDF','Export PDF')}</button>
+                <button type="button" className="no-print" onClick={exportAutopilotPdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}>{uiText('Ekspor PDF','Export PDF')}</button>
               </div>
             )}
             {!autopilotData ? (
