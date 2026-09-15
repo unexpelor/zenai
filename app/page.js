@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { useZenLocale } from "../providers/ZenLocaleProvider";
 import { createClient } from "../lib/supabase/client";
 import BusinessGrowthLoop from "../components/BusinessGrowthLoop";
 import ZenLanding from "../components/ZenLanding";
@@ -9,7 +10,6 @@ import { useAILocalization } from "../hooks/useAILocalization";
 import { stableHash } from "../lib/localization/translateContent";
 import { createLocalizationCacheKey, readLocalizationCache, writeLocalizationCache } from "../lib/localization/localizationCache";
 import { AI_LOCALIZATION_KEYS } from "../lib/localization/localizationRegistry";
-import { useZenLocale } from "../providers/ZenLocaleProvider";
 
 function safeArray(value) {
   return Array.isArray(value) ? value : [];
@@ -114,10 +114,9 @@ function ZenIcon({ name, size = 18, strokeWidth = 1.9 }) {
 }
 export default function Home() {
   const t = useTranslations();
-  // Use the same locale state that LanguageSwitcher mutates. This guarantees
-  // an immediate client-side localization pass without relying on next-intl
-  // route refreshes or regenerated module data.
-  const { locale } = useZenLocale();
+  const nextIntlLocale = useLocale();
+  const { locale: zenLocale } = useZenLocale();
+  const locale = zenLocale || nextIntlLocale;
   const uiText = (id, en) => (locale === "en" ? en : id);
 
   // UI translations are rendered through next-intl/uiText directly.
@@ -1761,130 +1760,150 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
 
   const canonicalValueForSave = (key, fallback) => aiCanonicalRef.current[key]?.value ?? fallback;
 
-  useEffect(() => {
-    // Global AI presentation localization. Canonical values remain untouched;
-    // translated values are only presentation state.
-    // Translation must react immediately to a locale click. Do not block this
-    // presentation sync on cloud hydration; canonical AI refs are independent
-    // of persistence and cloudLoaded may legitimately still be false.
+  // =========================
+  // OUTPUT SCANNER TRANSLATION
+  // Scan the canonical AI output states whenever the user clicks a language.
+  // The canonical source is never replaced by a translated presentation.
+  // =========================
+  const scanAndTranslateAiOutput = async (targetLocale) => {
     const { generation, signal } = beginGeneration();
-
     const stateMap = { business, pulseData, diagnosis, marketData, autopilotData, growthActions, businessUpdates, decisionResult };
-    const setterMap = { business: setBusiness, pulseData: setPulseData, diagnosis: setDiagnosis, marketData: setMarketData, autopilotData: setAutopilotData, growthActions: setGrowthActions, businessUpdates: setBusinessUpdates, decisionResult: setDecisionResult };
-    const targets = AI_LOCALIZATION_KEYS
-      .map((key) => [key, stateMap[key], setterMap[key]])
-      .filter(([, value, setter]) => value !== null && value !== undefined && typeof setter === "function");
+    const setterMap = {
+      business: setBusiness,
+      pulseData: setPulseData,
+      diagnosis: setDiagnosis,
+      marketData: setMarketData,
+      autopilotData: setAutopilotData,
+      growthActions: setGrowthActions,
+      businessUpdates: setBusinessUpdates,
+      decisionResult: setDecisionResult,
+    };
 
-    const syncAllAiOutputs = async () => {
-      const pending = [];
-      const cached = [];
+    const pending = [];
+    const cached = [];
 
-      // First resolve canonical sources and cache hits without making API calls.
-      for (const [key, currentValue, setter] of targets) {
-        if (!isCurrent(generation)) return;
-
-        const currentHash = stableHash(currentValue);
-        let canonical = aiCanonicalRef.current[key];
-        const localization = aiLocalizationRef.current[key] || {};
-
-        // Presentation state can be translated asynchronously. Never promote a
-        // translated presentation value back into canonical state. If a legacy
-        // value has no registered canonical source yet, capture it once.
-        if (!canonical) {
-          canonical = { value: currentValue, sourceLocale: locale || null, sourceHash: currentHash };
-          aiCanonicalRef.current[key] = canonical;
-          aiLocalizationRef.current[key] = { sourceHash: currentHash, lastPresentationHash: currentHash };
-        } else if (canonical.sourceHash !== currentHash && localization.lastPresentationHash !== currentHash) {
-          // Only an external/new AI state change may replace canonical content.
-          canonical = { value: currentValue, sourceLocale: locale || null, sourceHash: currentHash };
-          aiCanonicalRef.current[key] = canonical;
-          aiLocalizationRef.current[key] = { sourceHash: currentHash, lastPresentationHash: currentHash };
-        }
-
-        const sourceValue = canonical.value;
-        const sourceHash = canonical.sourceHash;
-        const sourceLocale = canonical.sourceLocale;
-
-        if (sourceLocale === locale) {
-          if (currentHash !== sourceHash) setter(sourceValue);
-          aiLocalizationRef.current[key] = { ...localization, locale, sourceHash, lastPresentationHash: sourceHash };
-          continue;
-        }
-
-        if (localization.locale === locale && localization.sourceHash === sourceHash) continue;
-
-        const cacheKey = createLocalizationCacheKey({
-          userId: session?.user?.id || "anonymous",
-          sourceHash,
-          locale,
-          key,
-        });
-        const translated = readLocalizationCache(cacheKey);
-
-        if (translated !== null) {
-          cached.push({ key, setter, translated, sourceHash });
-        } else {
-          pending.push({ key, value: sourceValue, sourceLocale, setter, sourceHash, cacheKey });
-        }
-      }
-
+    for (const key of AI_LOCALIZATION_KEYS) {
       if (!isCurrent(generation)) return;
+      const setter = setterMap[key];
+      const currentValue = stateMap[key];
+      if (typeof setter !== "function" || currentValue === null || currentValue === undefined) continue;
 
-      for (const item of cached) {
-        if (!isCurrent(generation)) return;
-        item.setter(item.translated);
-        aiLocalizationRef.current[item.key] = {
-          locale,
-          sourceHash: item.sourceHash,
-          lastPresentationHash: stableHash(item.translated),
+      const currentHash = stableHash(currentValue);
+      let canonical = aiCanonicalRef.current[key];
+      const presentation = aiLocalizationRef.current[key] || {};
+
+      // New AI output: capture it once as canonical. A translated presentation
+      // is recognized by lastPresentationHash and is never promoted to source.
+      if (!canonical) {
+        canonical = { value: currentValue, sourceLocale: locale || null, sourceHash: currentHash };
+        aiCanonicalRef.current[key] = canonical;
+      } else if (canonical.sourceHash !== currentHash && presentation.lastPresentationHash !== currentHash) {
+        canonical = { value: currentValue, sourceLocale: locale || null, sourceHash: currentHash };
+        aiCanonicalRef.current[key] = canonical;
+      }
+
+      const sourceHash = canonical.sourceHash;
+      const sourceLocale = canonical.sourceLocale;
+      const sourceValue = canonical.value;
+
+      if (sourceLocale === targetLocale) {
+        setter(sourceValue);
+        aiLocalizationRef.current[key] = {
+          locale: targetLocale,
+          sourceHash,
+          lastPresentationHash: sourceHash,
         };
+        continue;
       }
 
-      if (!pending.length) return;
+      const cacheKey = createLocalizationCacheKey({
+        userId: session?.user?.id || "anonymous",
+        sourceHash,
+        locale: targetLocale,
+        key,
+      });
+      const translated = readLocalizationCache(cacheKey);
 
-      // Group only when source languages differ. Normally all ZENAI AI output
-      // shares one source locale, so this becomes one translation request for
-      // the complete AI presentation payload.
-      const groups = new Map();
-      for (const item of pending) {
-        const groupKey = item.sourceLocale === "id" || item.sourceLocale === "en" ? item.sourceLocale : "auto";
-        if (!groups.has(groupKey)) groups.set(groupKey, []);
-        groups.get(groupKey).push(item);
+      if (translated !== null) {
+        cached.push({ key, setter, translated, sourceHash });
+      } else {
+        pending.push({ key, value: sourceValue, sourceLocale, setter, sourceHash, cacheKey });
       }
+    }
 
-      for (const [, group] of groups) {
+    if (!isCurrent(generation)) return;
+
+    cached.forEach(({ key, setter, translated, sourceHash }) => {
+      setter(translated);
+      aiLocalizationRef.current[key] = {
+        locale: targetLocale,
+        sourceHash,
+        lastPresentationHash: stableHash(translated),
+      };
+    });
+
+    if (!pending.length || !isCurrent(generation)) return;
+
+    // One request per source-language group, so clicking a language translates
+    // all currently available AI output instead of waiting for regeneration.
+    const groups = new Map();
+    pending.forEach((item) => {
+      const groupKey = item.sourceLocale === "id" || item.sourceLocale === "en" ? item.sourceLocale : "auto";
+      if (!groups.has(groupKey)) groups.set(groupKey, []);
+      groups.get(groupKey).push(item);
+    });
+
+    for (const group of groups.values()) {
+      if (!isCurrent(generation)) return;
+      const content = Object.fromEntries(group.map((item) => [item.key, item.value]));
+      const sourceLocale = group.every((item) => item.sourceLocale === group[0].sourceLocale)
+        ? group[0].sourceLocale
+        : null;
+
+      try {
+        const translatedContent = await translateAiState(content, targetLocale, signal, sourceLocale);
         if (!isCurrent(generation)) return;
 
-        const content = Object.fromEntries(group.map((item) => [item.key, item.value]));
-        const sourceLocale = group.every((item) => item.sourceLocale === group[0].sourceLocale)
-          ? group[0].sourceLocale
-          : null;
+        group.forEach((item) => {
+          const translated = translatedContent?.[item.key];
+          if (translated === undefined) return;
+          writeLocalizationCache(item.cacheKey, translated);
+          item.setter(translated);
+          aiLocalizationRef.current[item.key] = {
+            locale: targetLocale,
+            sourceHash: item.sourceHash,
+            lastPresentationHash: stableHash(translated),
+          };
+        });
+      } catch (error) {
+        if (error?.name === "AbortError") return;
+        console.warn("ZENAI output scanner translation failed:", error);
+      }
+    }
+  };
 
-        try {
-          const translatedContent = await translateAiState(content, locale, signal, sourceLocale);
-          if (!isCurrent(generation)) return;
-
-          for (const item of group) {
-            const translated = translatedContent?.[item.key];
-            if (translated === undefined) continue;
-            writeLocalizationCache(item.cacheKey, translated);
-            item.setter(translated);
-            aiLocalizationRef.current[item.key] = {
-              locale,
-              sourceHash: item.sourceHash,
-              lastPresentationHash: stableHash(translated),
-            };
-          }
-        } catch (error) {
-          if (error?.name === "AbortError") return;
-          console.warn("Global OpenRouter localization failed:", error);
-        }
+  // Explicit event from the language switcher. This is the primary trigger;
+  // it does not depend on generating a module again or refreshing the page.
+  useEffect(() => {
+    const handleOutputLanguageChange = (event) => {
+      const targetLocale = event?.detail?.locale;
+      if (targetLocale === "id" || targetLocale === "en") {
+        scanAndTranslateAiOutput(targetLocale);
       }
     };
 
-    syncAllAiOutputs();
-    return undefined;
-  }, [locale, session?.user?.id, aiLocalizationVersion]);
+    window.addEventListener("zenai:output-language-change", handleOutputLanguageChange);
+    return () => window.removeEventListener("zenai:output-language-change", handleOutputLanguageChange);
+  }, [locale, session?.user?.id]);
+
+  // Initial/restored locale sync. A language click uses the explicit event above;
+  // this only covers state restored from persistence or a non-click locale change.
+  const initialLocaleSyncRef = useRef(false);
+  useEffect(() => {
+    if (initialLocaleSyncRef.current || !locale) return;
+    initialLocaleSyncRef.current = true;
+    scanAndTranslateAiOutput(locale);
+  }, [locale]);
 
   const askAI = async ({
     prompt,
