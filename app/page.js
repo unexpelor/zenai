@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { createClient } from "../lib/supabase/client";
 import BusinessGrowthLoop from "../components/BusinessGrowthLoop";
 import ZenLanding from "../components/ZenLanding";
@@ -9,6 +9,7 @@ import { useAILocalization } from "../hooks/useAILocalization";
 import { stableHash } from "../lib/localization/translateContent";
 import { createLocalizationCacheKey, readLocalizationCache, writeLocalizationCache } from "../lib/localization/localizationCache";
 import { AI_LOCALIZATION_KEYS } from "../lib/localization/localizationRegistry";
+import { useZenLocale } from "../providers/ZenLocaleProvider";
 
 function safeArray(value) {
   return Array.isArray(value) ? value : [];
@@ -113,7 +114,10 @@ function ZenIcon({ name, size = 18, strokeWidth = 1.9 }) {
 }
 export default function Home() {
   const t = useTranslations();
-  const locale = useLocale();
+  // Use the same locale state that LanguageSwitcher mutates. This guarantees
+  // an immediate client-side localization pass without relying on next-intl
+  // route refreshes or regenerated module data.
+  const { locale } = useZenLocale();
   const uiText = (id, en) => (locale === "en" ? en : id);
 
   // UI translations are rendered through next-intl/uiText directly.
@@ -1880,7 +1884,7 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
 
     syncAllAiOutputs();
     return undefined;
-  }, [locale, cloudLoaded, session?.user?.id, aiLocalizationVersion]);
+  }, [locale, session?.user?.id, aiLocalizationVersion]);
 
   const askAI = async ({
     prompt,
