@@ -1,12 +1,12 @@
 import { jsonError, rateLimit, requireApiUser } from "../../../lib/api-security";
 
 const MAX_STRING_LENGTH = 12000;
-const MAX_BATCH_CHARS = 2800;
+const MAX_BATCH_CHARS = 3000;
 const MAX_BATCH_STRINGS = 20;
 const MAX_TOTAL_STRINGS = 1500;
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const DEFAULT_MODEL = "google/gemma-4-26b-a4b-it:free";
-const FALLBACK_MODEL = "google/gemma-4-31b-it:free";
+const DEFAULT_MODEL = "google/gemma-4-31b-it:free";
+const FALLBACK_MODEL = "google/gemma-4-26b-a4b-it:free";
 
 const TECHNICAL_KEYS = new Set([
   "id", "_id", "uuid", "key", "code", "slug", "url", "uri", "href",
@@ -105,8 +105,7 @@ async function requestOpenRouter({ model, fallbackModels = [], entries, sourceLo
   const prompt = buildTranslationPrompt(entries, sourceLocale, targetLocale);
   const inputChars = entries.reduce((sum, item) => sum + item.value.length, 0);
   const body = {
-    model,
-    ...(fallbackModels.length ? { models: fallbackModels } : {}),
+    models: [model, ...fallbackModels].filter(Boolean),
     messages: [
       { role: "system", content: "You are a precise professional translation engine. Translate the JSON values and return ONLY one valid JSON object using the numeric keys exactly as provided." },
       { role: "user", content: prompt },
@@ -114,10 +113,9 @@ async function requestOpenRouter({ model, fallbackModels = [], entries, sourceLo
     temperature: 0.1,
     max_tokens: Math.min(8000, Math.max(3000, Math.ceil((inputChars / 2.2) * maxTokensBoost))),
     stream: false,
-    provider: { allow_fallbacks: true },
   };
-  // Do not force response_format on free providers; prompt-level JSON is more compatible across endpoints.
-  // The parser below validates the returned JSON before accepting it.
+  // Keep the provider request deliberately minimal for free endpoints.
+  // JSON is enforced by the prompt and validated by parseTranslationJson().
 
   const response = await fetch(OPENROUTER_URL, {
     method: "POST",
@@ -128,7 +126,7 @@ async function requestOpenRouter({ model, fallbackModels = [], entries, sourceLo
       "X-Title": "ZENAI",
     },
     body: JSON.stringify(body),
-    signal: AbortSignal.timeout(10000),
+    signal: AbortSignal.timeout(15000),
   });
 
   const data = await response.json().catch(() => null);
