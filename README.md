@@ -13,13 +13,13 @@ ZenAI dirancang sebagai pendamping pengambilan keputusan usaha. Alur utamanya:
 ## Fitur Utama
 
 - **Ceritakan Usaha** — memasukkan konteks usaha melalui input yang didukung aplikasi.
-- **Business Pulse** — ringkasan kondisi dan prioritas usaha.
+- **Kondisi Usaha** — ringkasan kondisi dan prioritas usaha.
 - **Diagnosis** — analisis masalah, kekuatan, peluang, rekomendasi, dan langkah berikutnya.
-- **Market Insight** — pencarian informasi pasar eksternal melalui Tavily dan analisis AI.
-- **Business Autopilot** — pembuatan strategi/action plan 7, 14, atau 30 hari.
-- **Business Updates** — pencatatan perkembangan terbaru usaha.
+- **Perspektif Bisnis** — pencarian informasi pasar eksternal melalui Tavily dan analisis AI.
+- **Strategi dan Tindakan** — pembuatan strategi/action plan 7, 14, atau 30 hari.
+- **Analisis Lanjutan** — uji coba usaha.
 - **Laporan Keuangan** — pencatatan transaksi dan ringkasan kondisi keuangan sederhana.
-- **History & Settings** — pengelolaan riwayat dan preferensi yang tersedia.
+- **Pengaturan** — pengelolaan riwayat dan preferensi yang tersedia.
 - **Health Check** — pemeriksaan layanan utama untuk kebutuhan diagnostik/demo.
 
 ## Teknologi
@@ -59,10 +59,6 @@ npm start
 ```
 
 ## Environment
-
-Salin `.env.example` menjadi `.env.local`, lalu isi credential yang diperlukan.
-
-Jangan pernah commit `.env`, `.env.local`, atau API key ke repository.
 
 Environment utama:
 
