@@ -1,12 +1,12 @@
 import { jsonError, rateLimit, requireApiUser } from "../../../lib/api-security";
 
 const MAX_STRING_LENGTH = 12000;
-const MAX_BATCH_CHARS = 3000;
-const MAX_BATCH_STRINGS = 20;
+const MAX_BATCH_CHARS = 7000;
+const MAX_BATCH_STRINGS = 50;
 const MAX_TOTAL_STRINGS = 1500;
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const DEFAULT_MODEL = "google/gemma-4-31b-it:free";
-const FALLBACK_MODEL = "google/gemma-4-26b-a4b-it:free";
+const DEFAULT_MODEL = "google/gemma-4-26b-a4b-it:free";
+const FALLBACK_MODEL = "google/gemma-4-31b-it:free";
 
 const TECHNICAL_KEYS = new Set([
   "id", "_id", "uuid", "key", "code", "slug", "url", "uri", "href",
@@ -105,7 +105,8 @@ async function requestOpenRouter({ model, fallbackModels = [], entries, sourceLo
   const prompt = buildTranslationPrompt(entries, sourceLocale, targetLocale);
   const inputChars = entries.reduce((sum, item) => sum + item.value.length, 0);
   const body = {
-    models: [model, ...fallbackModels].filter(Boolean),
+    model,
+    ...(fallbackModels.length ? { models: fallbackModels } : {}),
     messages: [
       { role: "system", content: "You are a precise professional translation engine. Translate the JSON values and return ONLY one valid JSON object using the numeric keys exactly as provided." },
       { role: "user", content: prompt },
@@ -113,9 +114,10 @@ async function requestOpenRouter({ model, fallbackModels = [], entries, sourceLo
     temperature: 0.1,
     max_tokens: Math.min(8000, Math.max(3000, Math.ceil((inputChars / 2.2) * maxTokensBoost))),
     stream: false,
+    provider: { sort: "throughput", allow_fallbacks: true },
   };
-  // Keep the provider request deliberately minimal for free endpoints.
-  // JSON is enforced by the prompt and validated by parseTranslationJson().
+  // Do not force response_format on free providers; prompt-level JSON is more compatible across endpoints.
+  // The parser below validates the returned JSON before accepting it.
 
   const response = await fetch(OPENROUTER_URL, {
     method: "POST",
@@ -126,7 +128,7 @@ async function requestOpenRouter({ model, fallbackModels = [], entries, sourceLo
       "X-Title": "ZENAI",
     },
     body: JSON.stringify(body),
-    signal: AbortSignal.timeout(15000),
+    signal: AbortSignal.timeout(12000),
   });
 
   const data = await response.json().catch(() => null);
@@ -192,8 +194,8 @@ async function translateBatch(entries, { targetLocale, sourceLocale, apiKey }) {
   const configuredModel = DEFAULT_MODEL;
   const fallbackModels = [FALLBACK_MODEL].filter((value) => value && value !== configuredModel);
 
-  // One provider request only. OpenRouter handles fixed-model failover via
-  // `models`; the application never uses the dynamic openrouter/free router.
+  // One provider request only. OpenRouter handles model failover via `models`;
+  // avoid sequential retries that can leave the browser request pending for 30-60s.
   try {
     const text = await requestOpenRouter({
       model: configuredModel,
@@ -267,14 +269,22 @@ export async function POST(request) {
       model: DEFAULT_MODEL,
     });
   } catch (error) {
-    console.error("OPENROUTER TRANSLATION ERROR:", {
-      message: error?.message,
-      status: error?.status,
-      provider: error?.providerData,
-    });
-    return jsonError(error?.message || "Translation service failed.", 502, {
+    const diagnostic = {
+      routeVersion: "2026-09-15-diagnostic-v1",
       provider: "openrouter",
       apiKeyConfigured: Boolean(process.env.OPENROUTER_TRANSLATE_API_KEY),
-    });
+      httpStatus: error?.status || 502,
+      errorMessage: error?.message || "Translation service failed.",
+      providerData: error?.providerData || null,
+    };
+    console.error("OPENROUTER TRANSLATION ERROR:", diagnostic);
+    return Response.json(
+      {
+        success: false,
+        message: error?.message || "Translation service failed.",
+        debug: diagnostic,
+      },
+      { status: error?.status && error.status >= 400 && error.status < 600 ? error.status : 502 }
+    );
   }
 }
