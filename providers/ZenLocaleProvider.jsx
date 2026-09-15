@@ -13,6 +13,38 @@ const LocaleContext = createContext(null);
 export function ZenLocaleProvider({ initialLocale = "id", initialMessages, children }) {
   const safeInitialLocale = SUPPORTED_LOCALES.includes(initialLocale) ? initialLocale : "id";
   const [locale, setLocaleState] = useState(safeInitialLocale);
+  // The server-provided initialLocale is only a fallback. On a provider
+  // remount, restore the user's last explicit client preference instead of
+  // silently reverting to the server/default locale. This effect runs once
+  // per provider mount and never follows initialLocale, so navigation or
+  // prop changes cannot overwrite an explicit language choice.
+  useEffect(() => {
+    try {
+      const readPersistedLocale = () => {
+        const localStorageLocale = window.localStorage.getItem("zenai_locale");
+        if (SUPPORTED_LOCALES.includes(localStorageLocale)) return localStorageLocale;
+
+        const cookieLocale = document.cookie
+          .split(";")
+          .map((part) => part.trim())
+          .find((part) => part.startsWith("NEXT_LOCALE="))
+          ?.split("=")[1];
+        if (SUPPORTED_LOCALES.includes(cookieLocale)) return cookieLocale;
+
+        const pendingLocale = window.sessionStorage.getItem("zenai_pending_locale_sync");
+        if (SUPPORTED_LOCALES.includes(pendingLocale)) return pendingLocale;
+
+        return null;
+      };
+
+      const persistedLocale = readPersistedLocale();
+      if (persistedLocale && persistedLocale !== locale) {
+        setLocaleState(persistedLocale);
+      }
+    } catch {}
+    // Initialization/recovery must happen only once per provider mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const setLocale = useCallback((nextLocale) => {
     if (!SUPPORTED_LOCALES.includes(nextLocale)) return;
