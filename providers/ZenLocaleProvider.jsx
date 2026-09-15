@@ -19,30 +19,39 @@ export function ZenLocaleProvider({ initialLocale = "id", initialMessages, child
   // per provider mount and never follows initialLocale, so navigation or
   // prop changes cannot overwrite an explicit language choice.
   useEffect(() => {
-    try {
-      const readPersistedLocale = () => {
+    const restorePersistedLocale = () => {
+      try {
         const localStorageLocale = window.localStorage.getItem("zenai_locale");
-        if (SUPPORTED_LOCALES.includes(localStorageLocale)) return localStorageLocale;
-
         const cookieLocale = document.cookie
           .split(";")
           .map((part) => part.trim())
           .find((part) => part.startsWith("NEXT_LOCALE="))
           ?.split("=")[1];
-        if (SUPPORTED_LOCALES.includes(cookieLocale)) return cookieLocale;
-
         const pendingLocale = window.sessionStorage.getItem("zenai_pending_locale_sync");
-        if (SUPPORTED_LOCALES.includes(pendingLocale)) return pendingLocale;
+        const persistedLocale = [localStorageLocale, cookieLocale, pendingLocale]
+          .find((candidate) => SUPPORTED_LOCALES.includes(candidate));
 
-        return null;
-      };
+        if (persistedLocale && persistedLocale !== locale) {
+          setLocaleState(persistedLocale);
+        }
+      } catch {}
+    };
 
-      const persistedLocale = readPersistedLocale();
-      if (persistedLocale && persistedLocale !== locale) {
-        setLocaleState(persistedLocale);
-      }
-    } catch {}
-    // Initialization/recovery must happen only once per provider mount.
+    // Restore once on mount and when a browser restores/resumes the page.
+    // User-selected locale remains authoritative; these listeners only recover
+    // the already-persisted choice and never select a new language themselves.
+    restorePersistedLocale();
+    window.addEventListener("pageshow", restorePersistedLocale);
+    window.addEventListener("focus", restorePersistedLocale);
+    document.addEventListener("visibilitychange", restorePersistedLocale);
+
+    return () => {
+      window.removeEventListener("pageshow", restorePersistedLocale);
+      window.removeEventListener("focus", restorePersistedLocale);
+      document.removeEventListener("visibilitychange", restorePersistedLocale);
+    };
+    // locale is intentionally omitted: restoration must not continuously
+    // re-apply persisted state after every locale render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -50,7 +59,6 @@ export function ZenLocaleProvider({ initialLocale = "id", initialMessages, child
     if (!SUPPORTED_LOCALES.includes(nextLocale)) return;
     setLocaleState((current) => (current === nextLocale ? current : nextLocale));
     try {
-      window.dispatchEvent(new CustomEvent("zenai:output-language-change", { detail: { locale: nextLocale } }));
       document.cookie = `NEXT_LOCALE=${nextLocale}; Path=/; Max-Age=31536000; SameSite=Lax`;
       window.localStorage.setItem("zenai_locale", nextLocale);
       window.sessionStorage.setItem("zenai_pending_locale_sync", nextLocale);
