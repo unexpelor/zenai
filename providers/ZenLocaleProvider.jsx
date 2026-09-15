@@ -18,6 +18,7 @@ export function ZenLocaleProvider({ initialLocale = "id", initialMessages, child
     if (!SUPPORTED_LOCALES.includes(nextLocale)) return;
     setLocaleState((current) => (current === nextLocale ? current : nextLocale));
     try {
+      window.dispatchEvent(new CustomEvent("zenai:output-language-change", { detail: { locale: nextLocale } }));
       document.cookie = `NEXT_LOCALE=${nextLocale}; Path=/; Max-Age=31536000; SameSite=Lax`;
       window.localStorage.setItem("zenai_locale", nextLocale);
       window.sessionStorage.setItem("zenai_pending_locale_sync", nextLocale);
