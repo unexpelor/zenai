@@ -15,6 +15,9 @@ const check = (name, condition) => checks.push({ name, pass: Boolean(condition) 
 check("No reload-based locale switching", !page.includes("window.location.reload") && !switcher.includes("window.location.reload") && !sidebar.includes("window.location.reload"));
 check("Reactive locale provider", layout.includes("ZenLocaleProvider") && provider.includes("NextIntlClientProvider") && provider.includes("setLocaleState"));
 check("Locale persisted in cookie", provider.includes("NEXT_LOCALE=") && provider.includes("Max-Age=31536000"));
+check("Locale restores persisted client preference", provider.includes("localStorage.getItem(\"zenai_locale\")") && provider.includes("useEffect(() =>") && provider.includes("setLocaleState(persistedLocale)"));
+check("Initial locale is not continuously re-applied", !provider.includes("setLocaleState(initialLocale)"));
+check("Language switcher does not duplicate locale event", !switcher.includes("zenai:output-language-change"));
 check("Canonical AI source exists", page.includes("aiCanonicalRef") && page.includes("canonicalValueForSave"));
 check("Latest locale wins", localizationHook.includes("generationRef") && localizationHook.includes("generation === generationRef.current") && page.includes("isCurrent(generation)"));
 check("Abort stale translations", localizationHook.includes("new AbortController()") && localizationHook.includes("controllerRef.current?.abort()"));
