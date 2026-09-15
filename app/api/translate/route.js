@@ -1,12 +1,12 @@
 import { jsonError, rateLimit, requireApiUser } from "../../../lib/api-security";
 
 const MAX_STRING_LENGTH = 12000;
-const MAX_BATCH_CHARS = 9000;
+const MAX_BATCH_CHARS = 7000;
 const MAX_BATCH_STRINGS = 50;
 const MAX_TOTAL_STRINGS = 1500;
 const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
-const DEFAULT_MODEL = "google/gemma-4-26b-a4b-it:free";
-const FALLBACK_MODEL = "openrouter/free";
+const DEFAULT_MODEL = "google/gemma-4-31b-it:free";
+const FALLBACK_MODEL = "google/gemma-4-26b-a4b-it:free";
 
 const TECHNICAL_KEYS = new Set([
   "id", "_id", "uuid", "key", "code", "slug", "url", "uri", "href",
@@ -112,7 +112,8 @@ async function requestOpenRouter({ model, fallbackModels = [], entries, sourceLo
       { role: "user", content: prompt },
     ],
     temperature: 0.1,
-    max_tokens: Math.min(8000, Math.max(1600, Math.ceil((inputChars / 2.2) * maxTokensBoost))),
+    max_tokens: Math.min(8000, Math.max(3000, Math.ceil((inputChars / 2.2) * maxTokensBoost))),
+    reasoning: { effort: "none" },
     stream: false,
   };
   if (useJsonFormat) body.response_format = { type: "json_object" };
@@ -126,7 +127,7 @@ async function requestOpenRouter({ model, fallbackModels = [], entries, sourceLo
       "X-Title": "ZENAI",
     },
     body: JSON.stringify(body),
-    signal: AbortSignal.timeout(25000),
+    signal: AbortSignal.timeout(12000),
   });
 
   const data = await response.json().catch(() => null);
@@ -189,58 +190,11 @@ function parseTranslationJson(text, entries) {
 }
 
 async function translateBatch(entries, { targetLocale, sourceLocale, apiKey }) {
-  const configuredModel = process.env.OPENROUTER_TRANSLATE_MODEL || DEFAULT_MODEL;
+  const configuredModel = DEFAULT_MODEL;
   const fallbackModels = [FALLBACK_MODEL].filter((value) => value && value !== configuredModel);
-  let lastError = null;
 
-  // Let OpenRouter perform model-level failover in one request instead of
-  // making several sequential provider calls. This is both faster and more
-  // reliable when the free provider returns a transient failure.
-  try {
-    const text = await requestOpenRouter({
-      model: configuredModel,
-      fallbackModels,
-      entries,
-      sourceLocale,
-      targetLocale,
-      apiKey,
-      useJsonFormat: false,
-    });
-    return parseTranslationJson(text, entries);
-  } catch (error) {
-    lastError = error;
-    console.warn("Translation provider attempt failed:", {
-      model: configuredModel,
-      fallbacks: fallbackModels,
-      status: error?.status,
-      message: error?.message,
-      provider: error?.providerData,
-    });
-  }
-
-  // If the provider exhausted its output budget, retry once with a larger
-  // budget. This specifically prevents an otherwise valid JSON translation
-  // from ending as an empty/truncated completion.
-  if (lastError?.providerData?.finish_reason === "length") {
-    try {
-      const text = await requestOpenRouter({
-        model: configuredModel,
-        fallbackModels,
-        entries,
-        sourceLocale,
-        targetLocale,
-        apiKey,
-        useJsonFormat: false,
-        maxTokensBoost: 1.8,
-      });
-      return parseTranslationJson(text, entries);
-    } catch (error) {
-      lastError = error;
-    }
-  }
-
-  // Structured output is a final compatibility fallback for providers that
-  // support JSON mode but fail the plain prompt.
+  // One provider request only. OpenRouter handles model failover via `models`;
+  // avoid sequential retries that can leave the browser request pending for 30-60s.
   try {
     const text = await requestOpenRouter({
       model: configuredModel,
@@ -250,14 +204,15 @@ async function translateBatch(entries, { targetLocale, sourceLocale, apiKey }) {
       targetLocale,
       apiKey,
       useJsonFormat: true,
-      maxTokensBoost: 1.3,
     });
     return parseTranslationJson(text, entries);
   } catch (error) {
-    lastError = error;
+    // A structured-output retry is intentionally omitted: on the free tier it
+    // can create another long-running provider request without improving the
+    // user's experience. The route returns promptly with the real provider
+    // diagnostic so the frontend can keep the original output visible.
+    throw error;
   }
-
-  throw lastError || new Error("Translation provider failed.");
 }
 
 export async function POST(request) {
@@ -310,7 +265,7 @@ export async function POST(request) {
       content: translatedContent,
       translated: true,
       provider: "openrouter",
-      model: process.env.OPENROUTER_TRANSLATE_MODEL || DEFAULT_MODEL,
+      model: DEFAULT_MODEL,
     });
   } catch (error) {
     console.error("OPENROUTER TRANSLATION ERROR:", {
