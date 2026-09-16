@@ -5070,15 +5070,118 @@ padding: isMobile ? "16px 12px" : "32px",
                 }}
               >{uiText('Ceritakan usaha Anda','Tell Your Business')}</h3>
 
-              <p
-                style={{
-                  color: darkMode ? "#CBD5E1" : "#64748B",
-                  lineHeight: "1.6",
-                  marginBottom: "24px"
-                }}
-              >
-                {uiText("Jelaskan usaha Anda dengan bahasa biasa. Semakin lengkap informasi yang diberikan, semakin baik ZENAI memahami kondisi usaha Anda.", "Describe your business in plain language. The more complete the information you provide, the better ZENAI can understand your business condition.")}
-              </p>
+<p
+  style={{
+    color: darkMode ? "#CBD5E1" : "#64748B",
+    lineHeight: "1.6",
+    marginBottom: "24px"
+  }}
+>
+  {uiText(
+    `Jelaskan usaha Anda dengan bahasa biasa. Minimal sebutkan 3 hal berikut:`,
+    `Describe your business in plain language. At minimum, mention these 3 things:`
+  )}
+
+  <div
+    style={{
+      display: "flex",
+      flexDirection: "column",
+      gap: "14px",
+      marginTop: "16px",
+      marginBottom: "18px"
+    }}
+  >
+    {[
+      {
+        number: "1",
+        title: uiText("Bidang usaha", "Business field"),
+        description: uiText(
+          "Anda menjual produk atau jasa apa?",
+          "What product or service do you sell?"
+        )
+      },
+      {
+        number: "2",
+        title: uiText(
+          "Target pasar & lokasi usaha",
+          "Target market & business location"
+        ),
+        description: uiText(
+          "Siapa pelanggan Anda dan di mana usaha Anda beroperasi?",
+          "Who are your customers and where does your business operate?"
+        )
+      },
+      {
+        number: "3",
+        title: uiText("Kendala", "Challenges"),
+        description: uiText(
+          "Masalah atau kesulitan apa yang sedang dihadapi?",
+          "What problems or difficulties are you currently facing?"
+        )
+      }
+    ].map((item) => (
+      <div
+        key={item.number}
+        style={{
+          display: "flex",
+          alignItems: "flex-start",
+          gap: "12px"
+        }}
+      >
+        <div
+          style={{
+            flex: "0 0 30px",
+            width: "30px",
+            height: "30px",
+            borderRadius: "50%",
+            background: darkMode ? "#1E3A8A" : "#E8F1FF",
+            color: darkMode ? "#BFDBFE" : "#2563EB",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontWeight: 700,
+            fontSize: "14px"
+          }}
+        >
+          {item.number}
+        </div>
+
+        <div style={{ minWidth: 0 }}>
+          <div
+            style={{
+              fontWeight: 700,
+              color: darkMode ? "#F8FAFC" : "#172554",
+              marginBottom: "2px"
+            }}
+          >
+            {item.title}
+          </div>
+
+          <div
+            style={{
+              color: darkMode ? "#CBD5E1" : "#64748B",
+              lineHeight: "1.5"
+            }}
+          >
+            {item.description}
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+
+  <div
+    style={{
+      color: darkMode ? "#94A3B8" : "#64748B",
+      lineHeight: "1.6"
+    }}
+  >
+    {uiText(
+      "Semakin lengkap informasi yang Anda berikan, semakin akurat ZENAI memahami kondisi dan memberikan analisis yang relevan untuk usaha Anda.",
+      "The more complete your information, the more accurately ZENAI can understand your business and provide relevant analysis."
+    )}
+  </div>
+</p>
 
 
               {/* TEXT INPUT */}
