@@ -109,16 +109,16 @@ async function openrouter(
   system,
   jsonMode = false
 ) {
-  if (!process.env.OPENROUTER_API_KEY) {
+  if (!process.env.ZENAI_OPENROUTER_FALLBACK_KEY) {
     throw new Error(
-      "OPENROUTER_API_KEY tidak dikonfigurasi"
+      "ZENAI_OPENROUTER_FALLBACK_KEY tidak dikonfigurasi"
     );
   }
 
   const body = {
-    model:
-      process.env.OPENROUTER_MODEL ||
-      "google/gemma-4-26b-a4b-it:free",
+    // Last-resort fallback must always use OpenRouter's free router.
+    // Do not promote a specific model or a paid model through env config.
+    model: "openrouter/free",
 
     messages: [
       {
@@ -151,7 +151,7 @@ async function openrouter(
         "Content-Type": "application/json",
 
         Authorization:
-          `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          `Bearer ${process.env.ZENAI_OPENROUTER_FALLBACK_KEY}`,
       },
 
       body: JSON.stringify(body),
@@ -388,10 +388,11 @@ export async function POST(request) {
     // PROVIDER PRIORITY
     //
     // TEXT:
-    // Groq → OpenRouter → Gemini
+    //   Groq → Gemini → OpenRouter (LAST RESORT)
     //
     // IMAGE / AUDIO:
-    // Gemini
+    //   Gemini only. OpenRouter is intentionally NOT used here because
+    //   this adapter is text-only and must not silently discard media.
     // =========================
 
     const providers =
@@ -401,8 +402,8 @@ export async function POST(request) {
           ]
         : [
             "groq",
-            "openrouter",
             "gemini",
+            "openrouter",
           ];
 
     const errors = [];
@@ -432,8 +433,10 @@ export async function POST(request) {
         }
 
         // =====================
-        // OPENROUTER
+        // OPENROUTER — LAST RESORT ONLY
         // =====================
+        // This branch is intentionally after every existing text provider.
+        // Never move it ahead of an existing provider.
 
         if (
           provider === "openrouter"
@@ -514,5 +517,3 @@ export async function POST(request) {
       { status: 500 }
     );
   }
-        }
-        
