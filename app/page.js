@@ -5077,13 +5077,24 @@ padding: isMobile ? "16px 12px" : "32px",
                   marginBottom: "24px"
                 }}
               >
-                {uiText("Jelaskan usaha Anda dengan bahasa biasa. Minimal sebutkan 3 hal berikut:
+                {uiText(
+  `Jelaskan usaha Anda dengan bahasa biasa.
 
-Bidang usaha — Anda menjual produk atau jasa apa?
-Target pasar & lokasi usaha — Siapa pelanggan Anda dan di mana usaha Anda beroperasi?
-Kendala — Masalah atau kesulitan apa yang sedang dihadapi?
+Minimal sebutkan 3 hal berikut:
+1. Bidang usaha — Anda menjual produk atau jasa apa?
+2. Target pasar & lokasi usaha — Siapa pelanggan Anda dan di mana usaha Anda beroperasi?
+3. Kendala — Masalah atau kesulitan apa yang sedang dihadapi?
 
-Semakin lengkap informasi yang Anda berikan, semakin akurat ZENAI memahami kondisi dan memberikan analisis yang relevan untuk usaha Anda.", "Describe your business in plain language. The more complete the information you provide, the better ZENAI can understand your business condition.")}
+Semakin lengkap informasi yang Anda berikan, semakin akurat ZENAI memahami kondisi dan memberikan analisis yang relevan untuk usaha Anda.`,
+  `Describe your business in plain language.
+
+At minimum, mention these 3 things:
+1. Business field — What product or service do you sell?
+2. Target market & business location — Who are your customers and where does your business operate?
+3. Challenges — What problems or difficulties are you currently facing?
+
+The more complete your information, the more accurately ZENAI can understand your business and provide relevant analysis.`
+)}
               </p>
 
 
