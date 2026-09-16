@@ -1,423 +1,302 @@
-"use client";
+“use client”;
 
-import { useEffect, useRef, useState } from "react";
-import { useLocale, useTranslations } from "next-intl";
-import { createClient } from "../lib/supabase/client";
-import BusinessGrowthLoop from "../components/BusinessGrowthLoop";
-import ZenLanding from "../components/ZenLanding";
-import { stableHash } from "../lib/localization/translateContent";
-import { createLocalizationCacheKey, readLocalizationCache, writeLocalizationCache } from "../lib/localization/localizationCache";
+import { useEffect, useRef, useState } from “react”; import { useLocale,
+useTranslations } from “next-intl”; import { createClient } from
+“../lib/supabase/client”; import BusinessGrowthLoop from
+“../components/BusinessGrowthLoop”; import ZenLanding from
+“../components/ZenLanding”; import { stableHash } from
+“../lib/localization/translateContent”; import {
+createLocalizationCacheKey, readLocalizationCache,
+writeLocalizationCache } from “../lib/localization/localizationCache”;
 
-function safeArray(value) {
-  return Array.isArray(value) ? value : [];
-}
+function safeArray(value) { return Array.isArray(value) ? value : []; }
 
-function safeText(value, fallback = "") {
-  if (value === null || value === undefined) return fallback;
-  if (typeof value === "string" || typeof value === "number") return String(value);
-  if (Array.isArray(value)) return value.map((item) => safeText(item)).filter(Boolean).join(", ");
-  if (typeof value === "object") {
-    const preferred = value.name ?? value.title ?? value.label ?? value.description ?? value.summary ?? value.text ?? value.value;
-    if (preferred !== undefined) return safeText(preferred, fallback);
-    return Object.values(value).map((item) => safeText(item)).filter(Boolean).join(", ");
-  }
-  return fallback;
-}
+function safeText(value, fallback = ““) { if (value === null || value
+=== undefined) return fallback; if (typeof value ===”string” || typeof
+value === “number”) return String(value); if (Array.isArray(value))
+return value.map((item) => safeText(item)).filter(Boolean).join(“,”); if
+(typeof value === “object”) { const preferred = value.name ??
+value.title ?? value.label ?? value.description ?? value.summary ??
+value.text ?? value.value; if (preferred !== undefined) return
+safeText(preferred, fallback); return Object.values(value).map((item) =>
+safeText(item)).filter(Boolean).join(“,”); } return fallback; }
 
-function normalizeBusiness(value) {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
-  return {
-    ...value,
-    name: safeText(value.name),
-    product: safeText(value.product),
-    description: safeText(value.description),
-    summary: safeText(value.summary),
-    targetMarket: safeText(value.targetMarket),
-    location: safeText(value.location ?? value.lokasi),
-    strengths: safeArray(value.strengths),
-    weaknesses: safeArray(value.weaknesses),
-    opportunities: safeArray(value.opportunities),
-    risks: safeArray(value.risks),
-  };
-}
+function normalizeBusiness(value) { if (!value || typeof value !==
+“object” || Array.isArray(value)) return null; return { …value, name:
+safeText(value.name), product: safeText(value.product), description:
+safeText(value.description), summary: safeText(value.summary),
+targetMarket: safeText(value.targetMarket), location:
+safeText(value.location ?? value.lokasi), strengths:
+safeArray(value.strengths), weaknesses: safeArray(value.weaknesses),
+opportunities: safeArray(value.opportunities), risks:
+safeArray(value.risks), }; }
 
-function normalizePulse(value) {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
-  return { ...value, positive: safeArray(value.positive), attention: safeArray(value.attention), priority: safeArray(value.priority) };
-}
+function normalizePulse(value) { if (!value || typeof value !== “object”
+|| Array.isArray(value)) return null; return { …value, positive:
+safeArray(value.positive), attention: safeArray(value.attention),
+priority: safeArray(value.priority) }; }
 
-function normalizeDiagnosis(value) {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
-  return { ...value, strengths: safeArray(value.strengths), problems: safeArray(value.problems), opportunities: safeArray(value.opportunities), recommendations: safeArray(value.recommendations) };
-}
+function normalizeDiagnosis(value) { if (!value || typeof value !==
+“object” || Array.isArray(value)) return null; return { …value,
+strengths: safeArray(value.strengths), problems:
+safeArray(value.problems), opportunities:
+safeArray(value.opportunities), recommendations:
+safeArray(value.recommendations) }; }
 
-function normalizeMarket(value) {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
-  return {
-    ...value,
-    analysis: {
-      ...(value.analysis && typeof value.analysis === "object" ? value.analysis : {}),
-      externalFactors: safeArray(value.analysis?.externalFactors),
-      risks: safeArray(value.analysis?.risks),
-      opportunities: safeArray(value.analysis?.opportunities),
-    },
-  };
-}
+function normalizeMarket(value) { if (!value || typeof value !==
+“object” || Array.isArray(value)) return null; return { …value,
+analysis: { …(value.analysis && typeof value.analysis === “object” ?
+value.analysis : {}), externalFactors:
+safeArray(value.analysis?.externalFactors), risks:
+safeArray(value.analysis?.risks), opportunities:
+safeArray(value.analysis?.opportunities), }, }; }
 
-function normalizeAutopilot(value) {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
-  return {
-    ...value,
-    plan7: safeArray(value.plan7),
-    plan14: safeArray(value.plan14),
-    plan30: safeArray(value.plan30),
-    plan: safeArray(value.plan),
-  };
-}
+function normalizeAutopilot(value) { if (!value || typeof value !==
+“object” || Array.isArray(value)) return null; return { …value, plan7:
+safeArray(value.plan7), plan14: safeArray(value.plan14), plan30:
+safeArray(value.plan30), plan: safeArray(value.plan), }; }
 
-function normalizeDecision(value) {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
-  return {
-    ...value,
-    linked: safeArray(value.linked),
-    boundary: {
-      ...(value.boundary && typeof value.boundary === "object" ? value.boundary : {}),
-      value: value.boundary?.value ?? null,
-      explanation: String(value.boundary?.explanation || ""),
-    },
-  };
-}
+function normalizeDecision(value) { if (!value || typeof value !==
+“object” || Array.isArray(value)) return null; return { …value, linked:
+safeArray(value.linked), boundary: { …(value.boundary && typeof
+value.boundary === “object” ? value.boundary : {}), value:
+value.boundary?.value ?? null, explanation:
+String(value.boundary?.explanation || ““), }, }; }
 
+function ZenIcon({ name, size = 18, strokeWidth = 1.9 }) { const common
+= { width: size, height: size, viewBox: “0 0 24 24”, fill: “none”,
+stroke: “currentColor”, strokeWidth, strokeLinecap: “round”,
+strokeLinejoin: “round”, “aria-hidden”: true }; const paths = {
+dashboard: <></>, capture: <></>, activity: <></>, diagnosis: <></>,
+perspective: <></>, strategy: <></>, finance: <></>, intelligence:
+<></>, guide: <></>, settings: <></>, logout: <></>, menu: <></>, arrow:
+<></>, check: <></>, }; return <svg {…common}>{paths[name] ||
+paths.dashboard}; } export default function Home() { const t =
+useTranslations(); const locale = useLocale(); const uiText = (id, en)
+=> (locale === “en” ? en : id);
 
-function ZenIcon({ name, size = 18, strokeWidth = 1.9 }) {
-  const common = { width: size, height: size, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth, strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": true };
-  const paths = {
-    dashboard: <><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></>,
-    capture: <><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/></>,
-    activity: <><path d="M3 12h4l3-8 4 16 3-8h4"/></>,
-    diagnosis: <><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/><path d="M11 8v6M8 11h6"/></>,
-    perspective: <><path d="M12 3 3 7.5 12 12l9-4.5Z"/><path d="M5 10v5c0 2 3.1 4 7 4s7-2 7-4v-5"/></>,
-    strategy: <><path d="M9 18h6"/><path d="M10 22h4"/><path d="M8 14a6 6 0 1 1 8 0c-.8.6-1 1.5-1 2H9c0-.5-.2-1.4-1-2Z"/></>,
-    finance: <><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18"/><path d="M7 15h3"/></>,
-    intelligence: <><path d="M9.5 3.5a3.5 3.5 0 0 0-3 5.3A4.5 4.5 0 0 0 8 17h1.5"/><path d="M14.5 3.5a3.5 3.5 0 0 1 3 5.3A4.5 4.5 0 0 1 16 17h-1.5"/><path d="M9 12h6M10 7h4M10 17h4"/></>,
-    guide: <><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 1 1 4.3 1.8c-1.1 1-1.8 1.4-1.8 2.7"/><path d="M12 17h.01"/></>,
-    settings: <><circle cx="12" cy="12" r="3.5"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-1.4 1.4-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V20h-2v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1L9 17.4l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H7v-2h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9L8.2 9.4 9.6 8l.1.1a1.7 1.7 0 0 0 1.9.3 1.7 1.7 0 0 0 1-1.5V6h2v.9a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1L19 9.4l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.5 1h.9v2h-.9a1.7 1.7 0 0 0-1.5.6Z"/></>,
-    logout: <><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/><path d="M21 19V5a2 2 0 0 0-2-2h-6"/></>,
-    menu: <><path d="M4 6h16M4 12h16M4 18h16"/></>,
-    arrow: <><path d="M5 12h14M13 6l6 6-6 6"/></>,
-    check: <><path d="m5 12 4 4L19 6"/></>,
-  };
-  return <svg {...common}>{paths[name] || paths.dashboard}</svg>;
-}
-export default function Home() {
-  const t = useTranslations();
-  const locale = useLocale();
-  const uiText = (id, en) => (locale === "en" ? en : id);
+// UI translations are rendered through next-intl/uiText directly. //
+Avoid DOM-wide MutationObserver translation because it can cause
+expensive // recursive scans during large tab renders (especially
+Advanced Analysis).
 
-  // UI translations are rendered through next-intl/uiText directly.
-  // Avoid DOM-wide MutationObserver translation because it can cause expensive
-  // recursive scans during large tab renders (especially Advanced Analysis).
+const supabase = createClient(); const [authReady, setAuthReady] =
+useState(false); const [session, setSession] = useState(null); const
+[authMode, setAuthMode] = useState(“login”); const [showAuth,
+setShowAuth] = useState(false); const [authEmail, setAuthEmail] =
+useState(““); const [authPassword, setAuthPassword] = useState(”“);
+const [authLoading, setAuthLoading] = useState(false); const
+[authMessage, setAuthMessage] = useState(”“); const [cloudSaving,
+setCloudSaving] = useState(false); const [cloudLoaded, setCloudLoaded] =
+useState(false); const cloudHydratedRef = useRef(false); const
+cloudSaveTimerRef = useRef(null); const [isMobile, setIsMobile] =
+useState(false); const [darkMode, setDarkMode] = useState(false);
 
-  const supabase = createClient();
-  const [authReady, setAuthReady] = useState(false);
-  const [session, setSession] = useState(null);
-  const [authMode, setAuthMode] = useState("login");
-  const [showAuth, setShowAuth] = useState(false);
-  const [authEmail, setAuthEmail] = useState("");
-  const [authPassword, setAuthPassword] = useState("");
-  const [authLoading, setAuthLoading] = useState(false);
-  const [authMessage, setAuthMessage] = useState("");
-  const [cloudSaving, setCloudSaving] = useState(false);
-  const [cloudLoaded, setCloudLoaded] = useState(false);
-  const cloudHydratedRef = useRef(false);
-  const cloudSaveTimerRef = useRef(null);
-  const [isMobile, setIsMobile] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+useEffect(() => { try { const savedTheme =
+window.localStorage.getItem(“zenai_theme”); if (savedTheme === “dark”)
+setDarkMode(true); } catch (error) { console.error(“Gagal membaca
+tema:”, error); } }, []);
 
-  useEffect(() => {
-    try {
-      const savedTheme = window.localStorage.getItem("zenai_theme");
-      if (savedTheme === "dark") setDarkMode(true);
-    } catch (error) {
-      console.error("Gagal membaca tema:", error);
-    }
-  }, []);
+useEffect(() => { try { window.localStorage.setItem(“zenai_theme”,
+darkMode ? “dark” : “light”); } catch (error) { console.error(“Gagal
+menyimpan tema:”, error); } }, [darkMode]);
 
-  useEffect(() => {
-    try {
-      window.localStorage.setItem("zenai_theme", darkMode ? "dark" : "light");
-    } catch (error) {
-      console.error("Gagal menyimpan tema:", error);
-    }
-  }, [darkMode]);
+useEffect(() => { document.documentElement.dataset.theme = darkMode ?
+“dark” : “light”; document.body.dataset.theme = darkMode ? “dark” :
+“light”; }, [darkMode]);
 
-  useEffect(() => {
-    document.documentElement.dataset.theme = darkMode ? "dark" : "light";
-    document.body.dataset.theme = darkMode ? "dark" : "light";
-  }, [darkMode]);
+useEffect(() => { const checkScreen = () => { const mobile =
+window.innerWidth <= 768; setIsMobile(mobile); // Pada Android/HP,
+sidebar mulai dalam kondisi tertutup agar konten langsung memenuhi
+layar. if (mobile) setSidebarOpen(false); };
 
+checkScreen(); window.addEventListener(“resize”, checkScreen);
 
-useEffect(() => {
-  const checkScreen = () => {
-    const mobile = window.innerWidth <= 768;
-    setIsMobile(mobile);
-    // Pada Android/HP, sidebar mulai dalam kondisi tertutup agar konten langsung memenuhi layar.
-    if (mobile) setSidebarOpen(false);
-  };
+return () => { window.removeEventListener(“resize”, checkScreen); }; },
+[]);
 
-  checkScreen();
-  window.addEventListener("resize", checkScreen);
+const [tab, setTab] = useState(“capture”); const [sidebarOpen,
+setSidebarOpen] = useState(true);
 
-  return () => {
-    window.removeEventListener("resize", checkScreen);
-  };
-}, []);
+const [text, setText] = useState(““); const [image, setImage] =
+useState(”“);
 
-  const [tab, setTab] = useState("capture");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+const [audio, setAudio] = useState(““); const [audioName, setAudioName]
+= useState(”“); const [audioMimeType, setAudioMimeType] = useState(”“);
 
-  const [text, setText] = useState("");
-  const [image, setImage] = useState("");
+const [isRecording, setIsRecording] = useState(false);
 
-  const [audio, setAudio] = useState("");
-  const [audioName, setAudioName] = useState("");
-  const [audioMimeType, setAudioMimeType] =
-    useState("");
+const [recordingTime, setRecordingTime] = useState(0);
 
-  const [isRecording, setIsRecording] =
-    useState(false);
+const [busy, setBusy] = useState(false); const [provider, setProvider] =
+useState(““);
 
-  const [recordingTime, setRecordingTime] =
-    useState(0);
+const [business, setBusiness] = useState(null);
 
-  const [busy, setBusy] = useState(false);
-  const [provider, setProvider] = useState("");
+const [pulseData, setPulseData] = useState(null);
 
-  const [business, setBusiness] =
-    useState(null);
+const [diagnosis, setDiagnosis] = useState(null);
 
-  const [pulseData, setPulseData] =
-    useState(null);
+const [autopilotData, setAutopilotData] = useState(null);
 
-  const [diagnosis, setDiagnosis] =
-    useState(null);
+const [marketData, setMarketData] = useState(null);
 
-  const [autopilotData, setAutopilotData] =
-    useState(null);
+const [marketLoading, setMarketLoading] = useState(false);
 
-const [marketData, setMarketData] =
-  useState(null);
+const [marketError, setMarketError] = useState(““);
 
-const [marketLoading, setMarketLoading] =
-  useState(false);
+const [healthData, setHealthData] = useState(null); const
+[healthLoading, setHealthLoading] = useState(false); const [healthError,
+setHealthError] = useState(““);
 
-const [marketError, setMarketError] =
-  useState("");
+const getAccessToken = async () => { if (!supabase) return null; const {
+data } = await supabase.auth.getSession(); return
+data?.session?.access_token || null; };
 
-  const [healthData, setHealthData] = useState(null);
-  const [healthLoading, setHealthLoading] = useState(false);
-  const [healthError, setHealthError] = useState("");
+const runLiveHealthCheck = async () => { setHealthLoading(true);
+setHealthError(““); try { const accessToken = await getAccessToken(); if
+(!accessToken) throw new Error(locale ===”en” ? “User session is
+unavailable.” : “Sesi pengguna tidak tersedia.”); const response = await
+fetch(/api/health?locale=${encodeURIComponent(locale)}, { headers: {
+Authorization: Bearer ${accessToken} }, cache: “no-store” }); const
+result = await response.json().catch(() => null); if (!response.ok ||
+!result?.success) throw new Error(result?.message || (locale === “en” ?
+“Health check failed.” : “Health check gagal.”)); setHealthData(result);
+} catch (error) { console.error(“LIVE HEALTH CHECK ERROR:”, error);
+setHealthError(error?.message || (locale === “en” ? “Health check could
+not be completed.” : “Health check gagal dijalankan.”)); } finally {
+setHealthLoading(false); } };
 
-  const getAccessToken = async () => {
-    if (!supabase) return null;
-    const { data } = await supabase.auth.getSession();
-    return data?.session?.access_token || null;
-  };
+const runLiveAiSmokeTest = async () => { setHealthLoading(true);
+setHealthError(““); try { const accessToken = await getAccessToken(); if
+(!accessToken) throw new Error(locale ===”en” ? “User session is
+unavailable.” : “Sesi pengguna tidak tersedia.”); const started =
+performance.now(); const response = await fetch(“/api/ai”, { method:
+“POST”, headers: { “Content-Type”: “application/json”, Authorization:
+Bearer ${accessToken} }, body: JSON.stringify({ prompt: locale === “en”
+? “Reply only with PASS in English. Do not use Indonesian.” : “Balas
+hanya dengan PASS dalam Bahasa Indonesia. Jangan gunakan bahasa
+Inggris.”, system: locale === “en” ? “English-only smoke test. Reply
+exactly: PASS.” : “Uji smoke Bahasa Indonesia. Balas tepat: PASS.”,
+jsonMode: false, locale }), cache: “no-store” }); const result = await
+response.json().catch(() => null); const latency =
+Math.round(performance.now() - started); if (!response.ok ||
+!result?.success) throw new Error(result?.message || (locale === “en” ?
+“AI smoke test failed.” : “AI smoke test gagal.”));
+setHealthData((previous) => ({ …(previous || {}), checkedAt: new
+Date().toISOString(), liveAiSmokeTest: { status: “operational”,
+provider: result.provider || “Unknown”, latencyMs: latency, response:
+String(result.text || ““).trim().slice(0, 20) } })); } catch (error) {
+console.error(”LIVE AI SMOKE TEST ERROR:“, error);
+setHealthError(error?.message || (locale ===”en” ? “AI smoke test
+failed.” : “AI smoke test gagal.”)); } finally {
+setHealthLoading(false); } };
 
-  const runLiveHealthCheck = async () => {
-    setHealthLoading(true); setHealthError("");
-    try {
-      const accessToken = await getAccessToken();
-      if (!accessToken) throw new Error(locale === "en" ? "User session is unavailable." : "Sesi pengguna tidak tersedia.");
-      const response = await fetch(`/api/health?locale=${encodeURIComponent(locale)}`, { headers: { Authorization: `Bearer ${accessToken}` }, cache: "no-store" });
-      const result = await response.json().catch(() => null);
-      if (!response.ok || !result?.success) throw new Error(result?.message || (locale === "en" ? "Health check failed." : "Health check gagal."));
-      setHealthData(result);
-    } catch (error) {
-      console.error("LIVE HEALTH CHECK ERROR:", error);
-      setHealthError(error?.message || (locale === "en" ? "Health check could not be completed." : "Health check gagal dijalankan."));
-    } finally { setHealthLoading(false); }
-  };
+// Refresh Health data automatically when the interface language
+changes, // so previously loaded Indonesian details are never shown in
+English mode. useEffect(() => { if (!healthData) return;
+runLiveHealthCheck(); // Intentionally depend only on locale: re-check
+once per language change. // eslint-disable-next-line
+react-hooks/exhaustive-deps }, [locale]);
 
-  const runLiveAiSmokeTest = async () => {
-    setHealthLoading(true); setHealthError("");
-    try {
-      const accessToken = await getAccessToken();
-      if (!accessToken) throw new Error(locale === "en" ? "User session is unavailable." : "Sesi pengguna tidak tersedia.");
-      const started = performance.now();
-      const response = await fetch("/api/ai", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` }, body: JSON.stringify({ prompt: locale === "en" ? "Reply only with PASS in English. Do not use Indonesian." : "Balas hanya dengan PASS dalam Bahasa Indonesia. Jangan gunakan bahasa Inggris.", system: locale === "en" ? "English-only smoke test. Reply exactly: PASS." : "Uji smoke Bahasa Indonesia. Balas tepat: PASS.", jsonMode: false, locale }), cache: "no-store" });
-      const result = await response.json().catch(() => null);
-      const latency = Math.round(performance.now() - started);
-      if (!response.ok || !result?.success) throw new Error(result?.message || (locale === "en" ? "AI smoke test failed." : "AI smoke test gagal."));
-      setHealthData((previous) => ({ ...(previous || {}), checkedAt: new Date().toISOString(), liveAiSmokeTest: { status: "operational", provider: result.provider || "Unknown", latencyMs: latency, response: String(result.text || "").trim().slice(0, 20) } }));
-    } catch (error) {
-      console.error("LIVE AI SMOKE TEST ERROR:", error);
-      setHealthError(error?.message || (locale === "en" ? "AI smoke test failed." : "AI smoke test gagal."));
-    } finally { setHealthLoading(false); }
-  };
+const [businessUpdates, setBusinessUpdates] = useState([]);
 
-  // Refresh Health data automatically when the interface language changes,
-  // so previously loaded Indonesian details are never shown in English mode.
-  useEffect(() => {
-    if (!healthData) return;
-    runLiveHealthCheck();
-    // Intentionally depend only on locale: re-check once per language change.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [locale]);
+const [growthActions, setGrowthActions] = useState([]);
 
-  const [businessUpdates, setBusinessUpdates] =
-    useState([]);
+const [growthEvaluating, setGrowthEvaluating] = useState(false);
 
-  const [growthActions, setGrowthActions] =
-    useState([]);
+const [updateText, setUpdateText] = useState(““);
 
-  const [growthEvaluating, setGrowthEvaluating] =
-    useState(false);
+const [days, setDays] = useState(7);
 
-  const [updateText, setUpdateText] =
-    useState("");
+const mediaRecorderRef = useRef(null); const mediaStreamRef =
+useRef(null); const audioChunksRef = useRef([]); const recordingTimerRef
+= useRef(null);
 
-  const [days, setDays] = useState(7);
+// ========================= // LAPORAN KEUANGAN // Data keuangan tidak
+disimpan di localStorage. // Saat pengguna login, source of truth adalah
+Supabase cloud state. // Jika Supabase tidak dikonfigurasi, data hanya
+berada di memory sesi. // ========================= const
+[financePeriod, setFinancePeriod] = useState(““);
 
-  const mediaRecorderRef = useRef(null);
-  const mediaStreamRef = useRef(null);
-  const audioChunksRef = useRef([]);
-  const recordingTimerRef = useRef(null);
+useEffect(() => { if (!financePeriod) setFinancePeriod(new
+Date().toISOString().slice(0, 7)); }, [financePeriod]);
 
-  // =========================
-  // LAPORAN KEUANGAN
-  // Data keuangan tidak disimpan di localStorage.
-  // Saat pengguna login, source of truth adalah Supabase cloud state.
-  // Jika Supabase tidak dikonfigurasi, data hanya berada di memory sesi.
-  // =========================
-  const [financePeriod, setFinancePeriod] = useState("");
+// Periode pembanding dapat dipilih secara manual oleh pengguna. const
+[financeComparisonPeriod, setFinanceComparisonPeriod] = useState(““);
 
-  useEffect(() => {
-    if (!financePeriod) setFinancePeriod(new Date().toISOString().slice(0, 7));
-  }, [financePeriod]);
+useEffect(() => { if (!financeComparisonPeriod) { const now = new
+Date(); const previous = new Date(now.getFullYear(), now.getMonth() - 1,
+1);
+setFinanceComparisonPeriod(${previous.getFullYear()}-${String(previous.getMonth() + 1).padStart(2, "0")});
+} }, [financeComparisonPeriod]);
 
-  // Periode pembanding dapat dipilih secara manual oleh pengguna.
-  const [financeComparisonPeriod, setFinanceComparisonPeriod] = useState("");
+const [financeTransactions, setFinanceTransactions] = useState([]);
 
-  useEffect(() => {
-    if (!financeComparisonPeriod) {
-      const now = new Date();
-      const previous = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-      setFinanceComparisonPeriod(`${previous.getFullYear()}-${String(previous.getMonth() + 1).padStart(2, "0")}`);
-    }
-  }, [financeComparisonPeriod]);
+const [financeForm, setFinanceForm] = useState({ date: ““,
+description:”“, amount:”“, type:”income”, account: “bank” });
 
-  const [financeTransactions, setFinanceTransactions] =
-    useState([]);
+const [editingFinanceId, setEditingFinanceId] = useState(null);
 
-  const [financeForm, setFinanceForm] =
-    useState({
-      date: "",
-      description: "",
-      amount: "",
-      type: "income",
-      account: "bank"
-    });
+const [financeView, setFinanceView] = useState(“summary”);
 
-  const [editingFinanceId, setEditingFinanceId] =
-    useState(null);
+// ========================= // ZENAI ANALISIS LANJUTAN // Modul untuk
+mengevaluasi kondisi, risiko, skenario, dan keputusan bisnis secara
+terukur. // ========================= const [decisionText,
+setDecisionText] = useState(““); const [decisionResult,
+setDecisionResult] = useState(null); const [decisionRunning,
+setDecisionRunning] = useState(false); const [decisionScenario,
+setDecisionScenario] = useState({ currentPrice:”“, plannedPrice:”“,
+volumeChange:”“, hppChange:”“, expenseChange:”“, investmentAmount:”“,
+expectedRevenue:”“, incrementalHppRate:”“, incrementalExpense:”“,
+revenueChange:”“, cashImpact:”” }); const [decisionType,
+setDecisionType] = useState(“custom”);
 
-  const [financeView, setFinanceView] =
-    useState("summary");
+const [financeMessage, setFinanceMessage] = useState(““);
 
-  // =========================
-  // ZENAI ANALISIS LANJUTAN
-  // Modul untuk mengevaluasi kondisi, risiko, skenario, dan keputusan bisnis secara terukur.
-  // =========================
-  const [decisionText, setDecisionText] = useState("");
-  const [decisionResult, setDecisionResult] = useState(null);
-  const [decisionRunning, setDecisionRunning] = useState(false);
-  const [decisionScenario, setDecisionScenario] = useState({
-    currentPrice: "",
-    plannedPrice: "",
-    volumeChange: "",
-    hppChange: "",
-    expenseChange: "",
-    investmentAmount: "",
-    expectedRevenue: "",
-    incrementalHppRate: "",
-    incrementalExpense: "",
-    revenueChange: "",
-    cashImpact: ""
-  });
-  const [decisionType, setDecisionType] = useState("custom");
+useEffect(() => { if (!financeForm.date) setFinanceForm((current) => ({
+…current, date: new Date().toISOString().slice(0, 10) })); },
+[financeForm.date]);
 
-  const [financeMessage, setFinanceMessage] =
-    useState("");
+const financePersistenceNotice = supabase ? “Data keuangan tersimpan di
+akun Supabase Anda.” : “Mode tanpa Supabase: data keuangan hanya
+tersimpan selama sesi ini dan tidak disimpan ke browser.”;
 
-  useEffect(() => {
-    if (!financeForm.date) setFinanceForm((current) => ({ ...current, date: new Date().toISOString().slice(0, 10) }));
-  }, [financeForm.date]);
+const financeTypes = [ { value: “income”, label:
+t(“finance.types.income”) }, { value: “expense”, label:
+t(“finance.types.expense”) }, { value: “hpp”, label:
+t(“finance.types.hpp”) }, { value: “capital”, label:
+t(“finance.types.capital”) }, { value: “withdrawal”, label:
+t(“finance.types.withdrawal”) }, { value: “receivable”, label:
+t(“finance.types.receivable”) }, { value: “loan”, label:
+t(“finance.types.loan”) } ];
 
-  const financePersistenceNotice = supabase
-    ? "Data keuangan tersimpan di akun Supabase Anda."
-    : "Mode tanpa Supabase: data keuangan hanya tersimpan selama sesi ini dan tidak disimpan ke browser.";
+const financeAccounts = [ { value: “cash”, label: uiText(‘Kas’,‘Cash’)
+}, { value: “bank”, label: uiText(“Bank”,“Bank”) }, { value:
+“receivable”, label: uiText(“Piutang”,“Receivables”) } ];
 
-  const financeTypes = [
-    { value: "income", label: t("finance.types.income") },
-    { value: "expense", label: t("finance.types.expense") },
-    { value: "hpp", label: t("finance.types.hpp") },
-    { value: "capital", label: t("finance.types.capital") },
-    { value: "withdrawal", label: t("finance.types.withdrawal") },
-    { value: "receivable", label: t("finance.types.receivable") },
-    { value: "loan", label: t("finance.types.loan") }
-  ];
+// ========================= // BUSINESS UPDATES / HISTORY // Must be
+declared before cloud persistence effects because the cloud // save
+effect depends on businessUpdates. // ========================= const
+clearUserScopedState = () => { setBusiness(null); setPulseData(null);
+setDiagnosis(null); [“business”, “pulseData”, “diagnosis”].forEach((key)
+=> { delete aiCanonicalRef.current[key]; }); setAutopilotData(null);
+setMarketData(null); [“autopilotData”, “marketData”].forEach((key) => {
+delete aiCanonicalRef.current[key]; }); setMarketError(““);
+setBusinessUpdates([]); setGrowthActions([]); [”businessUpdates”,
+”growthActions”, ”decisionResult”].forEach((key) => { delete
+aiCanonicalRef.current[key]; }); setFinanceTransactions([]);
+setFinancePeriod(new Date().toISOString().slice(0, 7)); setText(”“);
+setImage(”“); setAudio(”“); setAudioName(”“); setAudioMimeType(”“);
+setProvider(”“); setUpdateText(”“); setFinanceMessage(”“);
+setEditingFinanceId(null); setDecisionText(”“); setDecisionResult(null);
+setDecisionRunning(false); setTab(”capture”); };
 
-  const financeAccounts = [
-    { value: "cash", label: uiText('Kas','Cash') },
-    { value: "bank", label: uiText("Bank","Bank") },
-    { value: "receivable", label: uiText("Piutang","Receivables") }
-  ];
-
-  // =========================
-  // BUSINESS UPDATES / HISTORY
-  // Must be declared before cloud persistence effects because the cloud
-  // save effect depends on businessUpdates.
-  // =========================
-  const clearUserScopedState = () => {
-    setBusiness(null);
-    setPulseData(null);
-    setDiagnosis(null);
-    ["business", "pulseData", "diagnosis"].forEach((key) => { delete aiCanonicalRef.current[key]; });
-    setAutopilotData(null);
-    setMarketData(null);
-    ["autopilotData", "marketData"].forEach((key) => { delete aiCanonicalRef.current[key]; });
-    setMarketError("");
-    setBusinessUpdates([]);
-    setGrowthActions([]);
-    ["businessUpdates", "growthActions", "decisionResult"].forEach((key) => { delete aiCanonicalRef.current[key]; });
-    setFinanceTransactions([]);
-    setFinancePeriod(new Date().toISOString().slice(0, 7));
-    setText("");
-    setImage("");
-    setAudio("");
-    setAudioName("");
-    setAudioMimeType("");
-    setProvider("");
-    setUpdateText("");
-    setFinanceMessage("");
-    setEditingFinanceId(null);
-    setDecisionText("");
-    setDecisionResult(null);
-    setDecisionRunning(false);
-    setTab("capture");
-  };
-
-  // =========================
-  // CLOUD PERSISTENCE
-  // Semua hasil penting ZenAI disimpan ke Supabase berdasarkan user.
-  // Data sensitif seperti transaksi keuangan tidak memakai localStorage.
-  // =========================
-  useEffect(() => {
-    if (!supabase) {
-      setAuthReady(true);
-      return;
-    }
+// ========================= // CLOUD PERSISTENCE // Semua hasil penting
+ZenAI disimpan ke Supabase berdasarkan user. // Data sensitif seperti
+transaksi keuangan tidak memakai localStorage. //
+========================= useEffect(() => { if (!supabase) {
+setAuthReady(true); return; }
 
     let active = true;
 
@@ -502,10 +381,11 @@ const [marketError, setMarketError] =
       active = false;
       listener?.subscription?.unsubscribe();
     };
-  }, []);
 
-  useEffect(() => {
-    if (!supabase || !session?.user?.id || !cloudHydratedRef.current) return;
+}, []);
+
+useEffect(() => { if (!supabase || !session?.user?.id ||
+!cloudHydratedRef.current) return;
 
     if (cloudSaveTimerRef.current) {
       clearTimeout(cloudSaveTimerRef.current);
@@ -551,26 +431,13 @@ const [marketError, setMarketError] =
     return () => {
       if (cloudSaveTimerRef.current) clearTimeout(cloudSaveTimerRef.current);
     };
-  }, [
-    session?.user?.id,
-    business,
-    pulseData,
-    diagnosis,
-    autopilotData,
-    marketData,
-    businessUpdates,
-    growthActions,
-    financeTransactions,
-    financePeriod,
-    decisionScenario,
-    decisionType,
-    decisionText,
-    decisionResult,
-    tab
-  ]);
 
-  const handleAuth = async (event) => {
-    event.preventDefault();
+}, [ session?.user?.id, business, pulseData, diagnosis, autopilotData,
+marketData, businessUpdates, growthActions, financeTransactions,
+financePeriod, decisionScenario, decisionType, decisionText,
+decisionResult, tab ]);
+
+const handleAuth = async (event) => { event.preventDefault();
 
     if (!supabase) {
       setAuthMessage(uiText("Supabase belum dikonfigurasi. Tambahkan NEXT_PUBLIC_SUPABASE_URL dan NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.", "Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY."));
@@ -605,27 +472,17 @@ const [marketError, setMarketError] =
     }
 
     setAuthLoading(false);
-  };
 
-  const handleLogout = async () => {
-    if (!supabase) return;
-    cloudHydratedRef.current = false;
-    setCloudLoaded(false);
-    if (cloudSaveTimerRef.current) {
-      clearTimeout(cloudSaveTimerRef.current);
-      cloudSaveTimerRef.current = null;
-    }
-    clearUserScopedState();
-    setSession(null);
-    try {
-      await supabase.auth.signOut();
-    } catch (error) {
-      console.error("Gagal logout:", error);
-    }
-  };
+};
 
-  const formatRupiah = (value) => {
-    const number = Number(value) || 0;
+const handleLogout = async () => { if (!supabase) return;
+cloudHydratedRef.current = false; setCloudLoaded(false); if
+(cloudSaveTimerRef.current) { clearTimeout(cloudSaveTimerRef.current);
+cloudSaveTimerRef.current = null; } clearUserScopedState();
+setSession(null); try { await supabase.auth.signOut(); } catch (error) {
+console.error(“Gagal logout:”, error); } };
+
+const formatRupiah = (value) => { const number = Number(value) || 0;
 
     return new Intl.NumberFormat(
       locale === "en" ? "en-US" : "id-ID",
@@ -635,11 +492,11 @@ const [marketError, setMarketError] =
         maximumFractionDigits: 0
       }
     ).format(number);
-  };
 
-  const financePeriodLabel = (period) => {
-    const value = String(period || "");
-    const match = /^(\d{4})-(\d{2})$/.exec(value);
+};
+
+const financePeriodLabel = (period) => { const value = String(period ||
+““); const match = /^()-()$/.exec(value);
 
     if (!match) return t("finance.invalidPeriod");
 
@@ -657,52 +514,35 @@ const [marketError, setMarketError] =
         year: "numeric"
       }
     );
-  };
 
-  const financeCurrent = (Array.isArray(financeTransactions) ? financeTransactions : []).filter(
-    (item) =>
-      item &&
-      typeof item.date === "string" &&
-      item.date.slice(0, 7) === financePeriod
-  );
+};
 
-  // Periode kedua dipilih manual, bukan otomatis dihitung oleh sistem.
-  const financePreviousPeriod = financeComparisonPeriod;
+const financeCurrent = (Array.isArray(financeTransactions) ?
+financeTransactions : []).filter( (item) => item && typeof item.date ===
+“string” && item.date.slice(0, 7) === financePeriod );
 
-  const financePrevious = (Array.isArray(financeTransactions) ? financeTransactions : []).filter(
-    (item) =>
-      item &&
-      typeof item.date === "string" &&
-      item.date.slice(0, 7) === financePreviousPeriod
-  );
+// Periode kedua dipilih manual, bukan otomatis dihitung oleh sistem.
+const financePreviousPeriod = financeComparisonPeriod;
 
-  // Laporan posisi keuangan menggunakan saldo kumulatif sampai akhir periode,
-  // sedangkan laba rugi dan arus kas tetap menggunakan transaksi periode terpilih.
-  const financeThroughCurrent = (Array.isArray(financeTransactions) ? financeTransactions : []).filter(
-    (item) => item && typeof item.date === "string" && item.date.slice(0, 7) <= financePeriod
-  );
+const financePrevious = (Array.isArray(financeTransactions) ?
+financeTransactions : []).filter( (item) => item && typeof item.date ===
+“string” && item.date.slice(0, 7) === financePreviousPeriod );
 
-  const financeThroughPrevious = (Array.isArray(financeTransactions) ? financeTransactions : []).filter(
-    (item) => item && typeof item.date === "string" && item.date.slice(0, 7) <= financePreviousPeriod
-  );
+// Laporan posisi keuangan menggunakan saldo kumulatif sampai akhir
+periode, // sedangkan laba rugi dan arus kas tetap menggunakan transaksi
+periode terpilih. const financeThroughCurrent =
+(Array.isArray(financeTransactions) ? financeTransactions : []).filter(
+(item) => item && typeof item.date === “string” && item.date.slice(0, 7)
+<= financePeriod );
 
-  const calculateFinance = (periodItems, balanceItems = periodItems) => {
-    const result = {
-      income: 0,
-      hpp: 0,
-      expense: 0,
-      capital: 0,
-      withdrawal: 0,
-      receivable: 0,
-      debt: 0,
-      loan: 0,
-      cash: 0,
-      bank: 0,
-      inventory: 0,
-      cashIn: 0,
-      cashOut: 0,
-      cashChange: 0
-    };
+const financeThroughPrevious = (Array.isArray(financeTransactions) ?
+financeTransactions : []).filter( (item) => item && typeof item.date ===
+“string” && item.date.slice(0, 7) <= financePreviousPeriod );
+
+const calculateFinance = (periodItems, balanceItems = periodItems) => {
+const result = { income: 0, hpp: 0, expense: 0, capital: 0, withdrawal:
+0, receivable: 0, debt: 0, loan: 0, cash: 0, bank: 0, inventory: 0,
+cashIn: 0, cashOut: 0, cashChange: 0 };
 
     const amountOf = (item) => Math.max(0, Number(item.amount) || 0);
     const accountOf = (item) => item.account === "cash" ? "cash" : "bank";
@@ -785,28 +625,23 @@ const [marketError, setMarketError] =
     result.totalEquity = result.capital + result.cumulativeNetProfit - result.withdrawal;
 
     return result;
-  };
 
-  const financeCurrentTotals = calculateFinance(
-    financeCurrent,
-    financeThroughCurrent
-  );
+};
 
-  const financePreviousTotals = calculateFinance(
-    financePrevious,
-    financeThroughPrevious
-  );
+const financeCurrentTotals = calculateFinance( financeCurrent,
+financeThroughCurrent );
 
-  const financeChange = (current, previous) => {
-    if (!previous) {
-      return null;
-    }
+const financePreviousTotals = calculateFinance( financePrevious,
+financeThroughPrevious );
+
+const financeChange = (current, previous) => { if (!previous) { return
+null; }
 
     return ((current - previous) / Math.abs(previous)) * 100;
-  };
 
-  const handleFinanceSubmit = (event) => {
-    event.preventDefault();
+};
+
+const handleFinanceSubmit = (event) => { event.preventDefault();
 
     const amount =
       Number(financeForm.amount);
@@ -877,10 +712,10 @@ const [marketError, setMarketError] =
 
     setEditingFinanceId(null);
     setFinanceView("transactions");
-  };
 
-  const editFinanceTransaction = (item) => {
-    setEditingFinanceId(item.id);
+};
+
+const editFinanceTransaction = (item) => { setEditingFinanceId(item.id);
 
     setFinanceForm({
       date: item.date,
@@ -904,10 +739,10 @@ const [marketError, setMarketError] =
           block: "start"
         });
     });
-  };
 
-  const cancelFinanceEdit = () => {
-    setEditingFinanceId(null);
+};
+
+const cancelFinanceEdit = () => { setEditingFinanceId(null);
 
     setFinanceForm({
       date: new Date().toISOString().slice(0, 10),
@@ -920,14 +755,12 @@ const [marketError, setMarketError] =
     setFinanceMessage(
       "Edit transaksi dibatalkan."
     );
-  };
 
-  const deleteFinanceTransaction = (id) => {
-    setFinanceTransactions((current) =>
-      current.filter(
-        (item) => item.id !== id
-      )
-    );
+};
+
+const deleteFinanceTransaction = (id) => {
+setFinanceTransactions((current) => current.filter( (item) => item.id
+!== id ) );
 
     if (editingFinanceId === id) {
       cancelFinanceEdit();
@@ -936,28 +769,27 @@ const [marketError, setMarketError] =
     setFinanceMessage(
       "Transaksi dihapus."
     );
-  };
 
-  const financeDelta = (current, previous) => {
-    const delta = (Number(current) || 0) - (Number(previous) || 0);
-    const percentage = financeChange(current, previous);
-    return { delta, percentage };
-  };
+};
 
-  const financeChangeLabel = (current, previous, inverse = false) => {
-    const { delta, percentage } = financeDelta(current, previous);
-    if (Number(previous) === 0) {
-      return delta === 0 ? uiText("Tidak berubah","Unchanged") : uiText("Belum ada basis pembanding","No comparison baseline");
-    }
-    const improving = inverse ? delta < 0 : delta > 0;
-    const tone = delta === 0 ? "Stabil" : improving ? "Membaik" : "Menurun";
-    return `${tone} ${delta >= 0 ? "↑" : "↓"} ${formatRupiah(Math.abs(delta))} (${Math.abs(percentage || 0).toFixed(1)}%)`;
-  };
+const financeDelta = (current, previous) => { const delta =
+(Number(current) || 0) - (Number(previous) || 0); const percentage =
+financeChange(current, previous); return { delta, percentage }; };
 
-  const financeInsight = (() => {
-    const current = financeCurrentTotals;
-    const previous = financePreviousTotals;
-    const hasCurrent = current.income !== 0 || current.expense !== 0 || current.hpp !== 0 || current.cashChange !== 0;
+const financeChangeLabel = (current, previous, inverse = false) => {
+const { delta, percentage } = financeDelta(current, previous); if
+(Number(previous) === 0) { return delta === 0 ? uiText(“Tidak
+berubah”,“Unchanged”) : uiText(“Belum ada basis pembanding”,“No
+comparison baseline”); } const improving = inverse ? delta < 0 : delta >
+0; const tone = delta === 0 ? “Stabil” : improving ? “Membaik” :
+“Menurun”; return
+${tone} ${delta >= 0 ? "↑" : "↓"} ${formatRupiah(Math.abs(delta))} (${Math.abs(percentage || 0).toFixed(1)}%);
+};
+
+const financeInsight = (() => { const current = financeCurrentTotals;
+const previous = financePreviousTotals; const hasCurrent =
+current.income !== 0 || current.expense !== 0 || current.hpp !== 0 ||
+current.cashChange !== 0;
 
     if (!hasCurrent) {
       const hasPrevious =
@@ -1105,16 +937,13 @@ const [marketError, setMarketError] =
       points,
       linkedAnalysis
     };
-  })();
 
+})();
 
-  const runDecisionSimulation = async (decisionOverride = null) => {
-    const num = (key) => {
-      const value = decisionScenario?.[key];
-      if (value === "" || value === null || value === undefined) return null;
-      const parsed = Number(value);
-      return Number.isFinite(parsed) ? parsed : null;
-    };
+const runDecisionSimulation = async (decisionOverride = null) => { const
+num = (key) => { const value = decisionScenario?.[key]; if (value === “”
+|| value === null || value === undefined) return null; const parsed =
+Number(value); return Number.isFinite(parsed) ? parsed : null; };
 
     const base = financeCurrentTotals || {};
     const comparison = financePreviousTotals || {};
@@ -1367,20 +1196,16 @@ const [marketError, setMarketError] =
 
 ${JSON.stringify(result, null, 2)}
 
-Jelaskan secara spesifik:
-1. apa keputusan yang diuji dan mekanisme dampaknya;
-2. perubahan laba, kas, pendapatan, atau margin yang paling penting;
-3. trade-off yang muncul;
-4. batas keputusan jika tersedia;
-5. kondisi yang harus dipenuhi agar keputusan tetap layak.
-Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan, katakan tidak cukup.`,
-          system: "Anda adalah Financial Decision Intelligence AI ZENAI. Berikan 4-6 kalimat formal dan konkret sesuai bahasa output yang diminta. Jangan memberi nasihat umum seperti 'tingkatkan pemasaran', 'efisiensi biaya', atau 'pantau secara berkala' kecuali langsung terkait dengan angka simulasi. Jangan mengubah angka. Jangan membuat data. Jangan markdown atau emoji."
-        });
-        result.interpretation = String(aiRaw || "").trim();
-      } catch (aiError) {
-        console.warn("Interpretasi AI tidak tersedia:", aiError);
-        result.interpretation = `${modelExplanation} Dampak terhadap laba adalah ${formatRupiah(profitDelta)} dan dampak terhadap kas adalah ${formatRupiah(cashDelta)}. ${boundary.explanation || "Batas keputusan belum dapat dihitung dari data yang tersedia."}`;
-      }
+Jelaskan secara spesifik: 1. apa keputusan yang diuji dan mekanisme
+dampaknya; 2. perubahan laba, kas, pendapatan, atau margin yang paling
+penting; 3. trade-off yang muncul; 4. batas keputusan jika tersedia; 5.
+kondisi yang harus dipenuhi agar keputusan tetap layak. Sebut minimal
+dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
+katakan tidak
+cukup.,           system: "Anda adalah Financial Decision Intelligence AI ZENAI. Berikan 4-6 kalimat formal dan konkret sesuai bahasa output yang diminta. Jangan memberi nasihat umum seperti 'tingkatkan pemasaran', 'efisiensi biaya', atau 'pantau secara berkala' kecuali langsung terkait dengan angka simulasi. Jangan mengubah angka. Jangan membuat data. Jangan markdown atau emoji."         });         result.interpretation = String(aiRaw || "").trim();       } catch (aiError) {         console.warn("Interpretasi AI tidak tersedia:", aiError);         result.interpretation =${modelExplanation}
+Dampak terhadap laba adalah ${formatRupiah(profitDelta)} dan dampak
+terhadap kas adalah ${formatRupiah(cashDelta)}. ${boundary.explanation
+|| “Batas keputusan belum dapat dihitung dari data yang tersedia.”}`; }
 
       const normalizedDecision = normalizeDecision(result);
       registerCanonicalAi("decisionResult", normalizedDecision, locale);
@@ -1393,12 +1218,11 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
     } finally {
       if (isLatestAiRequest("decisionResult", aiRequestId)) setDecisionRunning(false);
     }
-  };
 
-  const formatError = (error) => {
-    if (!error) {
-      return "Terjadi kesalahan.";
-    }
+};
+
+const formatError = (error) => { if (!error) { return “Terjadi
+kesalahan.”; }
 
     if (typeof error === "string") {
       return error;
@@ -1409,12 +1233,10 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
     }
 
     return "Terjadi kesalahan. Silakan coba lagi.";
-  };
 
-  const getBusinessContext = () => {
-    if (!business) {
-      return null;
-    }
+};
+
+const getBusinessContext = () => { if (!business) { return null; }
 
     return {
       ...business,
@@ -1431,12 +1253,11 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
         pulse: item.pulse || null
       }))
     };
-  };
 
-  const renderStatus = (status) => {
-    const normalized = String(status || "")
-      .toLowerCase()
-      .trim();
+};
+
+const renderStatus = (status) => { const normalized = String(status ||
+““) .toLowerCase() .trim();
 
     const statusMap = {
       critical: " Kritis",
@@ -1471,13 +1292,9 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
         ? String(status)
         : " Belum diketahui")
     );
-  };
-    const startRecording = async () => {
-    try {
-      const stream =
-        await navigator.mediaDevices.getUserMedia({
-          audio: true
-        });
+
+}; const startRecording = async () => { try { const stream = await
+navigator.mediaDevices.getUserMedia({ audio: true });
 
       mediaStreamRef.current = stream;
 
@@ -1567,18 +1384,12 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
         "Mikrofon tidak dapat diakses. Pastikan izin mikrofon sudah diberikan."
       );
     }
-  };
 
+};
 
-  const stopRecording = () => {
-    try {
-      if (
-        mediaRecorderRef.current &&
-        mediaRecorderRef.current.state !==
-          "inactive"
-      ) {
-        mediaRecorderRef.current.stop();
-      }
+const stopRecording = () => { try { if ( mediaRecorderRef.current &&
+mediaRecorderRef.current.state !== “inactive” ) {
+mediaRecorderRef.current.stop(); }
 
       if (recordingTimerRef.current) {
         clearInterval(
@@ -1598,18 +1409,12 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
 
       setIsRecording(false);
     }
-  };
 
+};
 
-  const clearAudio = () => {
-    try {
-      if (
-        mediaRecorderRef.current &&
-        mediaRecorderRef.current.state !==
-          "inactive"
-      ) {
-        mediaRecorderRef.current.stop();
-      }
+const clearAudio = () => { try { if ( mediaRecorderRef.current &&
+mediaRecorderRef.current.state !== “inactive” ) {
+mediaRecorderRef.current.stop(); }
 
       if (mediaStreamRef.current) {
         mediaStreamRef.current
@@ -1644,12 +1449,11 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
         error
       );
     }
-  };
 
+};
 
-  const handleAudioUpload = (event) => {
-    const file =
-      event.target.files?.[0];
+const handleAudioUpload = (event) => { const file =
+event.target.files?.[0];
 
     if (!file) {
       return;
@@ -1678,12 +1482,11 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
     };
 
     reader.readAsDataURL(file);
-  };
 
+};
 
-  const handleImageUpload = (event) => {
-    const file =
-      event.target.files?.[0];
+const handleImageUpload = (event) => { const file =
+event.target.files?.[0];
 
     if (!file) {
       return;
@@ -1708,80 +1511,56 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
     };
 
     reader.readAsDataURL(file);
-  };
 
+};
 
-  const getApiAuthHeaders = async () => {
-    if (!supabase) return {};
-    const { data } = await supabase.auth.getSession();
-    const accessToken = data?.session?.access_token;
-    return accessToken
-      ? { Authorization: `Bearer ${accessToken}` }
-      : {};
-  };
+const getApiAuthHeaders = async () => { if (!supabase) return {}; const
+{ data } = await supabase.auth.getSession(); const accessToken =
+data?.session?.access_token; return accessToken ? { Authorization:
+Bearer ${accessToken} } : {}; };
 
-  // ================================================================
-  // AI OUTPUT TRANSLATION — GLOBAL LOCALE
-  // Canonical AI data is immutable. Translation is presentation-only.
-  // ================================================================
-  const aiCanonicalRef = useRef({});
-  const translationRequestRef = useRef({ id: 0, controller: null });
-  const aiRequestSeqRef = useRef({});
-  const [canonicalRevision, setCanonicalRevision] = useState(0);
+// ================================================================ //
+AI OUTPUT TRANSLATION — GLOBAL LOCALE // Canonical AI data is immutable.
+Translation is presentation-only. //
+================================================================ const
+aiCanonicalRef = useRef({}); const translationRequestRef = useRef({ id:
+0, controller: null }); const aiRequestSeqRef = useRef({}); const
+[canonicalRevision, setCanonicalRevision] = useState(0);
 
-  const beginAiRequest = (key) => {
-    const nextId = (aiRequestSeqRef.current[key] || 0) + 1;
-    aiRequestSeqRef.current[key] = nextId;
-    return nextId;
-  };
+const beginAiRequest = (key) => { const nextId =
+(aiRequestSeqRef.current[key] || 0) + 1; aiRequestSeqRef.current[key] =
+nextId; return nextId; };
 
-  const isLatestAiRequest = (key, requestId) =>
-    aiRequestSeqRef.current[key] === requestId;
+const isLatestAiRequest = (key, requestId) =>
+aiRequestSeqRef.current[key] === requestId;
 
-  // Refs keep async translation work aligned with the latest React state,
-  // locale, and session without creating additional language state.
-  const aiStateRef = useRef({});
-  const localeRef = useRef(locale);
-  const sessionRef = useRef(session);
-  aiStateRef.current = {
-    business,
-    pulseData,
-    diagnosis,
-    marketData,
-    autopilotData,
-    growthActions,
-    businessUpdates,
-    decisionResult,
-  };
-  localeRef.current = locale;
-  sessionRef.current = session;
+// Refs keep async translation work aligned with the latest React state,
+// locale, and session without creating additional language state. const
+aiStateRef = useRef({}); const localeRef = useRef(locale); const
+sessionRef = useRef(session); aiStateRef.current = { business,
+pulseData, diagnosis, marketData, autopilotData, growthActions,
+businessUpdates, decisionResult, }; localeRef.current = locale;
+sessionRef.current = session;
 
-  const translateAiPayload = async (content, targetLocale, signal, sourceLocale) => {
-    const response = await fetch("/api/translate", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(await getApiAuthHeaders()),
-      },
-      body: JSON.stringify({ content, targetLocale, sourceLocale }),
-      cache: "no-store",
-      signal,
-    });
+const translateAiPayload = async (content, targetLocale, signal,
+sourceLocale) => { const response = await fetch(“/api/translate”, {
+method: “POST”, headers: { “Content-Type”: “application/json”, …(await
+getApiAuthHeaders()), }, body: JSON.stringify({ content, targetLocale,
+sourceLocale }), cache: “no-store”, signal, });
 
     const data = await response.json().catch(() => null);
     if (!response.ok || !data?.success) {
       throw new Error(data?.message || data?.error || `Translation failed (${response.status}).`);
     }
     return data.content;
-  };
 
-  // Capture canonical AI output ONCE per new AI payload. Never replace it
-  // merely because the presentation state was translated.
-  const registerCanonicalAi = (key, value, sourceLocale = locale) => {
-    if (value === null || value === undefined) {
-      delete aiCanonicalRef.current[key];
-      return;
-    }
+};
+
+// Capture canonical AI output ONCE per new AI payload. Never replace it
+// merely because the presentation state was translated. const
+registerCanonicalAi = (key, value, sourceLocale = locale) => { if (value
+=== null || value === undefined) { delete aiCanonicalRef.current[key];
+return; }
 
     const sourceHash = stableHash(value);
     const previous = aiCanonicalRef.current[key];
@@ -1800,13 +1579,14 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
     if (!previous.sourceLocale && sourceLocale) {
       previous.sourceLocale = sourceLocale;
     }
-  };
 
-  const canonicalValueForSave = (key, fallback) =>
-    aiCanonicalRef.current[key]?.value ?? fallback;
+};
 
-  const getVisibleOutputKeys = () => {
-    if (typeof document === "undefined") return [];
+const canonicalValueForSave = (key, fallback) =>
+aiCanonicalRef.current[key]?.value ?? fallback;
+
+const getVisibleOutputKeys = () => { if (typeof document ===
+“undefined”) return [];
 
     const keys = new Set();
     document.querySelectorAll("[data-zenai-output]").forEach((node) => {
@@ -1829,11 +1609,12 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
     });
 
     return [...keys];
-  };
 
-  const translateVisibleAiOutputs = async (targetLocale) => {
-    if (!["id", "en"].includes(targetLocale)) return;
-    if (typeof window === "undefined") return;
+};
+
+const translateVisibleAiOutputs = async (targetLocale) => { if (![“id”,
+“en”].includes(targetLocale)) return; if (typeof window === “undefined”)
+return;
 
     const stateMap = aiStateRef.current;
     const setterMap = {
@@ -1935,29 +1716,29 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
         }
       }
     }
-  };
 
-  // Global locale is the single trigger for AI-output presentation updates.
-  // Re-run automatically when the locale changes or when canonical AI data is
-  // restored/created, and translate every registered output instead of only
-  // the currently visible tab. This removes the need for a second language
-  // toggle after navigating to another menu.
-  useEffect(() => {
-    if (!locale || typeof window === "undefined") return;
-    void translateVisibleAiOutputs(locale);
+};
+
+// Global locale is the single trigger for AI-output presentation
+updates. // Re-run automatically when the locale changes or when
+canonical AI data is // restored/created, and translate every registered
+output instead of only // the currently visible tab. This removes the
+need for a second language // toggle after navigating to another menu.
+useEffect(() => { if (!locale || typeof window === “undefined”) return;
+void translateVisibleAiOutputs(locale);
 
     return () => {
       translationRequestRef.current.controller?.abort();
     };
-  }, [locale, canonicalRevision]);
 
-  const askAI = async ({
-    prompt,
-    system = ""
-  }) => {
-    const outputLanguage = locale === "en" ? "English" : "Bahasa Indonesia";
-    const localizedPrompt = `${prompt}\n\nOUTPUT LANGUAGE: ${outputLanguage}. Return all human-readable content in ${outputLanguage}. Keep JSON keys exactly as requested.`;
-    const localizedSystem = `${system}\n\nIMPORTANT LANGUAGE RULE: Respond in ${outputLanguage}. All human-readable text inside JSON values must use ${outputLanguage}. Do not mix Indonesian and English.`;
+}, [locale, canonicalRevision]);
+
+const askAI = async ({ prompt, system = “” }) => { const outputLanguage
+= locale === “en” ? “English” : “Bahasa Indonesia”; const
+localizedPrompt =
+${prompt}\n\nOUTPUT LANGUAGE: ${outputLanguage}. Return all human-readable content in ${outputLanguage}. Keep JSON keys exactly as requested.;
+const localizedSystem =
+${system}\n\nIMPORTANT LANGUAGE RULE: Respond in ${outputLanguage}. All human-readable text inside JSON values must use ${outputLanguage}. Do not mix Indonesian and English.;
 
     const response = await fetch(
       "/api/ai",
@@ -2004,15 +1785,11 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
       data?.message ||
       ""
     );
-  };
 
+};
 
-  const extractJson = (value) => {
-    if (!value) {
-      throw new Error(
-        "AI tidak mengembalikan data."
-      );
-    }
+const extractJson = (value) => { if (!value) { throw new Error( “AI
+tidak mengembalikan data.” ); }
 
     if (
       typeof value === "object"
@@ -2073,16 +1850,10 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
         "Respons AI tidak dalam format JSON yang valid."
       );
     }
-  };
-    const analyzeBusiness = async () => {
-    if (
-      !text.trim() &&
-      !image &&
-      !audio
-    ) {
-      alert(
-        "Ceritakan usaha Anda, unggah gambar, atau kirim rekaman suara terlebih dahulu."
-      );
+
+}; const analyzeBusiness = async () => { if ( !text.trim() && !image &&
+!audio ) { alert( “Ceritakan usaha Anda, unggah gambar, atau kirim
+rekaman suara terlebih dahulu.” );
 
       return;
     }
@@ -2092,49 +1863,36 @@ Sebut minimal dua angka dari data. Jika data tidak cukup untuk suatu kesimpulan,
 
     try {
       const prompt = `
+
 Analisis informasi usaha berikut.
 
-DESKRIPSI USAHA:
-${text || "-"}
+DESKRIPSI USAHA: ${text || “-”}
 
 Buat profil usaha dalam format JSON valid.
 
 Gunakan struktur berikut:
 
-{
-  "name": "",
-  "product": "",
-  "description": "",
-  "targetMarket": "",
-  "location": "",
-  "businessStage": "",
-  "strengths": [],
-  "weaknesses": [],
-  "opportunities": [],
-  "risks": [],
-  "summary": ""
-}
+{ “name”: ““,”product”: ““,”description”: ““,”targetMarket”:
+““,”location”: ““,”businessStage”: ““,”strengths”: [], “weaknesses”: [],
+“opportunities”: [], “risks”: [], “summary”: “” }
 
-Jangan gunakan markdown.
-Jangan menambahkan teks selain JSON.
-Jika informasi tidak tersedia, gunakan string kosong atau array kosong.
-`;
+Jangan gunakan markdown. Jangan menambahkan teks selain JSON. Jika
+informasi tidak tersedia, gunakan string kosong atau array kosong. `;
 
       const raw = await askAI({
         prompt,
 
         system: `
+
 Anda adalah Business Intelligence AI untuk ZENAI.
 
-Tugas Anda adalah memahami informasi usaha pengguna
-dan mengubahnya menjadi profil usaha yang jelas.
+Tugas Anda adalah memahami informasi usaha pengguna dan mengubahnya
+menjadi profil usaha yang jelas.
 
 Gunakan bahasa output yang diminta.
 
-Jangan mengarang informasi yang tidak tersedia.
-Balas hanya dengan JSON valid.
-`
-      });
+Jangan mengarang informasi yang tidak tersedia. Balas hanya dengan JSON
+valid. ` });
 
       const result =
         extractJson(raw);
@@ -2173,28 +1931,14 @@ Balas hanya dengan JSON valid.
     } finally {
       if (isLatestAiRequest("business", aiRequestId)) setBusy(false);
     }
-  };
 
-  const runPulse = async (
-    contextOverride = null,
-    options = {}
-  ) => {
-    /*
-      Proteksi jika function tidak sengaja
-      menerima React Event dari onClick.
-    */
-    if (
-      contextOverride &&
-      typeof contextOverride ===
-        "object" &&
-      (
-        contextOverride.nativeEvent ||
-        contextOverride.currentTarget ||
-        contextOverride.target
-      )
-    ) {
-      contextOverride = null;
-    }
+};
+
+const runPulse = async ( contextOverride = null, options = {} ) => { /
+Proteksi jika function tidak sengaja menerima React Event dari onClick.
+/ if ( contextOverride && typeof contextOverride === “object” && (
+contextOverride.nativeEvent || contextOverride.currentTarget ||
+contextOverride.target ) ) { contextOverride = null; }
 
     if (!business) {
       alert(
@@ -2222,74 +1966,51 @@ Balas hanya dengan JSON valid.
 
     try {
       const prompt = `
+
 Berikut adalah kondisi usaha:
 
-${JSON.stringify(
-  context,
-  null,
-  2
-)}
+${JSON.stringify( context, null, 2 )}
 
 Analisis kondisi usaha saat ini.
 
 Balas dengan JSON valid menggunakan struktur:
 
-{
-  "status": "",
-  "summary": "",
+{ “status”: ““,”summary”: ““,
 
-  "positive": [
-    {
-      "title": "",
-      "description": ""
-    }
-  ],
+“positive”: [ { “title”: ““,”description”: “” } ],
 
-  "attention": [
-    {
-      "title": "",
-      "description": "",
-      "status": ""
-    }
-  ],
+“attention”: [ { “title”: ““,”description”: ““,”status”: “” } ],
 
-  "priority": [
-    {
-      "title": "",
-      "action": "",
-      "impact": ""
-    }
-  ],
+“priority”: [ { “title”: ““,”action”: ““,”impact”: “” } ],
 
-  "nextStep": ""
-}
+“nextStep”: “” }
 
 Aturan:
 
-- Jangan membuat angka atau omzet jika tidak ada data.
-- Fokus pada kondisi usaha yang benar-benar tersedia.
-- Gunakan bahasa output yang diminta.
-- Jangan gunakan markdown.
-- Balas hanya JSON valid.
-`;
+-   Jangan membuat angka atau omzet jika tidak ada data.
 
-      const raw =
-        await askAI({
-          prompt,
+-   Fokus pada kondisi usaha yang benar-benar tersedia.
 
-          system: `
-Anda adalah Business Pulse AI ZENAI.
+-   Gunakan bahasa output yang diminta.
 
-Tugas Anda adalah membaca kondisi usaha
-dan memberikan gambaran singkat mengenai
-apa yang berjalan baik, apa yang perlu
-diperhatikan, dan tindakan prioritas.
+-   Jangan gunakan markdown.
 
-Jangan mengarang data.
-Gunakan informasi yang tersedia.
-Balas JSON valid.
-`
-        });
+-   Balas hanya JSON valid. `;
+
+        const raw =
+          await askAI({
+            prompt,
+
+            system: `
+
+    Anda adalah Business Pulse AI ZENAI.
+
+Tugas Anda adalah membaca kondisi usaha dan memberikan gambaran singkat
+mengenai apa yang berjalan baik, apa yang perlu diperhatikan, dan
+tindakan prioritas.
+
+Jangan mengarang data. Gunakan informasi yang tersedia. Balas JSON
+valid. ` });
 
       const result =
         extractJson(raw);
@@ -2323,28 +2044,14 @@ Balas JSON valid.
         setBusy(false);
       }
     }
-  };
 
-  const runDiagnosis = async (
-    contextOverride = null,
-    options = {}
-  ) => {
-    /*
-      Proteksi jika React Event
-      masuk sebagai parameter pertama.
-    */
-    if (
-      contextOverride &&
-      typeof contextOverride ===
-        "object" &&
-      (
-        contextOverride.nativeEvent ||
-        contextOverride.currentTarget ||
-        contextOverride.target
-      )
-    ) {
-      contextOverride = null;
-    }
+};
+
+const runDiagnosis = async ( contextOverride = null, options = {} ) => {
+/ Proteksi jika React Event masuk sebagai parameter pertama. / if (
+contextOverride && typeof contextOverride === “object” && (
+contextOverride.nativeEvent || contextOverride.currentTarget ||
+contextOverride.target ) ) { contextOverride = null; }
 
     if (!business) {
       alert(
@@ -2372,90 +2079,61 @@ Balas JSON valid.
 
     try {
       const prompt = `
+
 Berikut adalah data usaha:
 
-${JSON.stringify(
-  context,
-  null,
-  2
-)}
+${JSON.stringify( context, null, 2 )}
 
 Lakukan diagnosis usaha secara menyeluruh.
 
-Balas dengan JSON valid
-menggunakan struktur:
+Balas dengan JSON valid menggunakan struktur:
 
-{
-  "summary": "",
+{ “summary”: ““,
 
-  "status": "",
+“status”: ““,
 
-  "mainProblem": "",
+“mainProblem”: ““,
 
-  "strengths": [
-    {
-      "title": "",
-      "description": ""
-    }
-  ],
+“strengths”: [ { “title”: ““,”description”: “” } ],
 
-  "problems": [
-    {
-      "title": "",
-      "description": "",
-      "impact": "",
-      "priority": ""
-    }
-  ],
+“problems”: [ { “title”: ““,”description”: ““,”impact”: ““,”priority”:
+“” } ],
 
-  "opportunities": [
-    {
-      "title": "",
-      "description": "",
-      "potential": ""
-    }
-  ],
+“opportunities”: [ { “title”: ““,”description”: ““,”potential”: “” } ],
 
-  "recommendations": [
-    {
-      "priority": "",
-      "action": "",
-      "reason": ""
-    }
-  ],
+“recommendations”: [ { “priority”: ““,”action”: ““,”reason”: “” } ],
 
-  "nextStep": ""
-}
+“nextStep”: “” }
 
 Aturan:
 
-- Jangan membuat data keuangan.
-- Jangan membuat angka tanpa data pendukung.
-- Fokus pada masalah yang benar-benar mungkin
-  berdasarkan informasi usaha.
-- Gunakan bahasa output yang diminta.
-- Jangan gunakan markdown.
-- Balas hanya JSON valid.
-`;
+-   Jangan membuat data keuangan.
 
-      const raw =
-        await askAI({
-          prompt,
+-   Jangan membuat angka tanpa data pendukung.
 
-          system: `
-Anda adalah Business Diagnosis AI ZENAI.
+-   Fokus pada masalah yang benar-benar mungkin berdasarkan informasi
+    usaha.
 
-Tugas Anda adalah membantu pemilik usaha
-memahami masalah, kekuatan, peluang,
-risiko, dan prioritas perbaikan.
+-   Gunakan bahasa output yang diminta.
 
-Berikan diagnosis yang praktis
-dan mudah dipahami.
+-   Jangan gunakan markdown.
 
-Jangan mengarang data.
-Balas hanya JSON valid.
-`
-        });
+-   Balas hanya JSON valid. `;
+
+        const raw =
+          await askAI({
+            prompt,
+
+            system: `
+
+    Anda adalah Business Diagnosis AI ZENAI.
+
+Tugas Anda adalah membantu pemilik usaha memahami masalah, kekuatan,
+peluang, risiko, dan prioritas perbaikan.
+
+Berikan diagnosis yang praktis dan mudah dipahami.
+
+Jangan mengarang data. Balas hanya JSON valid. ` });
 
       const result =
         extractJson(raw);
@@ -2489,26 +2167,20 @@ Balas hanya JSON valid.
         setBusy(false);
       }
     }
-  };
-  const runMarketInsight = async () => {
-  if (!business) {
-    alert(
-      "Ceritakan usaha terlebih dahulu."
-    );
+
+}; const runMarketInsight = async () => { if (!business) { alert(
+“Ceritakan usaha terlebih dahulu.” );
 
     setTab("capture");
     return;
-  }
 
-  setMarketLoading(true);
-  setMarketError("");
-  const aiRequestId = beginAiRequest("marketData");
+}
 
-  try {
-    const response = await fetch(
-      "/api/marketplace",
-      {
-        method: "POST",
+setMarketLoading(true); setMarketError(““); const aiRequestId =
+beginAiRequest(”marketData”);
+
+try { const response = await fetch( “/api/marketplace”, { method:
+“POST”,
 
         headers: {
           "Content-Type": "application/json",
@@ -2562,7 +2234,7 @@ Balas hanya JSON valid.
 
     setTab("market");
 
-  } catch (error) {
+} catch (error) {
 
     console.error(
       "MARKET INSIGHT ERROR:",
@@ -2576,29 +2248,13 @@ Balas hanya JSON valid.
       setMarketError(message);
     }
 
-  } finally {
-    if (isLatestAiRequest("marketData", aiRequestId)) setMarketLoading(false);
-  }
-};
-    const runAutopilot = async (
-    contextOverride = null,
-    options = {}
-  ) => {
-    /*
-      Proteksi jika React Event masuk
-      sebagai parameter pertama.
-    */
-    if (
-      contextOverride &&
-      typeof contextOverride === "object" &&
-      (
-        contextOverride.nativeEvent ||
-        contextOverride.currentTarget ||
-        contextOverride.target
-      )
-    ) {
-      contextOverride = null;
-    }
+} finally { if (isLatestAiRequest(“marketData”, aiRequestId))
+setMarketLoading(false); } }; const runAutopilot = async (
+contextOverride = null, options = {} ) => { / Proteksi jika React Event
+masuk sebagai parameter pertama. / if ( contextOverride && typeof
+contextOverride === “object” && ( contextOverride.nativeEvent ||
+contextOverride.currentTarget || contextOverride.target ) ) {
+contextOverride = null; }
 
     if (!business) {
       alert(
@@ -2634,1567 +2290,1176 @@ Balas hanya JSON valid.
 
     try {
       const prompt = `
+
 Berikut adalah kondisi usaha:
 
-KONTEKS USAHA:
-${JSON.stringify(context, null, 2)}
+KONTEKS USAHA: ${JSON.stringify(context, null, 2)}
 
-BUSINESS PULSE:
-${JSON.stringify(
-  latestPulse || {},
-  null,
-  2
-)}
+BUSINESS PULSE: ${JSON.stringify( latestPulse || {}, null, 2 )}
 
-DIAGNOSIS:
-${JSON.stringify(
-  latestDiagnosis || {},
-  null,
-  2
-)}
+DIAGNOSIS: ${JSON.stringify( latestDiagnosis || {}, null, 2 )}
 
 Buat strategi dan tindakan yang praktis.
 
 Balas dengan JSON valid menggunakan struktur:
 
-{
-  "summary": "",
+{ “summary”: ““,
 
-  "priority": "",
+“priority”: ““,
 
-  "plan7": [
-    {
-      "day": "",
-      "title": "",
-      "action": "",
-      "purpose": ""
-    }
-  ],
+“plan7”: [ { “day”: ““,”title”: ““,”action”: ““,”purpose”: “” } ],
 
-  "plan14": [
-    {
-      "phase": "",
-      "title": "",
-      "action": ""
-    }
-  ],
+“plan14”: [ { “phase”: ““,”title”: ““,”action”: “” } ],
 
-  "plan30": [
-    {
-      "phase": "",
-      "title": "",
-      "action": ""
-    }
-  ],
+“plan30”: [ { “phase”: ““,”title”: ““,”action”: “” } ],
 
-  "plan": [
-    {
-      "step": "",
-      "action": "",
-      "purpose": ""
-    }
-  ],
+“plan”: [ { “step”: ““,”action”: ““,”purpose”: “” } ],
 
-  "warning": "",
+“warning”: ““,
 
-  "nextStep": ""
-}
+“nextStep”: “” }
 
 Aturan:
 
-- Prioritaskan tindakan dengan dampak terbesar.
-- Buat langkah sederhana dan realistis.
-- Jangan membuat angka target, omzet,
-  persentase, atau estimasi keuntungan
-  tanpa data pendukung.
-- Gunakan bahasa output yang diminta.
-- Jangan gunakan markdown.
-- Balas hanya JSON valid.
-`;
+-   Prioritaskan tindakan dengan dampak terbesar.
 
-      const response = await fetch("/api/autopilot", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(await getApiAuthHeaders())
-        },
-        body: JSON.stringify({
-          locale,
-          outputLanguage: locale === "en" ? "English" : "Bahasa Indonesia",
-          business: {
-            ...context,
-            pulse: latestPulse || {},
-            diagnosis: latestDiagnosis || {}
+-   Buat langkah sederhana dan realistis.
+
+-   Jangan membuat angka target, omzet, persentase, atau estimasi
+    keuntungan tanpa data pendukung.
+
+-   Gunakan bahasa output yang diminta.
+
+-   Jangan gunakan markdown.
+
+-   Balas hanya JSON valid. `;
+
+        const response = await fetch("/api/autopilot", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(await getApiAuthHeaders())
           },
-          duration: 30
-        })
-      });
+          body: JSON.stringify({
+            locale,
+            outputLanguage: locale === "en" ? "English" : "Bahasa Indonesia",
+            business: {
+              ...context,
+              pulse: latestPulse || {},
+              diagnosis: latestDiagnosis || {}
+            },
+            duration: 30
+          })
+        });
 
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(data?.message || "Gagal membuat strategi Autopilot.");
-      }
-
-      const apiResult = data?.result;
-      if (!apiResult?.mission || !Array.isArray(apiResult.actions)) {
-        throw new Error("Respons Autopilot tidak sesuai format.");
-      }
-
-      const result = {
-        summary: apiResult.mission.target,
-        priority: apiResult.mission.priority,
-        plan30: apiResult.actions.map((item) => ({
-          phase: locale === "en" ? `Day ${item.id}` : `Hari ${item.id}`,
-          title: item.title,
-          action: item.description
-        })),
-        plan7: apiResult.actions.slice(0, 7).map((item) => ({
-          day: item.id,
-          title: item.title,
-          action: item.description,
-          purpose: item.output
-        })),
-        plan14: apiResult.actions.slice(0, 14).map((item) => ({
-          phase: locale === "en" ? `Day ${item.id}` : `Hari ${item.id}`,
-          title: item.title,
-          action: item.description
-        })),
-        plan: apiResult.actions.map((item) => ({
-          step: item.id,
-          action: item.description,
-          purpose: item.output
-        })),
-        warning: "",
-        nextStep: apiResult.actions[0]?.title || "Mulai dari tindakan prioritas pertama."
-      };
-
-      const normalizedAutopilot = normalizeAutopilot(result);
-      registerCanonicalAi("autopilotData", normalizedAutopilot, locale);
-      if (isLatestAiRequest("autopilotData", aiRequestId)) setAutopilotData(normalizedAutopilot);
-
-      if (goToTab) {
-        setTab("autopilot");
-      }
-
-      return result;
-
-    } catch (error) {
-      console.error(
-        "Gagal menjalankan Autopilot:",
-        error
-      );
-
-      if (!silent) {
-        if (isLatestAiRequest("autopilotData", aiRequestId)) {
-          alert(formatError(error));
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(data?.message || "Gagal membuat strategi Autopilot.");
         }
-      }
 
-      throw error;
+        const apiResult = data?.result;
+        if (!apiResult?.mission || !Array.isArray(apiResult.actions)) {
+          throw new Error("Respons Autopilot tidak sesuai format.");
+        }
 
-    } finally {
-      if (!silent && isLatestAiRequest("autopilotData", aiRequestId)) {
-        setBusy(false);
-      }
-    }
-  };
+        const result = {
+          summary: apiResult.mission.target,
+          priority: apiResult.mission.priority,
+          plan30: apiResult.actions.map((item) => ({
+            phase: locale === "en" ? `Day ${item.id}` : `Hari ${item.id}`,
+            title: item.title,
+            action: item.description
+          })),
+          plan7: apiResult.actions.slice(0, 7).map((item) => ({
+            day: item.id,
+            title: item.title,
+            action: item.description,
+            purpose: item.output
+          })),
+          plan14: apiResult.actions.slice(0, 14).map((item) => ({
+            phase: locale === "en" ? `Day ${item.id}` : `Hari ${item.id}`,
+            title: item.title,
+            action: item.description
+          })),
+          plan: apiResult.actions.map((item) => ({
+            step: item.id,
+            action: item.description,
+            purpose: item.output
+          })),
+          warning: "",
+          nextStep: apiResult.actions[0]?.title || "Mulai dari tindakan prioritas pertama."
+        };
 
+        const normalizedAutopilot = normalizeAutopilot(result);
+        registerCanonicalAi("autopilotData", normalizedAutopilot, locale);
+        if (isLatestAiRequest("autopilotData", aiRequestId)) setAutopilotData(normalizedAutopilot);
 
-  const resetAnalysis = () => {
-    try {
-      if (
-        mediaRecorderRef.current &&
-        mediaRecorderRef.current.state !==
-          "inactive"
-      ) {
-        mediaRecorderRef.current.stop();
-      }
+        if (goToTab) {
+          setTab("autopilot");
+        }
 
-      if (mediaStreamRef.current) {
-        mediaStreamRef.current
-          .getTracks()
-          .forEach((track) =>
-            track.stop()
+        return result;
+
+    } catch (error) { console.error( “Gagal menjalankan Autopilot:”,
+    error );
+
+        if (!silent) {
+          if (isLatestAiRequest("autopilotData", aiRequestId)) {
+            alert(formatError(error));
+          }
+        }
+
+        throw error;
+
+    } finally { if (!silent && isLatestAiRequest(“autopilotData”,
+    aiRequestId)) { setBusy(false); } } };
+
+    const resetAnalysis = () => { try { if ( mediaRecorderRef.current &&
+    mediaRecorderRef.current.state !== “inactive” ) {
+    mediaRecorderRef.current.stop(); }
+
+        if (mediaStreamRef.current) {
+          mediaStreamRef.current
+            .getTracks()
+            .forEach((track) =>
+              track.stop()
+            );
+        }
+
+        if (recordingTimerRef.current) {
+          clearInterval(
+            recordingTimerRef.current
           );
-      }
 
-      if (recordingTimerRef.current) {
-        clearInterval(
-          recordingTimerRef.current
-        );
+          recordingTimerRef.current = null;
+        }
 
-        recordingTimerRef.current = null;
-      }
+        mediaRecorderRef.current = null;
+        mediaStreamRef.current = null;
+        audioChunksRef.current = [];
 
-      mediaRecorderRef.current = null;
-      mediaStreamRef.current = null;
-      audioChunksRef.current = [];
+        setIsRecording(false);
+        setRecordingTime(0);
 
-      setIsRecording(false);
-      setRecordingTime(0);
+        setText("");
+        setImage("");
 
-      setText("");
-      setImage("");
+        setAudio("");
+        setAudioName("");
+        setAudioMimeType("");
 
-      setAudio("");
-      setAudioName("");
-      setAudioMimeType("");
+        // Pertahankan profil perusahaan, riwayat pembaruan, dan laporan keuangan.
+        setDiagnosis(null);
+        setPulseData(null);
+        setUpdateText("");
 
-      // Pertahankan profil perusahaan, riwayat pembaruan, dan laporan keuangan.
-      setDiagnosis(null);
-      setPulseData(null);
-      setUpdateText("");
+        setAutopilotData(null);
+        setMarketData(null);
+        setMarketError("");
+        setDecisionText("");
+        setDecisionResult(null);
+        setDecisionRunning(false);
 
-      setAutopilotData(null);
-      setMarketData(null);
-      setMarketError("");
-      setDecisionText("");
-      setDecisionResult(null);
-      setDecisionRunning(false);
+        setProvider("");
+        setBusy(false);
 
-      setProvider("");
-      setBusy(false);
+        setDays(7);
 
-      setDays(7);
+        setTab("capture");
 
-      setTab("capture");
+    } catch (error) { console.error( “Gagal mereset analisis:”, error );
 
-    } catch (error) {
-      console.error(
-        "Gagal mereset analisis:",
-        error
-      );
+        setBusy(false);
+        setTab("capture");
 
-      setBusy(false);
-      setTab("capture");
-    }
-  };
+    } };
 
-
-  const resetCompanyTotal = async () => {
-    const firstConfirm = window.confirm(
-      "Reset Perusahaan Total? Semua profil, analisis, pembaruan usaha, periode, dan laporan keuangan akan dihapus."
-    );
+    const resetCompanyTotal = async () => { const firstConfirm =
+    window.confirm( “Reset Perusahaan Total? Semua profil, analisis,
+    pembaruan usaha, periode, dan laporan keuangan akan dihapus.” );
 
     if (!firstConfirm) return;
 
-    const confirmation = window.prompt(
-      'Ketik RESET untuk menghapus seluruh data perusahaan.'
-    );
+    const confirmation = window.prompt( ‘Ketik RESET untuk menghapus
+    seluruh data perusahaan.’ );
 
-    if (confirmation !== "RESET") {
-      alert("Reset dibatalkan. Ketik RESET persis untuk melanjutkan.");
-      return;
-    }
+    if (confirmation !== “RESET”) { alert(“Reset dibatalkan. Ketik RESET
+    persis untuk melanjutkan.”); return; }
 
-    try {
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
-        mediaRecorderRef.current.stop();
-      }
-      if (mediaStreamRef.current) {
-        mediaStreamRef.current.getTracks().forEach((track) => track.stop());
-      }
-      if (recordingTimerRef.current) {
-        clearInterval(recordingTimerRef.current);
-        recordingTimerRef.current = null;
-      }
+    try { if (mediaRecorderRef.current && mediaRecorderRef.current.state
+    !== “inactive”) { mediaRecorderRef.current.stop(); } if
+    (mediaStreamRef.current) {
+    mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+    } if (recordingTimerRef.current) {
+    clearInterval(recordingTimerRef.current); recordingTimerRef.current
+    = null; }
 
-      cloudHydratedRef.current = false;
-      if (cloudSaveTimerRef.current) {
-        clearTimeout(cloudSaveTimerRef.current);
-        cloudSaveTimerRef.current = null;
-      }
+        cloudHydratedRef.current = false;
+        if (cloudSaveTimerRef.current) {
+          clearTimeout(cloudSaveTimerRef.current);
+          cloudSaveTimerRef.current = null;
+        }
 
-      if (supabase && session?.user?.id) {
-        // Jangan menghapus row state. Tulis state kosong secara atomik
-        // agar tidak ada data lama yang dapat muncul kembali akibat
-        // race antara cloud save dan reset.
-        const emptyState = {
-          business: null,
-          pulseData: null,
-          diagnosis: null,
-          autopilotData: null,
-          marketData: null,
-          businessUpdates: [],
-          growthActions: [],
-          financeTransactions: [],
-          financePeriod: new Date().toISOString().slice(0, 7),
-          financeComparisonPeriod: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1).toISOString().slice(0, 7),
-          decisionScenario: { currentPrice: "", plannedPrice: "", volumeChange: "", hppChange: "", expenseChange: "", investmentAmount: "", expectedRevenue: "", incrementalHppRate: "", incrementalExpense: "", revenueChange: "", cashImpact: "" },
-          decisionType: "pricing",
-          decisionText: "",
-          decisionResult: null,
-          tab: "capture"
-        };
+        if (supabase && session?.user?.id) {
+          // Jangan menghapus row state. Tulis state kosong secara atomik
+          // agar tidak ada data lama yang dapat muncul kembali akibat
+          // race antara cloud save dan reset.
+          const emptyState = {
+            business: null,
+            pulseData: null,
+            diagnosis: null,
+            autopilotData: null,
+            marketData: null,
+            businessUpdates: [],
+            growthActions: [],
+            financeTransactions: [],
+            financePeriod: new Date().toISOString().slice(0, 7),
+            financeComparisonPeriod: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1).toISOString().slice(0, 7),
+            decisionScenario: { currentPrice: "", plannedPrice: "", volumeChange: "", hppChange: "", expenseChange: "", investmentAmount: "", expectedRevenue: "", incrementalHppRate: "", incrementalExpense: "", revenueChange: "", cashImpact: "" },
+            decisionType: "pricing",
+            decisionText: "",
+            decisionResult: null,
+            tab: "capture"
+          };
 
-        const { error } = await supabase
-          .from("zenai_user_state")
-          .upsert(
-            {
-              user_id: session.user.id,
-              state: emptyState,
-              updated_at: new Date().toISOString()
-            },
-            { onConflict: "user_id" }
-          );
+          const { error } = await supabase
+            .from("zenai_user_state")
+            .upsert(
+              {
+                user_id: session.user.id,
+                state: emptyState,
+                updated_at: new Date().toISOString()
+              },
+              { onConflict: "user_id" }
+            );
 
-        if (error) throw error;
-      }
+          if (error) throw error;
+        }
 
-      setText("");
-      setImage("");
-      setAudio("");
-      setAudioName("");
-      setAudioMimeType("");
-      setIsRecording(false);
-      setRecordingTime(0);
-      setBusy(false);
-      setProvider("");
-      setBusiness(null);
-      setPulseData(null);
-      setDiagnosis(null);
-      setAutopilotData(null);
-      setMarketData(null);
-      setMarketError("");
-      setBusinessUpdates([]);
-      setUpdateText("");
-      setFinanceTransactions([]);
-      setFinancePeriod(new Date().toISOString().slice(0, 7));
-      setFinanceForm({
-        date: new Date().toISOString().slice(0, 10),
-        description: "",
-        amount: "",
-        type: "income",
-        account: "bank"
-      });
-      setEditingFinanceId(null);
-      setFinanceView("summary");
-      setFinanceMessage("");
-      setTab("capture");
+        setText("");
+        setImage("");
+        setAudio("");
+        setAudioName("");
+        setAudioMimeType("");
+        setIsRecording(false);
+        setRecordingTime(0);
+        setBusy(false);
+        setProvider("");
+        setBusiness(null);
+        setPulseData(null);
+        setDiagnosis(null);
+        setAutopilotData(null);
+        setMarketData(null);
+        setMarketError("");
+        setBusinessUpdates([]);
+        setUpdateText("");
+        setFinanceTransactions([]);
+        setFinancePeriod(new Date().toISOString().slice(0, 7));
+        setFinanceForm({
+          date: new Date().toISOString().slice(0, 10),
+          description: "",
+          amount: "",
+          type: "income",
+          account: "bank"
+        });
+        setEditingFinanceId(null);
+        setFinanceView("summary");
+        setFinanceMessage("");
+        setTab("capture");
 
-      // Reset selesai dan state cloud sudah diset ke keadaan kosong.
-      // Aktifkan kembali persistence agar perusahaan baru dapat tersimpan.
-      cloudHydratedRef.current = true;
-      setCloudLoaded(true);
+        // Reset selesai dan state cloud sudah diset ke keadaan kosong.
+        // Aktifkan kembali persistence agar perusahaan baru dapat tersimpan.
+        cloudHydratedRef.current = true;
+        setCloudLoaded(true);
 
-      setAuthMessage("Data perusahaan berhasil dihapus. Anda dapat memulai perusahaan baru.");
-    } catch (error) {
-      console.error("Gagal mereset perusahaan total:", error);
-      alert(formatError(error));
-      cloudHydratedRef.current = true;
-    }
-  };
+        setAuthMessage("Data perusahaan berhasil dihapus. Anda dapat memulai perusahaan baru.");
 
+    } catch (error) { console.error(“Gagal mereset perusahaan total:”,
+    error); alert(formatError(error)); cloudHydratedRef.current = true;
+    } };
 
-  const addBusinessUpdate =
-    async () => {
-      if (!updateText.trim()) {
-        alert(
-          "Masukkan pembaruan usaha terlebih dahulu."
-        );
+    const addBusinessUpdate = async () => { if (!updateText.trim()) {
+    alert( “Masukkan pembaruan usaha terlebih dahulu.” );
 
-        return;
-      }
+          return;
+        }
 
-      const newUpdate = {
-        id: Date.now(),
+        const newUpdate = {
+          id: Date.now(),
 
-        text: updateText.trim(),
+          text: updateText.trim(),
 
-        date:
-          new Date().toLocaleString(
-            "id-ID"
-          ),
-
-        createdAt:
-          new Date().toISOString()
-      };
-
-
-      const latestUpdates = [
-        newUpdate,
-        ...businessUpdates
-      ];
-
-
-      const latestContext = {
-        ...business,
-
-        updates: latestUpdates.map(
-          (item) => ({
-            id: item.id,
-
-            text: item.text,
-
-            createdAt:
-              item.createdAt ||
-              item.date ||
-              null,
-
-            pulse:
-              item.pulse || null
-          })
-        ),
-
-        latestUpdate: {
-          id: newUpdate.id,
-
-          text: newUpdate.text,
+          date:
+            new Date().toLocaleString(
+              "id-ID"
+            ),
 
           createdAt:
-            newUpdate.createdAt,
-
-          pulse: null
-        }
-      };
+            new Date().toISOString()
+        };
 
 
-      setBusinessUpdates(
-        latestUpdates
-      );
-
-      setUpdateText("");
-      setBusy(true);
-
-      try {
-        /*
-          LANGKAH 1
-          Memperbarui kondisi usaha
-        */
-
-        const latestPulse =
-          await runPulse(
-            latestContext,
-            {
-              silent: true,
-              goToTab: false
-            }
-          );
+        const latestUpdates = [
+          newUpdate,
+          ...businessUpdates
+        ];
 
 
-        /*
-          LANGKAH 2
-          Memperbarui diagnosis
-        */
+        const latestContext = {
+          ...business,
 
-        const latestDiagnosis =
-          await runDiagnosis(
-            latestContext,
-            {
-              silent: true,
-              goToTab: false
-            }
-          );
+          updates: latestUpdates.map(
+            (item) => ({
+              id: item.id,
 
+              text: item.text,
 
-        /*
-          LANGKAH 3
-          Memperbarui strategi
-        */
+              createdAt:
+                item.createdAt ||
+                item.date ||
+                null,
 
-        await runAutopilot(
-          latestContext,
-          {
-            diagnosisOverride:
-              latestDiagnosis,
+              pulse:
+                item.pulse || null
+            })
+          ),
 
-            pulseOverride:
-              latestPulse,
+          latestUpdate: {
+            id: newUpdate.id,
 
-            silent: true,
+            text: newUpdate.text,
 
-            goToTab: false
+            createdAt:
+              newUpdate.createdAt,
+
+            pulse: null
           }
+        };
+
+
+        setBusinessUpdates(
+          latestUpdates
         );
 
+        setUpdateText("");
+        setBusy(true);
 
-        setTab("pulse");
+        try {
+          /*
+            LANGKAH 1
+            Memperbarui kondisi usaha
+          */
 
-      } catch (error) {
-        console.error(
-          "Gagal memperbarui analisis:",
-          error
-        );
-
-        alert(
-          formatError(error) ||
-          "Pembaruan berhasil disimpan, tetapi analisis terbaru gagal dibuat."
-        );
-
-      } finally {
-        setBusy(false);
-      }
-    };
-
-
-  const getAnalysisHistory =
-    () => {
-      const history = [];
-
-      if (business) {
-        history.push({
-          type: "Profil Usaha",
-
-          description:
-            safeText(business.product) ||
-            safeText(business.description) ||
-            "Informasi usaha telah dianalisis.",
-
-          date:
-            "Tersedia"
-        });
-      }
-
-      if (pulseData) {
-        history.push({
-          type:
-            "Lihat Kondisi Usaha",
-
-          description:
-            safeText(pulseData.summary) ||
-            "Analisis kondisi usaha telah dibuat.",
-
-          date:
-            "Selesai"
-        });
-      }
-
-      if (diagnosis) {
-        history.push({
-          type:
-            "Diagnosis Usaha",
-
-          description:
-            safeText(diagnosis.summary) ||
-            "Diagnosis usaha telah dibuat.",
-
-          date:
-            "Selesai"
-        });
-      }
-
-      if (autopilotData) {
-        history.push({
-          type:
-            "Strategi & Tindakan",
-
-          description:
-            safeText(autopilotData.summary) ||
-            "Rencana tindakan telah dibuat.",
-
-          date:
-            "Selesai"
-        });
-      }
-
-      return history;
-    };
+          const latestPulse =
+            await runPulse(
+              latestContext,
+              {
+                silent: true,
+                goToTab: false
+              }
+            );
 
 
-  const analysisHistory =
-    getAnalysisHistory();
+          /*
+            LANGKAH 2
+            Memperbarui diagnosis
+          */
 
-  // =========================
-  // EXPORT REPORTS TO PDF
-  // Browser print engine: no additional dependency required.
-  // =========================
-  const escapePdfHtml = (value) => {
-    return String(value ?? "")
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-  };
+          const latestDiagnosis =
+            await runDiagnosis(
+              latestContext,
+              {
+                silent: true,
+                goToTab: false
+              }
+            );
 
-  const pdfLabel = (label) => {
-    const labels = {
-      // Judul/fitur
-      "Business Pulse": "Kondisi Usaha",
-      "Business Diagnosis": "Diagnosis Usaha",
-      "Diagnosis": "Diagnosis Usaha",
-      "Market Insight": "Wawasan Pasar",
-      "Business Autopilot": "Strategi & Tindakan",
-      "Growth Actions": "Tindakan Pertumbuhan",
-      "Business Updates": "Pembaruan Usaha",
-      "Financial Statements": "Laporan Keuangan",
-      "Summary": "Ikhtisar",
-      "Status": "Status",
-      "Summary": "Ringkasan",
-      "Main Problem": "Masalah Utama",
-      "Positive": "Hal Positif",
-      "Attention": "Perlu Perhatian",
-      "Priority": "Prioritas",
-      "Next Step": "Langkah Berikutnya",
-      "Strengths": uiText("Kekuatan","Strengths"),
-      "Problems": uiText("Masalah","Problems"),
-      "Opportunities": "Peluang",
-      "Recommendations": "Rekomendasi",
-      "Action": uiText("Tindakan","Actions"),
-      "Reason": "Alasan",
-      "Impact": "Dampak",
-      "Potential": "Potensi",
-      "Description": "Deskripsi",
-      "Title": "Judul",
-      "Date": "Tanggal",
-      "Description": "Keterangan",
-      "Type": "Jenis",
-      "Amount": "Jumlah",
-      "Reason": "Alasan",
-      "Market Condition": "Kondisi Pasar",
-      "Demand Signal": "Sinyal Permintaan",
-      "Business Perspective": "Perspektif Bisnis",
-      "External Factors": "Faktor Eksternal",
-      "Risks": "Risiko",
-      "Competition Insight": "Wawasan Persaingan",
-      "Scenarios": "Skenario",
-      "Optimistic": "Optimistis",
-      "Realistic": "Realistis",
-      "Risk": "Risiko",
-      "Strategic Implication": "Implikasi Strategis",
-      "Limitations": "Keterbatasan",
-      "DemandSignal": "Sinyal Permintaan",
-      "MarketCondition": "Kondisi Pasar",
-      "BusinessPerspective": "Perspektif Bisnis",
-      "ExternalFactors": "Faktor Eksternal",
-      "CompetitionInsight": "Wawasan Persaingan",
-      "StrategicImplication": "Implikasi Strategis",
-      "MainProblem": "Masalah Utama",
-      "NextStep": "Langkah Berikutnya",
-      "CumulativeNetProfit": "Laba Bersih Kumulatif",
-      "cashIn": "Kas Masuk",
-      "cashOut": "Kas Keluar",
-      "cashChange": "Perubahan Kas Bersih",
-      "cashTotal": "Saldo Kas dan Bank",
-      "income": uiText("Pendapatan","Revenue"),
-      "hpp": "Harga Pokok Penjualan",
-      "grossProfit": "Laba Kotor",
-      "expense": "Beban Operasional",
-      "netProfit": uiText("Laba Bersih","Net Profit"),
-      "receivable": "Piutang Usaha",
-      "inventory": "Persediaan",
-      "totalAssets": "Total Aset",
-      "debt": "Liabilitas",
-      "capital": "Modal",
-      "cumulativeNetProfit": "Laba Ditahan",
-      "withdrawal": "Prive",
-      "totalEquity": "Total Ekuitas",
-      "ASET": "ASET",
-      "LIABILITAS DAN EKUITAS": "LIABILITAS DAN EKUITAS",
-      "Pendapatan": "Pendapatan",
-      "Harga Pokok Penjualan": "Harga Pokok Penjualan",
-      "Laba Kotor": "Laba Kotor",
-      "Beban Operasional": "Beban Operasional",
-      "Laba Bersih": "Laba Bersih",
-      "Kas Masuk": "Kas Masuk",
-      "Kas Keluar": "Kas Keluar",
-      "Perubahan Kas Bersih": "Perubahan Kas Bersih",
-      "Saldo Kas dan Bank": "Saldo Kas dan Bank",
-      "Kas dan Bank": "Kas dan Bank",
-      "Piutang Usaha": "Piutang Usaha",
-      "Persediaan": "Persediaan",
-      "Total Aset": "Total Aset",
-      "Liabilitas": "Liabilitas",
-      "Modal": "Modal",
-      "Laba Ditahan": "Laba Ditahan",
-      "Prive": "Prive",
-      "Total Ekuitas": "Total Ekuitas",
-      "Total Liabilitas dan Ekuitas": "Total Liabilitas dan Ekuitas",
-      "Tidak ada transaksi yang tercatat pada periode ini.": "Tidak ada transaksi yang tercatat pada periode ini.",
-      "No transactions recorded for this period.": "Tidak ada transaksi yang tercatat pada periode ini.",
-      "connector-ready": "Siap digunakan",
-      "operational": "Beroperasi",
-      "configured": "Terkonfigurasi",
-      "down": "Tidak tersedia",
-      "HIGH": "TINGGI",
-      "MEDIUM": "SEDANG",
-      "LOW": "RENDAH"
-    };
 
-    const raw = String(label ?? "");
-    if (Object.prototype.hasOwnProperty.call(labels, raw)) return labels[raw];
+          /*
+            LANGKAH 3
+            Memperbarui strategi
+          */
 
-    // Fallback untuk key camelCase/snake-like yang mungkin muncul dari respons AI.
-    const normalized = raw
-      .replace(/([a-z])([A-Z])/g, "$1 $2")
-      .replace(/[_-]+/g, " ")
-      .trim();
-    if (Object.prototype.hasOwnProperty.call(labels, normalized)) return labels[normalized];
+          await runAutopilot(
+            latestContext,
+            {
+              diagnosisOverride:
+                latestDiagnosis,
 
-    const lower = normalized.toLowerCase();
-    const dynamic = {
-      "status": "Status", "summary": "Ringkasan",
-      "main problem": "Masalah Utama", "positive": "Hal Positif",
-      "attention": "Perlu Perhatian", "priority": "Prioritas",
-      "next step": "Langkah Berikutnya", "strengths": uiText("Kekuatan","Strengths"),
-      "problems": uiText("Masalah","Problems"), "opportunities": "Peluang",
-      "recommendations": "Rekomendasi", "action": uiText("Tindakan","Actions"),
-      "reason": "Alasan", "impact": "Dampak", "potential": "Potensi",
-      "description": "Deskripsi", "title": "Judul", "date": "Tanggal",
-      "type": "Jenis", "amount": "Jumlah", "market condition": "Kondisi Pasar",
-      "demand signal": "Sinyal Permintaan", "business perspective": "Perspektif Bisnis",
-      "external factors": "Faktor Eksternal", "risks": "Risiko",
-      "competition insight": "Wawasan Persaingan", "scenarios": "Skenario",
-      "optimistic": "Optimistis", "realistic": "Realistis",
-      "risk": "Risiko", "strategic implication": "Implikasi Strategis",
-      "limitations": "Keterbatasan",
-      "market insight": "Wawasan Pasar",
-      "market condition": "Kondisi Pasar",
-      "demand signal": "Sinyal Permintaan",
-      "business perspective": "Perspektif Bisnis",
-      "external factors": "Faktor Eksternal",
-      "competition insight": "Wawasan Persaingan",
-      "strategic implication": "Implikasi Strategis",
-      "scenarios": "Skenario",
-      "optimistic": "Optimistis",
-      "realistic": "Realistis",
-      "risk": "Risiko",
-      "warning": "peringatan",
-      "plan": "Ringkasan Rencana",
-      "plan7": "Rencana 7 Hari",
-      "plan14": "Rencana 14 Hari",
-      "plan30": "Rencana 30 Hari"
-    };
-    return dynamic[lower] || normalized || raw;
-  };
+              pulseOverride:
+                latestPulse,
 
-  const translatePdfText = (value) => {
-    if (value === null || value === undefined) return value;
-    const replacements = [
-      [/\bMarket Insight\b/gi, "Wawasan Pasar"],
-      [/\bBusiness Perspective\b/gi, "Perspektif Bisnis"],
-      [/\bMarket Condition\b/gi, "Kondisi Pasar"],
-      [/\bDemand Signal\b/gi, "Sinyal Permintaan"],
-      [/\bExternal Factors\b/gi, "Faktor Eksternal"],
-      [/\bCompetition Insight\b/gi, "Wawasan Persaingan"],
-      [/\bStrategic Implication\b/gi, "Implikasi Strategis"],
-      [/\bOptimistic\b/gi, "Optimistis"],
-      [/\bRealistic\b/gi, "Realistis"],
-      [/\bRisk\b/gi, "Risiko"],
-      [/\bRisks\b/gi, "Risiko"],
-      [/\bOpportunities\b/gi, "Peluang"],
-      [/\bStrengths\b/gi, uiText("Kekuatan","Strengths")],
-      [/\bProblems\b/gi, uiText("Masalah","Problems")],
-      [/\bRecommendations\b/gi, "Rekomendasi"],
-      [/\bSummary\b/gi, "Ringkasan"],
-      [/\bStatus\b/gi, "Status"],
-      [/\bReason\b/gi, "Alasan"],
-      [/\bLimitations\b/gi, "Keterbatasan"],
-      [/\bDemandSignal\b/gi, "Sinyal Permintaan"],
-      [/\bMarketCondition\b/gi, "Kondisi Pasar"],
-      [/\bBusinessPerspective\b/gi, "Perspektif Bisnis"],
-      [/\bExternalFactors\b/gi, "Faktor Eksternal"],
-      [/\bCompetitionInsight\b/gi, "Wawasan Persaingan"],
-      [/\bStrategicImplication\b/gi, "Implikasi Strategis"],
-    ];
-    return replacements.reduce((result, [pattern, replacement]) => result.replace(pattern, replacement), String(value));
-  };
+              silent: true,
 
-  const formatPdfValue = (value) => {
-    if (value === null || value === undefined || value === "") return "—";
-    if (Array.isArray(value)) {
-      if (!value.length) return "—";
-      return `<table class="pdf-table"><tbody>${value.map((item) => {
-        if (item && typeof item === "object" && !Array.isArray(item)) {
-          return `<tr>${Object.values(item).map((cell) => `<td>${formatPdfValue(cell)}</td>`).join("")}</tr>`;
+              goToTab: false
+            }
+          );
+
+
+          setTab("pulse");
+
+        } catch (error) {
+          console.error(
+            "Gagal memperbarui analisis:",
+            error
+          );
+
+          alert(
+            formatError(error) ||
+            "Pembaruan berhasil disimpan, tetapi analisis terbaru gagal dibuat."
+          );
+
+        } finally {
+          setBusy(false);
         }
-        return `<tr><td>${formatPdfValue(item)}</td></tr>`;
-      }).join("")}</tbody></table>`;
+
+    };
+
+    const getAnalysisHistory = () => { const history = [];
+
+        if (business) {
+          history.push({
+            type: "Profil Usaha",
+
+            description:
+              safeText(business.product) ||
+              safeText(business.description) ||
+              "Informasi usaha telah dianalisis.",
+
+            date:
+              "Tersedia"
+          });
+        }
+
+        if (pulseData) {
+          history.push({
+            type:
+              "Lihat Kondisi Usaha",
+
+            description:
+              safeText(pulseData.summary) ||
+              "Analisis kondisi usaha telah dibuat.",
+
+            date:
+              "Selesai"
+          });
+        }
+
+        if (diagnosis) {
+          history.push({
+            type:
+              "Diagnosis Usaha",
+
+            description:
+              safeText(diagnosis.summary) ||
+              "Diagnosis usaha telah dibuat.",
+
+            date:
+              "Selesai"
+          });
+        }
+
+        if (autopilotData) {
+          history.push({
+            type:
+              "Strategi & Tindakan",
+
+            description:
+              safeText(autopilotData.summary) ||
+              "Rencana tindakan telah dibuat.",
+
+            date:
+              "Selesai"
+          });
+        }
+
+        return history;
+
+    };
+
+    const analysisHistory = getAnalysisHistory();
+
+    // ========================= // EXPORT REPORTS TO PDF // Browser
+    print engine: no additional dependency required. //
+    ========================= const escapePdfHtml = (value) => { return
+    String(value ?? ““) .replace(/&/g,”&“) .replace(/</g,”<“)
+    .replace(/>/g,”>“) .replace(/”/g, “"“) .replace(/’/g,”'“); };
+
+    const pdfLabel = (label) => { const labels = { // Judul/fitur
+    “Business Pulse”: “Kondisi Usaha”, “Business Diagnosis”: “Diagnosis
+    Usaha”, “Diagnosis”: “Diagnosis Usaha”, “Market Insight”: “Wawasan
+    Pasar”, “Business Autopilot”: “Strategi & Tindakan”, “Growth
+    Actions”: “Tindakan Pertumbuhan”, “Business Updates”: “Pembaruan
+    Usaha”, “Financial Statements”: “Laporan Keuangan”, “Summary”:
+    “Ikhtisar”, “Status”: “Status”, “Summary”: “Ringkasan”, “Main
+    Problem”: “Masalah Utama”, “Positive”: “Hal Positif”, “Attention”:
+    “Perlu Perhatian”, “Priority”: “Prioritas”, “Next Step”: “Langkah
+    Berikutnya”, “Strengths”: uiText(“Kekuatan”,“Strengths”),
+    “Problems”: uiText(“Masalah”,“Problems”), “Opportunities”:
+    “Peluang”, “Recommendations”: “Rekomendasi”, “Action”:
+    uiText(“Tindakan”,“Actions”), “Reason”: “Alasan”, “Impact”:
+    “Dampak”, “Potential”: “Potensi”, “Description”: “Deskripsi”,
+    “Title”: “Judul”, “Date”: “Tanggal”, “Description”: “Keterangan”,
+    “Type”: “Jenis”, “Amount”: “Jumlah”, “Reason”: “Alasan”, “Market
+    Condition”: “Kondisi Pasar”, “Demand Signal”: “Sinyal Permintaan”,
+    “Business Perspective”: “Perspektif Bisnis”, “External Factors”:
+    “Faktor Eksternal”, “Risks”: “Risiko”, “Competition Insight”:
+    “Wawasan Persaingan”, “Scenarios”: “Skenario”, “Optimistic”:
+    “Optimistis”, “Realistic”: “Realistis”, “Risk”: “Risiko”, “Strategic
+    Implication”: “Implikasi Strategis”, “Limitations”: “Keterbatasan”,
+    “DemandSignal”: “Sinyal Permintaan”, “MarketCondition”: “Kondisi
+    Pasar”, “BusinessPerspective”: “Perspektif Bisnis”,
+    “ExternalFactors”: “Faktor Eksternal”, “CompetitionInsight”:
+    “Wawasan Persaingan”, “StrategicImplication”: “Implikasi Strategis”,
+    “MainProblem”: “Masalah Utama”, “NextStep”: “Langkah Berikutnya”,
+    “CumulativeNetProfit”: “Laba Bersih Kumulatif”, “cashIn”: “Kas
+    Masuk”, “cashOut”: “Kas Keluar”, “cashChange”: “Perubahan Kas
+    Bersih”, “cashTotal”: “Saldo Kas dan Bank”, “income”:
+    uiText(“Pendapatan”,“Revenue”), “hpp”: “Harga Pokok Penjualan”,
+    “grossProfit”: “Laba Kotor”, “expense”: “Beban Operasional”,
+    “netProfit”: uiText(“Laba Bersih”,“Net Profit”), “receivable”:
+    “Piutang Usaha”, “inventory”: “Persediaan”, “totalAssets”: “Total
+    Aset”, “debt”: “Liabilitas”, “capital”: “Modal”,
+    “cumulativeNetProfit”: “Laba Ditahan”, “withdrawal”: “Prive”,
+    “totalEquity”: “Total Ekuitas”, “ASET”: “ASET”, “LIABILITAS DAN
+    EKUITAS”: “LIABILITAS DAN EKUITAS”, “Pendapatan”: “Pendapatan”,
+    “Harga Pokok Penjualan”: “Harga Pokok Penjualan”, “Laba Kotor”:
+    “Laba Kotor”, “Beban Operasional”: “Beban Operasional”, “Laba
+    Bersih”: “Laba Bersih”, “Kas Masuk”: “Kas Masuk”, “Kas Keluar”: “Kas
+    Keluar”, “Perubahan Kas Bersih”: “Perubahan Kas Bersih”, “Saldo Kas
+    dan Bank”: “Saldo Kas dan Bank”, “Kas dan Bank”: “Kas dan Bank”,
+    “Piutang Usaha”: “Piutang Usaha”, “Persediaan”: “Persediaan”, “Total
+    Aset”: “Total Aset”, “Liabilitas”: “Liabilitas”, “Modal”: “Modal”,
+    “Laba Ditahan”: “Laba Ditahan”, “Prive”: “Prive”, “Total Ekuitas”:
+    “Total Ekuitas”, “Total Liabilitas dan Ekuitas”: “Total Liabilitas
+    dan Ekuitas”, “Tidak ada transaksi yang tercatat pada periode ini.”:
+    “Tidak ada transaksi yang tercatat pada periode ini.”, “No
+    transactions recorded for this period.”: “Tidak ada transaksi yang
+    tercatat pada periode ini.”, “connector-ready”: “Siap digunakan”,
+    “operational”: “Beroperasi”, “configured”: “Terkonfigurasi”, “down”:
+    “Tidak tersedia”, “HIGH”: “TINGGI”, “MEDIUM”: “SEDANG”, “LOW”:
+    “RENDAH” };
+
+    const raw = String(label ?? ““); if
+    (Object.prototype.hasOwnProperty.call(labels, raw)) return
+    labels[raw];
+
+    // Fallback untuk key camelCase/snake-like yang mungkin muncul dari
+    respons AI. const normalized = raw .replace(/([a-z])([A-Z])/g, “$1
+    $2”) .replace(/[_-]+/g, ” “) .trim(); if
+    (Object.prototype.hasOwnProperty.call(labels, normalized)) return
+    labels[normalized];
+
+    const lower = normalized.toLowerCase(); const dynamic = { “status”:
+    “Status”, “summary”: “Ringkasan”, “main problem”: “Masalah Utama”,
+    “positive”: “Hal Positif”, “attention”: “Perlu Perhatian”,
+    “priority”: “Prioritas”, “next step”: “Langkah Berikutnya”,
+    “strengths”: uiText(“Kekuatan”,“Strengths”), “problems”:
+    uiText(“Masalah”,“Problems”), “opportunities”: “Peluang”,
+    “recommendations”: “Rekomendasi”, “action”:
+    uiText(“Tindakan”,“Actions”), “reason”: “Alasan”, “impact”:
+    “Dampak”, “potential”: “Potensi”, “description”: “Deskripsi”,
+    “title”: “Judul”, “date”: “Tanggal”, “type”: “Jenis”, “amount”:
+    “Jumlah”, “market condition”: “Kondisi Pasar”, “demand signal”:
+    “Sinyal Permintaan”, “business perspective”: “Perspektif Bisnis”,
+    “external factors”: “Faktor Eksternal”, “risks”: “Risiko”,
+    “competition insight”: “Wawasan Persaingan”, “scenarios”:
+    “Skenario”, “optimistic”: “Optimistis”, “realistic”: “Realistis”,
+    “risk”: “Risiko”, “strategic implication”: “Implikasi Strategis”,
+    “limitations”: “Keterbatasan”, “market insight”: “Wawasan Pasar”,
+    “market condition”: “Kondisi Pasar”, “demand signal”: “Sinyal
+    Permintaan”, “business perspective”: “Perspektif Bisnis”, “external
+    factors”: “Faktor Eksternal”, “competition insight”: “Wawasan
+    Persaingan”, “strategic implication”: “Implikasi Strategis”,
+    “scenarios”: “Skenario”, “optimistic”: “Optimistis”, “realistic”:
+    “Realistis”, “risk”: “Risiko”, “warning”: “peringatan”, “plan”:
+    “Ringkasan Rencana”, “plan7”: “Rencana 7 Hari”, “plan14”: “Rencana
+    14 Hari”, “plan30”: “Rencana 30 Hari” }; return dynamic[lower] ||
+    normalized || raw; };
+
+    const translatePdfText = (value) => { if (value === null || value
+    === undefined) return value; const replacements = [ [/Insightgi,
+    “Wawasan Pasar”], [/Perspectivegi, “Perspektif Bisnis”],
+    [/Conditiongi, “Kondisi Pasar”], [/Signalgi, “Sinyal Permintaan”],
+    [/Factorsgi, “Faktor Eksternal”], [/Insightgi, “Wawasan
+    Persaingan”], [/Implicationgi, “Implikasi Strategis”], [/gi,
+    “Optimistis”], [/gi, “Realistis”], [/gi, “Risiko”], [/gi, “Risiko”],
+    [/gi, “Peluang”], [/gi, uiText(“Kekuatan”,“Strengths”)], [/gi,
+    uiText(“Masalah”,“Problems”)], [/gi, “Rekomendasi”], [/gi,
+    “Ringkasan”], [/gi, “Status”], [/gi, “Alasan”], [/gi,
+    “Keterbatasan”], [/gi, “Sinyal Permintaan”], [/gi, “Kondisi Pasar”],
+    [/gi, “Perspektif Bisnis”], [/gi, “Faktor Eksternal”], [/gi,
+    “Wawasan Persaingan”], [/gi, “Implikasi Strategis”], ]; return
+    replacements.reduce((result, [pattern, replacement]) =>
+    result.replace(pattern, replacement), String(value)); };
+
+    const formatPdfValue = (value) => { if (value === null || value ===
+    undefined || value === ““) return”—“; if (Array.isArray(value)) { if
+    (!value.length) return”—“; return
+    <table class="pdf-table"><tbody>${value.map((item) => {       if (item && typeof item === "object" && !Array.isArray(item)) {         return
+
+    ${Object.values(item).map((cell) => `<td>${formatPdfValue(cell)}
+
+    ).join("")}</tr>; } return
+    <tr><td>${formatPdfValue(item)}</td></tr>; }).join(““)}
+
+    ;   }   if (typeof value === "object") {     return
+
+    ${Object.entries(value)
+          .map(([key, item]) => `<tr><th>${escapePdfHtml(pdfLabel(key))}
+
+    ${formatPdfValue(item)}
+
+    )       .join("")}</tbody></table>; } return
+    escapePdfHtml(translatePdfText(value)).replace(//g, “”); };
+
+    const exportReportPdf = (title, sections = []) => { if (typeof
+    window === “undefined”) return;
+
+    const reportWindow = window.open(““,”_blank”,
+    “width=980,height=900”); if (!reportWindow) { alert(“Popup browser
+    diblokir. Izinkan popup untuk ZenAI, lalu coba lagi.”); return; }
+
+    const businessName = business?.name || business?.businessName ||
+    uiText(“Usaha Anda”, “Your Business”); const printLocale = locale
+    === “en” ? “en-US” : “id-ID”; const generatedAt = new
+    Intl.DateTimeFormat(printLocale, { dateStyle: “long”, timeStyle:
+    “short” }).format(new Date()); const printLanguage = locale === “en”
+    ? “en” : “id”; const printActionLabel = uiText(“Cetak / Simpan
+    sebagai PDF”, “Print / Save as PDF”); const printSubtitle =
+    uiText(“Pendamping Bisnis Berbasis AI”, “AI-Powered Business
+    Assistant”); const printFooter = uiText( “ZENAI — AI BUSINESS
+    ASSISTANT · Pahami. Putuskan. Tumbuh.”, “ZENAI — AI BUSINESS
+    ASSISTANT · Understand. Decide. Grow.” );
+
+    const sectionHtml = sections .filter((section) => section &&
+    section.value !== null && section.value !== undefined)
+    .map((section) =>
+    <section class="pdf-section">         <h2>${escapePdfHtml(section.title)}</h2>         ${formatPdfValue(section.value)}       </section>)
+    .join(““);
+
+    reportWindow.document.open(); reportWindow.document.write(`<!doctype
+    html>
+
+    ${escapePdfHtml(title)} — ZENAI</title>
+    <style>
+    @page { size: A4; margin: 16mm 15mm 18mm; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, Helvetica, sans-serif; color: #172033; background: #fff; font-size: 10.5px; line-height: 1.45; }
+    .pdf-header { display:flex; align-items:center; gap:14px; padding-bottom:14px; border-bottom:2px solid #2563eb; margin-bottom:20px; }
+    .pdf-logo { width:58px; height:58px; object-fit:contain; }
+    .brand { margin:0; font-size:18px; font-weight:800; letter-spacing:.04em; }
+    .subtitle { margin:2px 0 0; font-size:10px; color:#64748b; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+    .report-title { margin:0 0 4px; font-size:20px; color:#0f172a; }
+    .business { margin:0; color:#475569; font-size:11px; font-weight:600; }
+    .meta { margin-top:5px; color:#64748b; font-size:9px; }
+    .pdf-section { margin:0 0 18px; break-inside: avoid-page; page-break-inside: avoid; }
+    .pdf-section h2 { margin:0 0 8px; padding:7px 10px; background:#f8fafc; border-left:4px solid #2563eb; color:#1e3a8a; font-size:12px; break-after:avoid; page-break-after:avoid; }
+    .pdf-table { width:100%; border-collapse:collapse; margin-top:4px; page-break-inside:auto; }
+    .pdf-table th, .pdf-table td { border:1px solid #cbd5e1; padding:7px 9px; vertical-align:top; overflow-wrap:anywhere; }
+    .pdf-table thead { display:table-header-group; }
+    .pdf-table tr { break-inside:avoid; page-break-inside:avoid; }
+    .pdf-table th { width:42%; text-align:left; background:#f8fafc; font-weight:700; color:#334155; }
+    .pdf-table td { text-align:right; }
+    .pdf-table td .pdf-table { margin-top:0; }
+    .pdf-table td .pdf-table th, .pdf-table td .pdf-table td { text-align:left; }
+    ul { margin:5px 0 5px 20px; padding:0; }
+    li { margin-bottom:4px; orphans:3; widows:3; }
+    .pdf-footer { margin-top:24px; padding-top:10px; border-top:1px solid #cbd5e1; color:#64748b; font-size:8.5px; text-align:center; }
+    .print-actions { position:sticky; top:0; padding:10px 0; background:#fff; text-align:right; }
+    .print-actions button { border:0; background:#2563eb; color:#fff; padding:9px 14px; border-radius:8px; font-weight:700; cursor:pointer; }
+    @media print {
+      @page { size:A4 portrait; margin:16mm 15mm 18mm; }
+      html, body { margin:0 !important; padding:0 !important; background:#fff !important; color:#172033 !important; }
+      .print-actions { display:none !important; }
+      .pdf-section, .pdf-header, .report-title, .business, .meta, .pdf-footer { break-inside:avoid-page; }
     }
-    if (typeof value === "object") {
-      return `<table class="pdf-table"><tbody>${Object.entries(value)
-        .map(([key, item]) => `<tr><th>${escapePdfHtml(pdfLabel(key))}</th><td>${formatPdfValue(item)}</td></tr>`)
-        .join("")}</tbody></table>`;
-    }
-    return escapePdfHtml(translatePdfText(value)).replace(/\n/g, "<br />");
-  };
+    </style>
+    </head>
+    <body>
+    <div class="print-actions"><button onclick="window.print()">${escapePdfHtml(printActionLabel)}
 
-  const exportReportPdf = (title, sections = []) => {
-    if (typeof window === "undefined") return;
+    ZENAI
 
-    const reportWindow = window.open("", "_blank", "width=980,height=900");
-    if (!reportWindow) {
-      alert("Popup browser diblokir. Izinkan popup untuk ZenAI, lalu coba lagi.");
-      return;
-    }
+    ${escapePdfHtml(printSubtitle)}</div>
+    </div>
+    </header>
+    <h1 class="report-title">${escapePdfHtml(title)}
 
-    const businessName = business?.name || business?.businessName || uiText("Usaha Anda", "Your Business");
-    const printLocale = locale === "en" ? "en-US" : "id-ID";
-    const generatedAt = new Intl.DateTimeFormat(printLocale, {
-      dateStyle: "long",
-      timeStyle: "short"
-    }).format(new Date());
-    const printLanguage = locale === "en" ? "en" : "id";
-    const printActionLabel = uiText("Cetak / Simpan sebagai PDF", "Print / Save as PDF");
-    const printSubtitle = uiText("Pendamping Bisnis Berbasis AI", "AI-Powered Business Assistant");
-    const printFooter = uiText(
-      "ZENAI — AI BUSINESS ASSISTANT · Pahami. Putuskan. Tumbuh.",
-      "ZENAI — AI BUSINESS ASSISTANT · Understand. Decide. Grow."
-    );
+    Usaha: ${escapePdfHtml(businessName)}
 
-    const sectionHtml = sections
-      .filter((section) => section && section.value !== null && section.value !== undefined)
-      .map((section) => `
-        <section class="pdf-section">
-          <h2>${escapePdfHtml(section.title)}</h2>
-          ${formatPdfValue(section.value)}
-        </section>
-      `)
-      .join("");
+    Dibuat: escapePdfHtml(generatedAt) < /p>{sectionHtml}
 
-    reportWindow.document.open();
-    reportWindow.document.write(`<!doctype html>
-<html lang="${printLanguage}">
-<head>
-<meta charset="utf-8" />
-<title>${escapePdfHtml(title)} — ZENAI</title>
-<style>
-  @page { size: A4; margin: 16mm 15mm 18mm; }
-  * { box-sizing: border-box; }
-  body { margin: 0; font-family: Arial, Helvetica, sans-serif; color: #172033; background: #fff; font-size: 10.5px; line-height: 1.45; }
-  .pdf-header { display:flex; align-items:center; gap:14px; padding-bottom:14px; border-bottom:2px solid #2563eb; margin-bottom:20px; }
-  .pdf-logo { width:58px; height:58px; object-fit:contain; }
-  .brand { margin:0; font-size:18px; font-weight:800; letter-spacing:.04em; }
-  .subtitle { margin:2px 0 0; font-size:10px; color:#64748b; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
-  .report-title { margin:0 0 4px; font-size:20px; color:#0f172a; }
-  .business { margin:0; color:#475569; font-size:11px; font-weight:600; }
-  .meta { margin-top:5px; color:#64748b; font-size:9px; }
-  .pdf-section { margin:0 0 18px; break-inside: avoid-page; page-break-inside: avoid; }
-  .pdf-section h2 { margin:0 0 8px; padding:7px 10px; background:#f8fafc; border-left:4px solid #2563eb; color:#1e3a8a; font-size:12px; break-after:avoid; page-break-after:avoid; }
-  .pdf-table { width:100%; border-collapse:collapse; margin-top:4px; page-break-inside:auto; }
-  .pdf-table th, .pdf-table td { border:1px solid #cbd5e1; padding:7px 9px; vertical-align:top; overflow-wrap:anywhere; }
-  .pdf-table thead { display:table-header-group; }
-  .pdf-table tr { break-inside:avoid; page-break-inside:avoid; }
-  .pdf-table th { width:42%; text-align:left; background:#f8fafc; font-weight:700; color:#334155; }
-  .pdf-table td { text-align:right; }
-  .pdf-table td .pdf-table { margin-top:0; }
-  .pdf-table td .pdf-table th, .pdf-table td .pdf-table td { text-align:left; }
-  ul { margin:5px 0 5px 20px; padding:0; }
-  li { margin-bottom:4px; orphans:3; widows:3; }
-  .pdf-footer { margin-top:24px; padding-top:10px; border-top:1px solid #cbd5e1; color:#64748b; font-size:8.5px; text-align:center; }
-  .print-actions { position:sticky; top:0; padding:10px 0; background:#fff; text-align:right; }
-  .print-actions button { border:0; background:#2563eb; color:#fff; padding:9px 14px; border-radius:8px; font-weight:700; cursor:pointer; }
-  @media print {
-    @page { size:A4 portrait; margin:16mm 15mm 18mm; }
-    html, body { margin:0 !important; padding:0 !important; background:#fff !important; color:#172033 !important; }
-    .print-actions { display:none !important; }
-    .pdf-section, .pdf-header, .report-title, .business, .meta, .pdf-footer { break-inside:avoid-page; }
-  }
-</style>
-</head>
-<body>
-<div class="print-actions"><button onclick="window.print()">${escapePdfHtml(printActionLabel)}</button></div>
-<header class="pdf-header">
-  <img class="pdf-logo" src="${window.location.origin}/zenai-logo.png" alt="ZenAI Logo" onerror="this.style.display='none'" />
-  <div>
-    <div class="brand">ZENAI</div>
-    <div class="subtitle">${escapePdfHtml(printSubtitle)}</div>
-  </div>
-</header>
-<h1 class="report-title">${escapePdfHtml(title)}</h1>
-<p class="business">Usaha: ${escapePdfHtml(businessName)}</p>
-<p class="meta">Dibuat: ${escapePdfHtml(generatedAt)}</p>
-${sectionHtml}
-<div class="pdf-footer">${escapePdfHtml(printFooter)}</div>
-</body>
-</html>`);
-    reportWindow.document.close();
-  };
+    ${escapePdfHtml(printFooter)}
 
-  const exportPulsePdf = () => exportReportPdf(uiText("Laporan Kondisi Usaha","Business Condition Report"), [
-    { title: uiText("Kondisi Usaha","Business Condition"), value: pulseData }
-  ]);
+    `); reportWindow.document.close(); };
 
-  const exportDiagnosisPdf = () => exportReportPdf(uiText("Laporan Diagnosis Usaha","Business Diagnosis Report"), [
-    { title: uiText('Diagnosis Usaha','Business Diagnosis'), value: diagnosis }
-  ]);
+    const exportPulsePdf = () => exportReportPdf(uiText(“Laporan Kondisi
+    Usaha”,“Business Condition Report”), [ { title: uiText(“Kondisi
+    Usaha”,“Business Condition”), value: pulseData }]);
 
-  const exportMarketPdf = () => {
-    const analysis = marketData?.analysis || {};
-    const sourceItems = Array.isArray(marketData?.sources)
-      ? marketData.sources.slice(0, 10).map((item, index) => ({
-          No: index + 1,
-          Judul: item?.title || "Sumber informasi",
-          Tanggal: item?.publishedDate || "—",
-          Tautan: item?.url || "—"
-        }))
-      : [];
+    const exportDiagnosisPdf = () => exportReportPdf(uiText(“Laporan
+    Diagnosis Usaha”,“Business Diagnosis Report”), [ { title:
+    uiText(‘Diagnosis Usaha’,‘Business Diagnosis’), value: diagnosis
+    }]);
 
-    return exportReportPdf(uiText("Laporan Perspektif Bisnis","Business Perspective Report"), [
-      {
-        title: uiText("Ringkasan","Summary"),
-        value: analysis.summary || uiText("Belum tersedia.","Not available yet.")
-      },
-      {
-        title: uiText('Kondisi Pasar','Market Condition'),
-        value: analysis.marketCondition || uiText("Belum tersedia.","Not available yet.")
-      },
-      {
-        title: uiText('Sinyal Permintaan','Demand Signal'),
-        value: analysis.demandSignal || uiText("Belum tersedia.","Not available yet.")
-      },
-      {
-        title: uiText('Perspektif Bisnis','Business Perspective'),
-        value: analysis.businessPerspective || uiText("Belum tersedia.","Not available yet.")
-      },
-      {
-        title: uiText("Faktor Eksternal","External Factors"),
-        value: analysis.externalFactors || []
-      },
-      {
-        title: uiText("Risiko","Risk"),
-        value: analysis.risks || []
-      },
-      {
-        title: uiText('Peluang','Opportunity'),
-        value: analysis.opportunities || []
-      },
-      {
-        title: uiText("Wawasan Persaingan","Competition Insight"),
-        value: analysis.competitionInsight || uiText("Belum tersedia.","Not available yet.")
-      },
-      {
-        title: uiText("Skenario","Scenarios"),
-        value: analysis.scenarios || {}
-      },
-      {
-        title: uiText('Implikasi Strategis','Strategic Implication'),
-        value: analysis.strategicImplication || uiText("Belum tersedia.","Not available yet.")
-      },
-      {
-        title: uiText("Keterbatasan","Limitations"),
-        value: analysis.limitations || uiText("Belum tersedia.","Not available yet.")
-      },
-      ...(sourceItems.length
-        ? [{ title: uiText("Sumber Informasi","Information Sources"), value: sourceItems }]
-        : [])
-    ]);
-  };
+    const exportMarketPdf = () => { const analysis =
+    marketData?.analysis || {}; const sourceItems =
+    Array.isArray(marketData?.sources) ? marketData.sources.slice(0,
+    10).map((item, index) => ({ No: index + 1, Judul: item?.title ||
+    “Sumber informasi”, Tanggal: item?.publishedDate || “—”, Tautan:
+    item?.url || “—” })) : [];
 
-  const exportAutopilotPdf = () => {
-    const plans = [
-      { title: uiText('Rencana 7 Hari','7-Day Plan'), value: Array.isArray(autopilotData?.plan7) ? autopilotData.plan7 : [] },
-      { title: uiText('Rencana 14 Hari','14-Day Plan'), value: Array.isArray(autopilotData?.plan14) ? autopilotData.plan14 : [] },
-      { title: uiText('Rencana 30 Hari','30-Day Plan'), value: Array.isArray(autopilotData?.plan30) ? autopilotData.plan30 : [] },
+    return exportReportPdf(uiText(“Laporan Perspektif Bisnis”,“Business
+    Perspective Report”), [ { title: uiText(“Ringkasan”,“Summary”),
+    value: analysis.summary || uiText(“Belum tersedia.”,“Not available
+    yet.”) }, { title: uiText(‘Kondisi Pasar’,‘Market Condition’),
+    value: analysis.marketCondition || uiText(“Belum tersedia.”,“Not
+    available yet.”) }, { title: uiText(‘Sinyal Permintaan’,‘Demand
+    Signal’), value: analysis.demandSignal || uiText(“Belum
+    tersedia.”,“Not available yet.”) }, { title: uiText(‘Perspektif
+    Bisnis’,‘Business Perspective’), value: analysis.businessPerspective
+    || uiText(“Belum tersedia.”,“Not available yet.”) }, { title:
+    uiText(“Faktor Eksternal”,“External Factors”), value:
+    analysis.externalFactors || [] }, { title: uiText(“Risiko”,“Risk”),
+    value: analysis.risks || [] }, { title:
+    uiText(‘Peluang’,‘Opportunity’), value: analysis.opportunities || []
+    }, { title: uiText(“Wawasan Persaingan”,“Competition Insight”),
+    value: analysis.competitionInsight || uiText(“Belum tersedia.”,“Not
+    available yet.”) }, { title: uiText(“Skenario”,“Scenarios”), value:
+    analysis.scenarios || {} }, { title: uiText(‘Implikasi
+    Strategis’,‘Strategic Implication’), value:
+    analysis.strategicImplication || uiText(“Belum tersedia.”,“Not
+    available yet.”) }, { title: uiText(“Keterbatasan”,“Limitations”),
+    value: analysis.limitations || uiText(“Belum tersedia.”,“Not
+    available yet.”) }, …(sourceItems.length ? [{ title: uiText(“Sumber
+    Informasi”,“Information Sources”), value: sourceItems }] : []) ]);
+    };
+
+    const exportAutopilotPdf = () => { const plans = [ { title:
+    uiText(‘Rencana 7 Hari’,‘7-Day Plan’), value:
+    Array.isArray(autopilotData?.plan7) ? autopilotData.plan7 : [] }, {
+    title: uiText(‘Rencana 14 Hari’,‘14-Day Plan’), value:
+    Array.isArray(autopilotData?.plan14) ? autopilotData.plan14 : [] },
+    { title: uiText(‘Rencana 30 Hari’,‘30-Day Plan’), value:
+    Array.isArray(autopilotData?.plan30) ? autopilotData.plan30 : [] },
     ].filter((section) => section.value.length > 0);
 
-    return exportReportPdf(uiText("Rencana Strategi dan Tindakan","Strategy and Action Plan"), [
-      { title: uiText("Strategi Utama","Main Strategy"), value: autopilotData?.mission || autopilotData?.strategy || {} },
-      ...plans,
-      { title: "Tindakan Pertumbuhan", value: growthActions }
-    ]);
-  };
+    return exportReportPdf(uiText(“Rencana Strategi dan
+    Tindakan”,“Strategy and Action Plan”), [ { title: uiText(“Strategi
+    Utama”,“Main Strategy”), value: autopilotData?.mission ||
+    autopilotData?.strategy || {} }, …plans, { title: “Tindakan
+    Pertumbuhan”, value: growthActions } ]); };
 
-  const exportFinancePdf = () => {
-    const current = financeCurrentTotals;
-    const transactions = financeTransactions
-      .filter((item) => item.date?.slice(0, 7) === financePeriod)
-      .map((item) => ({
-        Tanggal: item.date,
-        Keterangan: item.description,
-        Jenis: financeTypes.find((type) => type.value === item.type)?.label || item.type,
-        Jumlah: formatRupiah(item.amount)
-      }));
+    const exportFinancePdf = () => { const current =
+    financeCurrentTotals; const transactions = financeTransactions
+    .filter((item) => item.date?.slice(0, 7) === financePeriod)
+    .map((item) => ({ Tanggal: item.date, Keterangan: item.description,
+    Jenis: financeTypes.find((type) => type.value === item.type)?.label
+    || item.type, Jumlah: formatRupiah(item.amount) }));
 
-    return exportReportPdf(`Laporan Keuangan — ${financePeriodLabel(financePeriod)}`, [
-      {
-        title: uiText('Laporan Laba Rugi','Income Statement'),
-        value: {
-          "Pendapatan": formatRupiah(current.income),
-          "Harga Pokok Penjualan": formatRupiah(current.hpp),
-          "Laba Kotor": formatRupiah(current.grossProfit),
-          "Beban Operasional": formatRupiah(current.expense),
-          "Laba Bersih": formatRupiah(current.netProfit)
-        }
-      },
-      {
-        title: uiText('Laporan Arus Kas','Cash Flow Statement'),
-        value: {
-          "Kas Masuk": formatRupiah(current.cashIn),
-          "Kas Keluar": formatRupiah(current.cashOut),
-          "Perubahan Kas Bersih": formatRupiah(current.cashChange),
-          "Saldo Kas dan Bank": formatRupiah(current.cashTotal)
-        }
-      },
-      {
-        title: uiText('Laporan Posisi Keuangan','Balance Sheet'),
-        value: {
-          "ASET": "",
-          "Kas dan Bank": formatRupiah(current.cashTotal),
-          "Piutang Usaha": formatRupiah(current.receivable),
-          "Persediaan": formatRupiah(current.inventory),
-          "Total Aset": formatRupiah(current.totalAssets),
-          "LIABILITAS DAN EKUITAS": "",
-          "Liabilitas": formatRupiah(current.debt),
-          "Modal": formatRupiah(current.capital),
-          "Laba Ditahan": formatRupiah(current.cumulativeNetProfit),
-          "Prive": formatRupiah(current.withdrawal),
-          "Total Ekuitas": formatRupiah(current.totalEquity),
-          "Total Liabilitas dan Ekuitas": formatRupiah(current.debt + current.totalEquity)
-        }
-      },
-      {
-        title: uiText("Analisis Keuangan ZENAI","ZENAI Financial Analysis"),
-        value: {
-          "Kesimpulan": financeInsight.headline,
-          "Ringkasan": financeInsight.summary,
-          "Perubahan Utama": financeInsight.points,
-          "Keterkaitan Analisis Bisnis": financeInsight.linkedAnalysis
-        }
-      },
-      {
-        title: "Rincian Transaksi",
-        value: transactions.length ? transactions : "No transactions recorded for this period."
-      }
-    ]);
-  };
+    return
+    exportReportPdf(Laporan Keuangan — ${financePeriodLabel(financePeriod)},
+    [ { title: uiText(‘Laporan Laba Rugi’,‘Income Statement’), value: {
+    “Pendapatan”: formatRupiah(current.income), “Harga Pokok Penjualan”:
+    formatRupiah(current.hpp), “Laba Kotor”:
+    formatRupiah(current.grossProfit), “Beban Operasional”:
+    formatRupiah(current.expense), “Laba Bersih”:
+    formatRupiah(current.netProfit) } }, { title: uiText(‘Laporan Arus
+    Kas’,‘Cash Flow Statement’), value: { “Kas Masuk”:
+    formatRupiah(current.cashIn), “Kas Keluar”:
+    formatRupiah(current.cashOut), “Perubahan Kas Bersih”:
+    formatRupiah(current.cashChange), “Saldo Kas dan Bank”:
+    formatRupiah(current.cashTotal) } }, { title: uiText(‘Laporan Posisi
+    Keuangan’,‘Balance Sheet’), value: { “ASET”: ““,”Kas dan Bank”:
+    formatRupiah(current.cashTotal), “Piutang Usaha”:
+    formatRupiah(current.receivable), “Persediaan”:
+    formatRupiah(current.inventory), “Total Aset”:
+    formatRupiah(current.totalAssets), “LIABILITAS DAN EKUITAS”:
+    ““,”Liabilitas”: formatRupiah(current.debt), “Modal”:
+    formatRupiah(current.capital), “Laba Ditahan”:
+    formatRupiah(current.cumulativeNetProfit), “Prive”:
+    formatRupiah(current.withdrawal), “Total Ekuitas”:
+    formatRupiah(current.totalEquity), “Total Liabilitas dan Ekuitas”:
+    formatRupiah(current.debt + current.totalEquity) } }, { title:
+    uiText(“Analisis Keuangan ZENAI”,“ZENAI Financial Analysis”), value:
+    { “Kesimpulan”: financeInsight.headline, “Ringkasan”:
+    financeInsight.summary, “Perubahan Utama”: financeInsight.points,
+    “Keterkaitan Analisis Bisnis”: financeInsight.linkedAnalysis } }, {
+    title: “Rincian Transaksi”, value: transactions.length ?
+    transactions : “No transactions recorded for this period.” } ]); };
 
-  // Supabase auth screens are rendered only after all hooks have run.
-  // This keeps React hook order stable and avoids rendering JSX inside useEffect.
-  if (supabase && !authReady) {
-    return (
-      <main
-        style={{
-          minHeight: "100vh",
+    // Supabase auth screens are rendered only after all hooks have run.
+    // This keeps React hook order stable and avoids rendering JSX
+    inside useEffect. if (supabase && !authReady) { return ( <main
+    style={{ minHeight: “100vh”, display: “grid”, placeItems: “center”,
+    padding: “24px”, fontFamily: “Inter, Arial, sans-serif” }} > <div
+    style={{ color: darkMode ? “#CBD5E1” : “#64748B” }}>{uiText(‘Memuat
+    ZenAI…’,‘Loading ZenAI…’)}
+
+        </main>
+
+    ); }
+
+    if (supabase && !session && !showAuth) { return ( <ZenLanding
+    darkMode={darkMode} onToggleTheme={() => setDarkMode((d) => !d)}
+    onLogin={() => { setAuthMode(“login”); setShowAuth(true); }}
+    onSignup={() => { setAuthMode(“signup”); setShowAuth(true); }} /> );
+    } if (supabase && !session) { return ( <main style={{ width: “100%”,
+    minHeight: “100vh”, maxWidth: “none”, margin: 0, padding: “24px”,
+    boxSizing: “border-box”,
+
           display: "grid",
           placeItems: "center",
-          padding: "24px",
-          fontFamily: "Inter, Arial, sans-serif"
+
+          background: darkMode ? "#0b1120" : "#F8FAFC",
+          color: darkMode ? "#F8FAFC" : "#0F172A",
+          fontFamily: "Inter, Arial, sans-serif",
+
+          position: "relative",
+          overflowX: "hidden",
         }}
-      >
-        <div style={{ color: darkMode ? "#CBD5E1" : "#64748B" }}>{uiText('Memuat ZenAI...','Loading ZenAI...')}</div>
-      </main>
-    );
-  }
 
-  if (supabase && !session && !showAuth) {
-    return (
-      <ZenLanding
-        darkMode={darkMode}
-        onToggleTheme={() => setDarkMode((d) => !d)}
-        onLogin={() => { setAuthMode("login"); setShowAuth(true); }}
-        onSignup={() => { setAuthMode("signup"); setShowAuth(true); }}
-      />
-    );
-  }
-  if (supabase && !session) {
-  return (
-    <main
-      style={{
-        width: "100%",
-        minHeight: "100vh",
-        maxWidth: "none",
-        margin: 0,
-        padding: "24px",
-        boxSizing: "border-box",
+      <form onSubmit={handleAuth} style={{ width: “100%”, maxWidth:
+      “420px”, background: darkMode ? “#111827” : “#FFFFFF”, color:
+      darkMode ? “#F8FAFC” : “#0F172A”, border:
+      1px solid ${darkMode ? "#334155" : "#E2E8F0"}, borderRadius:
+      “20px”, padding: “28px”, boxSizing: “border-box” }}
 
-        display: "grid",
-        placeItems: "center",
-
-        background: darkMode ? "#0b1120" : "#F8FAFC",
-        color: darkMode ? "#F8FAFC" : "#0F172A",
-        fontFamily: "Inter, Arial, sans-serif",
-
-        position: "relative",
-        overflowX: "hidden",
-      }}
-    >
-        <form
-          onSubmit={handleAuth}
-          style={{
-            width: "100%",
-            maxWidth: "420px",
-            background: darkMode ? "#111827" : "#FFFFFF",
-            color: darkMode ? "#F8FAFC" : "#0F172A",
-            border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}`,
-            borderRadius: "20px",
-            padding: "28px",
-            boxSizing: "border-box"
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              textAlign: "center",
-              marginBottom: "24px"
-            }}
           >
-            <img
-              src="/zenai-logo.png"
-              alt="ZENAI"
+            <div
               style={{
-                width: "180px",
-                height: "180px",
-                objectFit: "contain",
-                marginBottom: "8px"
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                textAlign: "center",
+                marginBottom: "24px"
+              }}
+            >
+              <img
+                src="/zenai-logo.png"
+                alt="ZENAI"
+                style={{
+                  width: "180px",
+                  height: "180px",
+                  objectFit: "contain",
+                  marginBottom: "8px"
+                }}
+              />
+              <div
+                style={{
+                  fontSize: "14px",
+                  fontWeight: "700",
+                  letterSpacing: "2px",
+                  color: darkMode ? "#6ee7b7" : "#2563EB"
+                }}
+              >{uiText('Know More Grow More','Know More Grow More')}</div>
+              <button type="button" onClick={() => setShowAuth(false)} style={{ marginTop: "14px", background: "transparent", color: darkMode ? "#93C5FD" : "#2563EB", fontWeight: "700", cursor: "pointer" }}>{uiText('← Kembali ke beranda','← Back to home')}</button>
+            </div>
+
+            <div
+              style={{
+                color: darkMode ? "#CBD5E1" : "#64748B",
+                marginBottom: "24px",
+                lineHeight: "1.5",
+                textAlign: "center"
+              }}
+            >
+              {authMode === "login"
+                ? uiText("Masuk untuk menyimpan data bisnis dan hasil AI secara permanen.", "Log in to save your business data and AI results permanently.")
+                : uiText("Buat akun ZENAI agar data tersimpan di cloud.","Create a ZENAI account to save your data in the cloud.")}
+            </div>
+
+            <label style={{ display: "block", fontWeight: "600", marginBottom: "7px", color: darkMode ? "#F8FAFC" : "#0F172A" }}>{uiText('Email','Email')}</label>
+            <input
+              type="email"
+              value={authEmail}
+              onChange={(e) => setAuthEmail(e.target.value)}
+              autoComplete="email"
+              style={{
+                width: "100%",
+                padding: "12px",
+                border: "1px solid #CBD5E1",
+                borderRadius: "10px",
+                marginBottom: "14px",
+                boxSizing: "border-box"
               }}
             />
-            <div
+
+            <label style={{ display: "block", fontWeight: "600", marginBottom: "7px", color: darkMode ? "#F8FAFC" : "#0F172A" }}>{uiText('Password','Password')}</label>
+            <input
+              type="password"
+              value={authPassword}
+              onChange={(e) => setAuthPassword(e.target.value)}
+              autoComplete={authMode === "login" ? "current-password" : "new-password"}
               style={{
-                fontSize: "14px",
-                fontWeight: "700",
-                letterSpacing: "2px",
-                color: darkMode ? "#6ee7b7" : "#2563EB"
+                width: "100%",
+                padding: "12px",
+                border: "1px solid #CBD5E1",
+                borderRadius: "10px",
+                marginBottom: "16px",
+                boxSizing: "border-box"
               }}
-            >{uiText('Know More Grow More','Know More Grow More')}</div>
-            <button type="button" onClick={() => setShowAuth(false)} style={{ marginTop: "14px", background: "transparent", color: darkMode ? "#93C5FD" : "#2563EB", fontWeight: "700", cursor: "pointer" }}>{uiText('← Kembali ke beranda','← Back to home')}</button>
-          </div>
+            />
 
-          <div
-            style={{
-              color: darkMode ? "#CBD5E1" : "#64748B",
-              marginBottom: "24px",
-              lineHeight: "1.5",
-              textAlign: "center"
-            }}
-          >
-            {authMode === "login"
-              ? uiText("Masuk untuk menyimpan data bisnis dan hasil AI secara permanen.", "Log in to save your business data and AI results permanently.")
-              : uiText("Buat akun ZENAI agar data tersimpan di cloud.","Create a ZENAI account to save your data in the cloud.")}
-          </div>
-
-          <label style={{ display: "block", fontWeight: "600", marginBottom: "7px", color: darkMode ? "#F8FAFC" : "#0F172A" }}>{uiText('Email','Email')}</label>
-          <input
-            type="email"
-            value={authEmail}
-            onChange={(e) => setAuthEmail(e.target.value)}
-            autoComplete="email"
-            style={{
-              width: "100%",
-              padding: "12px",
-              border: "1px solid #CBD5E1",
-              borderRadius: "10px",
-              marginBottom: "14px",
-              boxSizing: "border-box"
-            }}
-          />
-
-          <label style={{ display: "block", fontWeight: "600", marginBottom: "7px", color: darkMode ? "#F8FAFC" : "#0F172A" }}>{uiText('Password','Password')}</label>
-          <input
-            type="password"
-            value={authPassword}
-            onChange={(e) => setAuthPassword(e.target.value)}
-            autoComplete={authMode === "login" ? "current-password" : "new-password"}
-            style={{
-              width: "100%",
-              padding: "12px",
-              border: "1px solid #CBD5E1",
-              borderRadius: "10px",
-              marginBottom: "16px",
-              boxSizing: "border-box"
-            }}
-          />
-
-          <button
-            type="submit"
-            disabled={authLoading}
-            style={{
-              width: "100%",
-              padding: "13px",
-              border: "none",
-              borderRadius: "10px",
-              background: darkMode ? "#2563EB" : "#2563EB",
-              color: "#FFFFFF",
-              fontWeight: "700",
-              cursor: authLoading ? "not-allowed" : "pointer"
-            }}
-          >
-            {authLoading
-              ? uiText("Memproses...", "Processing...")
-              : authMode === "login"
-                ? uiText("Masuk", "Log In")
-                : uiText("Buat Akun", "Sign Up")}
-          </button>
-
-          {authMessage && (
-            <div
+            <button
+              type="submit"
+              disabled={authLoading}
               style={{
-                marginTop: "14px",
-                color: darkMode ? "#E2E8F0" : "#475569",
-                fontSize: "14px",
-                lineHeight: "1.5"
+                width: "100%",
+                padding: "13px",
+                border: "none",
+                borderRadius: "10px",
+                background: darkMode ? "#2563EB" : "#2563EB",
+                color: "#FFFFFF",
+                fontWeight: "700",
+                cursor: authLoading ? "not-allowed" : "pointer"
               }}
             >
-              {authMessage}
-            </div>
-          )}
+              {authLoading
+                ? uiText("Memproses...", "Processing...")
+                : authMode === "login"
+                  ? uiText("Masuk", "Log In")
+                  : uiText("Buat Akun", "Sign Up")}
+            </button>
 
-          <button
-            type="button"
-            onClick={() => {
-              setAuthMode(authMode === "login" ? "signup" : "login");
-              setAuthMessage("");
-            }}
-            style={{
-              marginTop: "16px",
-              border: "none",
-              background: "transparent",
-              color: darkMode ? "#60A5FA" : "#2563EB",
-              fontWeight: "600",
-              cursor: "pointer",
-              padding: 0
-            }}
-          >
-            {authMode === "login"
-              ? uiText("Belum punya akun? Buat akun", "Don't have an account? Sign Up")
-              : uiText("Sudah punya akun? Masuk", "Already have an account? Log In")}
-          </button>
-        </form>
-      </main>
-    );
-  }
+            {authMessage && (
+              <div
+                style={{
+                  marginTop: "14px",
+                  color: darkMode ? "#E2E8F0" : "#475569",
+                  fontSize: "14px",
+                  lineHeight: "1.5"
+                }}
+              >
+                {authMessage}
+              </div>
+            )}
 
-  return (
-    <main
-  className={`zenai-app ${darkMode ? "zenai-dark" : "zenai-light"}`}
-  style={{
-        flex: 1,
-minWidth: 0,
-overflowX: "hidden",
-padding: isMobile ? "16px 12px" : "32px",
-        minHeight: "100vh",
-        background: darkMode ? "#0B1120" : "#F8FAFC",
-        color: darkMode ? "#F8FAFC" : "#0F172A",
-        display: "flex",
-        fontFamily: "Arial, sans-serif"
-      }}
-    >
-     {/* MOBILE OVERLAY */}
-     {isMobile && sidebarOpen && <button type="button" className="zenai-sidebar-overlay no-print" aria-label="Tutup menu" onClick={() => setSidebarOpen(false)} />}
-     {/* SIDEBAR */}
-<aside
-  className={`zenai-sidebar no-print ${sidebarOpen ? "open" : "closed"}`}
-  style={{
-    width: isMobile ? (sidebarOpen ? "220px" : "64px") : (sidebarOpen ? "280px" : "72px"),
-    minWidth: isMobile ? (sidebarOpen ? "220px" : "64px") : (sidebarOpen ? "280px" : "72px"),
-    height: "100dvh",
-    maxHeight: "100dvh",
-    background: darkMode ? "#111827" : "#FFFFFF",
-    borderRight: "1px solid #E2E8F0",
-    padding: sidebarOpen
-      ? (isMobile ? "14px 10px" : "18px 14px")
-      : (isMobile ? "14px 6px" : "18px 8px"),
-    position: "fixed",
-    left: 0,
-    top: 0,
-    zIndex: 1000,
-    boxSizing: "border-box",
-    overflow: "hidden",
-    display: "flex",
-    flexDirection: "column",
-    overscrollBehavior: "contain",
-    transition: "width 0.25s ease, min-width 0.25s ease, padding 0.25s ease"
-  }}
->
-  {/* TOGGLE SIDEBAR */}
-  <button
-    onClick={() => setSidebarOpen(!sidebarOpen)}
-    title={sidebarOpen ? "Tutup menu" : uiText("Buka menu","Open menu")}
-    style={{
-      width: "100%",
-      minHeight: "40px",
-      border: "none",
-      background: "transparent",
-      cursor: "pointer",
-      padding: "7px 8px",
-      marginBottom: "6px",
-      fontSize: "21px",
-      lineHeight: 1,
-      textAlign: sidebarOpen ? "right" : "center",
-      color: "#334155",
-      flexShrink: 0
-    }}
-  >
-    <ZenIcon name="menu" size={20} />
-  </button>
+            <button
+              type="button"
+              onClick={() => {
+                setAuthMode(authMode === "login" ? "signup" : "login");
+                setAuthMessage("");
+              }}
+              style={{
+                marginTop: "16px",
+                border: "none",
+                background: "transparent",
+                color: darkMode ? "#60A5FA" : "#2563EB",
+                fontWeight: "600",
+                cursor: "pointer",
+                padding: 0
+              }}
+            >
+              {authMode === "login"
+                ? uiText("Belum punya akun? Buat akun", "Don't have an account? Sign Up")
+                : uiText("Sudah punya akun? Masuk", "Already have an account? Log In")}
+            </button>
+          </form>
+        </main>
 
-  {/* LOGO */}
-  <div
-    style={{
-      padding: sidebarOpen ? "4px 8px 12px" : "4px 0 12px",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: sidebarOpen ? "flex-start" : "center",
-      justifyContent: "center",
-      overflow: "hidden",
-      flexShrink: 0
-    }}
-  >
-    <img
-      src={sidebarOpen ? "/zenai-logo.png" : "/zenai-mark.png"}
-      alt="ZENAI"
-      style={{
-        display: "block",
-        width: sidebarOpen ? "clamp(70px, 13vh, 110px)" : (isMobile ? "42px" : "46px"),
-        height: sidebarOpen ? "clamp(70px, 13vh, 110px)" : (isMobile ? "42px" : "46px"),
-        objectFit: "contain",
-        objectPosition: "center",
-        filter: darkMode ? "brightness(1.08) saturate(1.05)" : "none",
-        transition: "all 0.25s ease"
-      }}
-    />
-    {sidebarOpen && (
-      <div
-        style={{
-          marginTop: "-4px",
-          paddingLeft: "2px",
-          fontSize: "11px",
-          fontWeight: "700",
-          letterSpacing: "1px",
-          color: darkMode ? "#CBD5E1" : "#64748B",
-          whiteSpace: "nowrap"
-        }}
-      >{uiText('AI Business Assistant','AI Business Assistant')}</div>
+    ); }
+
+    return ( <main
+    className={zenai-app ${darkMode ? "zenai-dark" : "zenai-light"}}
+    style={{ flex: 1, minWidth: 0, overflowX: “hidden”, padding:
+    isMobile ? “16px 12px” : “32px”, minHeight: “100vh”, background:
+    darkMode ? “#0B1120” : “#F8FAFC”, color: darkMode ? “#F8FAFC” :
+    “#0F172A”, display: “flex”, fontFamily: “Arial, sans-serif” }} > {/*
+    MOBILE OVERLAY /} {isMobile && sidebarOpen && <button type=“button”
+    className=“zenai-sidebar-overlay no-print” aria-label=“Tutup menu”
+    onClick={() => setSidebarOpen(false)} />} {/ SIDEBAR /} <aside
+    className={zenai-sidebar no-print ${sidebarOpen ? "open" : "closed"}}
+    style={{ width: isMobile ? (sidebarOpen ? “220px” : “64px”) :
+    (sidebarOpen ? “280px” : “72px”), minWidth: isMobile ? (sidebarOpen
+    ? “220px” : “64px”) : (sidebarOpen ? “280px” : “72px”), height:
+    “100dvh”, maxHeight: “100dvh”, background: darkMode ? “#111827” :
+    “#FFFFFF”, borderRight: “1px solid #E2E8F0”, padding: sidebarOpen ?
+    (isMobile ? “14px 10px” : “18px 14px”) : (isMobile ? “14px 6px” :
+    “18px 8px”), position: “fixed”, left: 0, top: 0, zIndex: 1000,
+    boxSizing: “border-box”, overflow: “hidden”, display: “flex”,
+    flexDirection: “column”, overscrollBehavior: “contain”, transition:
+    “width 0.25s ease, min-width 0.25s ease, padding 0.25s ease” }} > {/
+    TOGGLE SIDEBAR */} <button onClick={() =>
+    setSidebarOpen(!sidebarOpen)} title={sidebarOpen ? “Tutup menu” :
+    uiText(“Buka menu”,“Open menu”)} style={{ width: “100%”, minHeight:
+    “40px”, border: “none”, background: “transparent”, cursor:
+    “pointer”, padding: “7px 8px”, marginBottom: “6px”, fontSize:
+    “21px”, lineHeight: 1, textAlign: sidebarOpen ? “right” : “center”,
+    color: “#334155”, flexShrink: 0 }} >
+
+    {/* LOGO */} <div style={{ padding: sidebarOpen ? “4px 8px 12px” :
+    “4px 0 12px”, display: “flex”, flexDirection: “column”, alignItems:
+    sidebarOpen ? “flex-start” : “center”, justifyContent: “center”,
+    overflow: “hidden”, flexShrink: 0 }} > <img src={sidebarOpen ?
+    “/zenai-logo.png” : “/zenai-mark.png”} alt=“ZENAI” style={{ display:
+    “block”, width: sidebarOpen ? “clamp(70px, 13vh, 110px)” : (isMobile
+    ? “42px” : “46px”), height: sidebarOpen ? “clamp(70px, 13vh, 110px)”
+    : (isMobile ? “42px” : “46px”), objectFit: “contain”,
+    objectPosition: “center”, filter: darkMode ? “brightness(1.08)
+    saturate(1.05)” : “none”, transition: “all 0.25s ease” }} />
+    {sidebarOpen && ( <div style={{ marginTop: “-4px”, paddingLeft:
+    “2px”, fontSize: “11px”, fontWeight: “700”, letterSpacing: “1px”,
+    color: darkMode ? “#CBD5E1” : “#64748B”, whiteSpace: “nowrap” }}
+    >{uiText(‘AI Business Assistant’,‘AI Business Assistant’)}
+
     )}
-  </div>
 
-  {/* NAVIGASI UTAMA */}
-  <nav
-    className="zenai-sidebar-nav"
-    style={{
-      display: "flex",
-      flexDirection: "column",
-      gap: "clamp(5px, 0.9vh, 7px)",
-      flex: "1 1 auto",
-      minHeight: 0,
-      maxHeight: "100%",
-      overflowY: "auto",
-      overflowX: "hidden",
-      paddingRight: "3px",
-      paddingBottom: "4px",
-      scrollbarWidth: "thin",
-      WebkitOverflowScrolling: "touch"
-    }}
-  >
-    {[
-      ["home", "dashboard", t("nav.dashboard")],
-      ["capture", "capture", t("nav.capture")],
-      ["pulse", "activity", t("nav.pulse")],
-      ["diagnosis", "diagnosis", t("nav.diagnosis")],
-      ["market", "perspective", t("nav.perspective")],
-      ["autopilot", "strategy", t("nav.strategy")],
-      ["finance", "finance", t("nav.finance")],
-      ["advancedAnalysis", "intelligence", t("nav.advanced")],
-    ].map(([key, icon, label]) => (
-      <button
-        key={key}
-        onClick={() => {
-          setTab(key);
-          if (isMobile) setSidebarOpen(false);
-        }}
-        title={sidebarOpen ? "" : label}
-        className={tab === key ? "zenai-nav-item is-active" : "zenai-nav-item"}
-        style={{
-          width: "100%",
-          minHeight: "43px",
-          border: tab === key ? "1px solid #BFDBFE" : "1px solid #e8edf3",
-          padding: "10px 12px",
-          borderRadius: "10px",
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: sidebarOpen ? "flex-start" : "center",
-          gap: sidebarOpen ? "9px" : "0",
-          textAlign: sidebarOpen ? "left" : "center",
-          background: tab === key ? (darkMode ? "#172554" : "#EFF6FF") : (darkMode ? "#111827" : "#FFFFFF"),
-          color: tab === key ? (darkMode ? "#60A5FA" : "#2563EB") : (darkMode ? "#E2E8F0" : "#475569"),
-          fontWeight: tab === key ? "700" : "500",
-          boxShadow: tab === key ? "0 3px 10px rgba(37, 99, 235, 0.08)" : "0 1px 2px rgba(15, 23, 42, 0.03)",
-          fontSize: "13px",
-          whiteSpace: "nowrap",
-          overflow: "hidden",
-          flexShrink: 0
-        }}
-      >
-        <span className="zenai-nav-icon"><ZenIcon name={icon} size={18} /></span>
-        {sidebarOpen && <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{label}</span>}
-      </button>
-    ))}
-  </nav>
+    {/* NAVIGASI UTAMA */} <nav className=“zenai-sidebar-nav” style={{
+    display: “flex”, flexDirection: “column”, gap: “clamp(5px, 0.9vh,
+    7px)”, flex: “1 1 auto”, minHeight: 0, maxHeight: “100%”, overflowY:
+    “auto”, overflowX: “hidden”, paddingRight: “3px”, paddingBottom:
+    “4px”, scrollbarWidth: “thin”, WebkitOverflowScrolling: “touch” }} >
+    {[ [“home”, “dashboard”, t(“nav.dashboard”)], [“capture”, “capture”,
+    t(“nav.capture”)], [“pulse”, “activity”, t(“nav.pulse”)],
+    [“diagnosis”, “diagnosis”, t(“nav.diagnosis”)], [“market”,
+    “perspective”, t(“nav.perspective”)], [“autopilot”, “strategy”,
+    t(“nav.strategy”)], [“finance”, “finance”, t(“nav.finance”)],
+    [“advancedAnalysis”, “intelligence”, t(“nav.advanced”)],
+    ].map(([key, icon, label]) => ( <button key={key} onClick={() => {
+    setTab(key); if (isMobile) setSidebarOpen(false); }}
+    title={sidebarOpen ? “” : label} className={tab === key ?
+    “zenai-nav-item is-active” : “zenai-nav-item”} style={{ width:
+    “100%”, minHeight: “43px”, border: tab === key ? “1px solid #BFDBFE”
+    : “1px solid #e8edf3”, padding: “10px 12px”, borderRadius: “10px”,
+    cursor: “pointer”, display: “flex”, alignItems: “center”,
+    justifyContent: sidebarOpen ? “flex-start” : “center”, gap:
+    sidebarOpen ? “9px” : “0”, textAlign: sidebarOpen ? “left” :
+    “center”, background: tab === key ? (darkMode ? “#172554” :
+    “#EFF6FF”) : (darkMode ? “#111827” : “#FFFFFF”), color: tab === key
+    ? (darkMode ? “#60A5FA” : “#2563EB”) : (darkMode ? “#E2E8F0” :
+    “#475569”), fontWeight: tab === key ? “700” : “500”, boxShadow: tab
+    === key ? “0 3px 10px rgba(37, 99, 235, 0.08)” : “0 1px 2px rgba(15,
+    23, 42, 0.03)”, fontSize: “13px”, whiteSpace: “nowrap”, overflow:
+    “hidden”, flexShrink: 0 }} > {sidebarOpen && <span style={{
+    overflow: “hidden”, textOverflow: “ellipsis” }}>{label}} ))}
 
-  {/* AREA BAWAH SIDEBAR */}
-  <div
-    style={{
-      marginTop: "clamp(6px, 1.5vh, 14px)",
-      paddingTop: "clamp(6px, 1.2vh, 10px)",
-      flexShrink: 0,
-      minHeight: 0
-    }}
-  >
-    <div
-      style={{
-        height: "1px",
-        background: darkMode ? "#334155" : "#E2E8F0",
-        margin: "0 2px 9px"
-      }}
-    />
+    {/* AREA BAWAH SIDEBAR */} <div style={{ marginTop: “clamp(6px,
+    1.5vh, 14px)”, paddingTop: “clamp(6px, 1.2vh, 10px)”, flexShrink: 0,
+    minHeight: 0 }} > <div style={{ height: “1px”, background: darkMode
+    ? “#334155” : “#E2E8F0”, margin: “0 2px 9px” }} />
 
-    <div style={{ display: "grid", gap: "7px", marginBottom: "7px" }}>
-      <button
-        type="button"
-        onClick={() => { setTab("guide"); if (isMobile) setSidebarOpen(false); }}
-        title={sidebarOpen ? "" : uiText("Panduan","Guide")}
-        aria-label={uiText("Panduan","Guide")}
-        className={tab === "guide" ? "zenai-nav-item is-active" : "zenai-nav-item"}
-        style={{
-          width: "100%",
-          minHeight: "41px",
-          border: tab === "guide" ? "1px solid #BFDBFE" : "1px solid #E2E8F0",
-          background: tab === "guide" ? (darkMode ? "#172554" : "#EFF6FF") : (darkMode ? "#111827" : "#FFFFFF"),
-          color: tab === "guide" ? (darkMode ? "#60A5FA" : "#2563EB") : (darkMode ? "#E2E8F0" : "#475569"),
-          padding: "9px 11px",
-          borderRadius: "10px",
-          cursor: "pointer",
-          fontSize: "12px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: sidebarOpen ? "flex-start" : "center",
-          gap: sidebarOpen ? "8px" : "0",
-          overflow: "hidden",
-          whiteSpace: "nowrap",
-          fontWeight: "600"
-        }}
-      >
-        <span className="zenai-nav-icon"><ZenIcon name="guide" size={17} /></span>
-        {sidebarOpen && <span>{t("nav.guide")}</span>}
-      </button>
+    <div style={{ display: “grid”, gap: “7px”, marginBottom: “7px” }}>
+    <button type=“button” onClick={() => { setTab(“guide”); if
+    (isMobile) setSidebarOpen(false); }} title={sidebarOpen ? “” :
+    uiText(“Panduan”,“Guide”)} aria-label={uiText(“Panduan”,“Guide”)}
+    className={tab === “guide” ? “zenai-nav-item is-active” :
+    “zenai-nav-item”} style={{ width: “100%”, minHeight: “41px”, border:
+    tab === “guide” ? “1px solid #BFDBFE” : “1px solid #E2E8F0”,
+    background: tab === “guide” ? (darkMode ? “#172554” : “#EFF6FF”) :
+    (darkMode ? “#111827” : “#FFFFFF”), color: tab === “guide” ?
+    (darkMode ? “#60A5FA” : “#2563EB”) : (darkMode ? “#E2E8F0” :
+    “#475569”), padding: “9px 11px”, borderRadius: “10px”, cursor:
+    “pointer”, fontSize: “12px”, display: “flex”, alignItems: “center”,
+    justifyContent: sidebarOpen ? “flex-start” : “center”, gap:
+    sidebarOpen ? “8px” : “0”, overflow: “hidden”, whiteSpace: “nowrap”,
+    fontWeight: “600” }} > {sidebarOpen && {t(“nav.guide”)}}
 
-      <button
-        type="button"
-        onClick={() => { setTab("settings"); if (isMobile) setSidebarOpen(false); }}
-        title={sidebarOpen ? "" : uiText("Pengaturan","Settings")}
-        aria-label={uiText("Pengaturan","Settings")}
-        className={tab === "settings" ? "zenai-nav-item is-active" : "zenai-nav-item"}
-        style={{
-          width: "100%",
-          minHeight: "41px",
-          border: tab === "settings" ? "1px solid #BFDBFE" : "1px solid #E2E8F0",
-          background: tab === "settings" ? (darkMode ? "#172554" : "#EFF6FF") : (darkMode ? "#111827" : "#FFFFFF"),
-          color: tab === "settings" ? (darkMode ? "#60A5FA" : "#2563EB") : (darkMode ? "#E2E8F0" : "#475569"),
-          padding: "9px 11px",
-          borderRadius: "10px",
-          cursor: "pointer",
-          fontSize: "12px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: sidebarOpen ? "flex-start" : "center",
-          gap: sidebarOpen ? "8px" : "0",
-          overflow: "hidden",
-          whiteSpace: "nowrap",
-          fontWeight: "600"
-        }}
-      >
-        <span className="zenai-nav-icon"><ZenIcon name="settings" size={17} /></span>
-        {sidebarOpen && <span>{t("nav.settings")}</span>}
-      </button>
-    </div>
-
-      <button
-        type="button"
-        onClick={async () => {
-          const ok = window.confirm(uiText("Keluar dari akun ZenAI?","Are you sure you want to log out?"));
-          if (!ok) return;
-          await handleLogout();
-        }}
-        title={sidebarOpen ? "" : uiText("Keluar","Log Out")}
-        aria-label={uiText("Keluar","Log Out")}
-        style={{
-          width: "100%",
-          minHeight: "41px",
-          border: "1px solid #fda4af",
-          background: darkMode ? "#111827" : "#FFFFFF",
-          color: "#e11d48",
-          padding: "9px 11px",
-          borderRadius: "10px",
-          cursor: "pointer",
-          fontSize: "12px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: sidebarOpen ? "flex-start" : "center",
-          gap: sidebarOpen ? "8px" : "0",
-          overflow: "hidden",
-          whiteSpace: "nowrap",
-          fontWeight: "600"
-        }}
-      >
-        <span className="zenai-nav-icon"><ZenIcon name="logout" size={17} /></span>
-        {sidebarOpen && <span>{t("nav.logout")}</span>}
-      </button>
-    </div>
-</aside>
-
-      {/* KONTEN UTAMA */}
-      {isMobile && <button type="button" className="zenai-mobile-menu no-print" aria-label={uiText("Buka menu","Open menu")} onClick={() => setSidebarOpen(true)}><ZenIcon name="menu" size={20} /></button>}
-      <section
-  className="zenai-content"
-  style={{
-    flex: 1,
-    minWidth: 0,
-
-    marginLeft: isMobile
-      ? "0"
-      : (sidebarOpen ? "280px" : "72px"),
-
-    width: isMobile
-      ? "100%"
-      : `calc(100% - ${sidebarOpen ? "280px" : "72px"})`,
-
-    padding: isMobile ? "24px 12px" : "32px",
-    boxSizing: "border-box",
-    transition: "margin-left 0.25s ease, width 0.25s ease"
-  }}
->
-        {/* HEADER */}
-        <header
-          className="zenai-page-header no-print"
+        <button
+          type="button"
+          onClick={() => { setTab("settings"); if (isMobile) setSidebarOpen(false); }}
+          title={sidebarOpen ? "" : uiText("Pengaturan","Settings")}
+          aria-label={uiText("Pengaturan","Settings")}
+          className={tab === "settings" ? "zenai-nav-item is-active" : "zenai-nav-item"}
           style={{
+            width: "100%",
+            minHeight: "41px",
+            border: tab === "settings" ? "1px solid #BFDBFE" : "1px solid #E2E8F0",
+            background: tab === "settings" ? (darkMode ? "#172554" : "#EFF6FF") : (darkMode ? "#111827" : "#FFFFFF"),
+            color: tab === "settings" ? (darkMode ? "#60A5FA" : "#2563EB") : (darkMode ? "#E2E8F0" : "#475569"),
+            padding: "9px 11px",
+            borderRadius: "10px",
+            cursor: "pointer",
+            fontSize: "12px",
             display: "flex",
-            justifyContent: "space-between",
             alignItems: "center",
-            gap: "20px",
-            marginBottom: "30px",
-            background: darkMode ? "#111827" : "transparent",
-            color: darkMode ? "#F8FAFC" : "#0F172A",
-            border: darkMode ? "1px solid #334155" : "none",
-            borderRadius: darkMode ? "24px" : "0",
-            padding: darkMode ? "28px 32px" : "0"
+            justifyContent: sidebarOpen ? "flex-start" : "center",
+            gap: sidebarOpen ? "8px" : "0",
+            overflow: "hidden",
+            whiteSpace: "nowrap",
+            fontWeight: "600"
           }}
         >
-          <div style={{ width: "100%" }}>
-            <h2
-              style={{
-                margin: 0,
-                fontSize: "28px",
-                color: darkMode ? "#FFFFFF" : "#0F172A",
-                fontWeight: "800"
-              }}
-            >
-              {tab === "home" &&
-                t("nav.dashboard")}
+          <span className="zenai-nav-icon"><ZenIcon name="settings" size={17} /></span>
+          {sidebarOpen && <span>{t("nav.settings")}</span>}
+        </button>
 
-              {tab === "capture" &&
-                t("nav.capture")}
+        <button
+          type="button"
+          onClick={async () => {
+            const ok = window.confirm(uiText("Keluar dari akun ZenAI?","Are you sure you want to log out?"));
+            if (!ok) return;
+            await handleLogout();
+          }}
+          title={sidebarOpen ? "" : uiText("Keluar","Log Out")}
+          aria-label={uiText("Keluar","Log Out")}
+          style={{
+            width: "100%",
+            minHeight: "41px",
+            border: "1px solid #fda4af",
+            background: darkMode ? "#111827" : "#FFFFFF",
+            color: "#e11d48",
+            padding: "9px 11px",
+            borderRadius: "10px",
+            cursor: "pointer",
+            fontSize: "12px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: sidebarOpen ? "flex-start" : "center",
+            gap: sidebarOpen ? "8px" : "0",
+            overflow: "hidden",
+            whiteSpace: "nowrap",
+            fontWeight: "600"
+          }}
+        >
+          <span className="zenai-nav-icon"><ZenIcon name="logout" size={17} /></span>
+          {sidebarOpen && <span>{t("nav.logout")}</span>}
+        </button>
 
-              {tab === "pulse" &&
-                t("nav.pulse")}
+        {/* KONTEN UTAMA */}
+        {isMobile && <button type="button" className="zenai-mobile-menu no-print" aria-label={uiText("Buka menu","Open menu")} onClick={() => setSidebarOpen(true)}><ZenIcon name="menu" size={20} /></button>}
+        <section
 
-              {tab === "diagnosis" &&
-                t("nav.diagnosis")}
+    className=“zenai-content” style={{ flex: 1, minWidth: 0,
 
-              {tab === "autopilot" &&
-                t("nav.strategy")}
+    marginLeft: isMobile ? “0” : (sidebarOpen ? “280px” : “72px”),
 
-              {tab === "guide" && t("nav.guide")}
+    width: isMobile ? “100%” :
+    calc(100% - ${sidebarOpen ? "280px" : "72px"}),
 
-              {tab === "settings" && t("nav.settings")}
+    padding: isMobile ? “24px 12px” : “32px”, boxSizing: “border-box”,
+    transition: “margin-left 0.25s ease, width 0.25s ease” }} > {/*
+    HEADER */} <header className=“zenai-page-header no-print” style={{
+    display: “flex”, justifyContent: “space-between”, alignItems:
+    “center”, gap: “20px”, marginBottom: “30px”, background: darkMode ?
+    “#111827” : “transparent”, color: darkMode ? “#F8FAFC” : “#0F172A”,
+    border: darkMode ? “1px solid #334155” : “none”, borderRadius:
+    darkMode ? “24px” : “0”, padding: darkMode ? “28px 32px” : “0” }} >
+    <div style={{ width: “100%” }}> <h2 style={{ margin: 0, fontSize:
+    “28px”, color: darkMode ? “#FFFFFF” : “#0F172A”, fontWeight: “800”
+    }} > {tab === “home” && t(“nav.dashboard”)}
 
-              {tab === "finance" &&
-                t("nav.finance")}
+                {tab === "capture" &&
+                  t("nav.capture")}
 
-{tab === "market" &&
-  t("nav.perspective")}
+                {tab === "pulse" &&
+                  t("nav.pulse")}
+
+                {tab === "diagnosis" &&
+                  t("nav.diagnosis")}
+
+                {tab === "autopilot" &&
+                  t("nav.strategy")}
+
+                {tab === "guide" && t("nav.guide")}
+
+                {tab === "settings" && t("nav.settings")}
+
+                {tab === "finance" &&
+                  t("nav.finance")}
+
+{tab === “market” && t(“nav.perspective”)}
 
               {tab === "advancedAnalysis" &&
                 t("nav.advanced")}
@@ -5078,23 +4343,103 @@ padding: isMobile ? "16px 12px" : "32px",
                 }}
               >
                 {uiText(
-  `Jelaskan usaha Anda dengan bahasa biasa.
-
-Minimal sebutkan 3 hal berikut:
-1. Bidang usaha — Anda menjual produk atau jasa apa?
-2. Target pasar & lokasi usaha — Siapa pelanggan Anda dan di mana usaha Anda beroperasi?
-3. Kendala — Masalah atau kesulitan apa yang sedang dihadapi?
-
-Semakin lengkap informasi yang Anda berikan, semakin akurat ZENAI memahami kondisi dan memberikan analisis yang relevan untuk usaha Anda.`,
-  `Describe your business in plain language.
-
-At minimum, mention these 3 things:
-1. Business field — What product or service do you sell?
-2. Target market & business location — Who are your customers and where does your business operate?
-3. Challenges — What problems or difficulties are you currently facing?
-
-The more complete your information, the more accurately ZENAI can understand your business and provide relevant analysis.`
-)}
+                  `Jelaskan usaha Anda dengan bahasa biasa. Minimal sebutkan 3 hal berikut:`,
+                  `Describe your business in plain language. At minimum, mention these 3 things:`
+                )}
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "14px",
+                    marginBottom: "18px"
+                  }}
+                >
+                  {[
+                    {
+                      number: "1",
+                      title: uiText("Bidang usaha", "Business field"),
+                      description: uiText(
+                        "Anda menjual produk atau jasa apa?",
+                        "What product or service do you sell?"
+                      )
+                    },
+                    {
+                      number: "2",
+                      title: uiText("Target pasar & lokasi usaha", "Target market & business location"),
+                      description: uiText(
+                        "Siapa pelanggan Anda dan di mana usaha Anda beroperasi?",
+                        "Who are your customers and where does your business operate?"
+                      )
+                    },
+                    {
+                      number: "3",
+                      title: uiText("Kendala", "Challenges"),
+                      description: uiText(
+                        "Masalah atau kesulitan apa yang sedang dihadapi?",
+                        "What problems or difficulties are you currently facing?"
+                      )
+                    }
+                  ].map((item) => (
+                    <div
+                      key={item.number}
+                      style={{
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: "12px"
+                      }}
+                    >
+                      <div
+                        style={{
+                          flex: "0 0 30px",
+                          width: "30px",
+                          height: "30px",
+                          borderRadius: "50%",
+                          background: darkMode ? "#1E3A8A" : "#E8F1FF",
+                          color: darkMode ? "#BFDBFE" : "#2563EB",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontWeight: 700,
+                          fontSize: "14px",
+                          marginTop: "1px"
+                        }}
+                      >
+                        {item.number}
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <div
+                          style={{
+                            fontWeight: 700,
+                            color: darkMode ? "#F8FAFC" : "#172554",
+                            marginBottom: "2px"
+                          }}
+                        >
+                          {item.title}
+                        </div>
+                        <div
+                          style={{
+                            color: darkMode ? "#CBD5E1" : "#64748B",
+                            lineHeight: "1.5"
+                          }}
+                        >
+                          {item.description}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div
+                  style={{
+                    color: darkMode ? "#94A3B8" : "#64748B",
+                    lineHeight: "1.6",
+                    marginBottom: "4px"
+                  }}
+                >
+                  {uiText(
+                    "Semakin lengkap informasi yang Anda berikan, semakin akurat ZENAI memahami kondisi dan memberikan analisis yang relevan untuk usaha Anda.",
+                    "The more complete your information, the more accurately ZENAI can understand your business and provide relevant analysis."
+                  )}
+                </div>
               </p>
 
 
@@ -5807,23 +5152,13 @@ The more complete your information, the more accurately ZENAI can understand you
 
 
                 {/* NEXT STEP */}
-{pulseData.nextStep && (
-  <div
-    style={{
-      background: darkMode ? "#172033" : "#EFF6FF",
-      border: `1px solid ${
-        darkMode ? "#60A5FA" : "#BFDBFE"
-      }`,
-      borderRadius: "16px",
-      padding: "20px",
-      marginBottom: "24px"
-    }}
-  >
-    <strong
-      style={{
-        color: darkMode ? "#F8FAFC" : "#0F172A"
-      }}
-    >{uiText('Langkah Berikutnya','Next Step')}</strong>
+
+{pulseData.nextStep && ( <div style={{ background: darkMode ? “#172033”
+: “#EFF6FF”, border:
+1px solid ${         darkMode ? "#60A5FA" : "#BFDBFE"       },
+borderRadius: “16px”, padding: “20px”, marginBottom: “24px” }} > <strong
+style={{ color: darkMode ? “#F8FAFC” : “#0F172A” }} >{uiText(‘Langkah
+Berikutnya’,‘Next Step’)}
 
     <p
       style={{
@@ -5834,24 +5169,11 @@ The more complete your information, the more accurately ZENAI can understand you
     >
       {pulseData.nextStep}
     </p>
-  </div>
-)}
-                {/* UPDATE USAHA */}
-                <div
-                  style={{
-                    background: darkMode ? "#111827" : "#FFFFFF",
-                    border:
-                      "1px solid #E2E8F0",
-                    borderRadius: "18px",
-                    padding: "24px"
-                  }}
-                >
-                  <h3
-                    style={{
-                      marginTop: 0
-                    }}
-                  >{uiText('Ada perubahan pada usaha?','Any changes in your business?')}</h3>
 
+)} {/* UPDATE USAHA */} <div style={{ background: darkMode ? “#111827” :
+“#FFFFFF”, border: “1px solid #E2E8F0”, borderRadius: “18px”, padding:
+“24px” }} > <h3 style={{ marginTop: 0 }} >{uiText(‘Ada perubahan pada
+usaha?’,‘Any changes in your business?’)}
                   <p
                     style={{
                       color: darkMode ? "#CBD5E1" : "#64748B",
@@ -5863,25 +5185,15 @@ The more complete your information, the more accurately ZENAI can understand you
                   </p>
 
                   <textarea
-  value={updateText}
-  onChange={(event) =>
-    setUpdateText(
-      event.target.value
-    )
-  }
-  placeholder={uiText("Contoh: Penjualan minggu ini turun, saya baru menaikkan harga, ada pesaing baru, atau saya menambah produk...","Example: Sales dropped this week, I just raised prices, there is a new competitor, or I added a product...")}
-  style={{
-    width: "100%",
-    minHeight: "110px",
-    padding: "14px",
-    border: "1px solid #CBD5E1",
-    borderRadius: "10px",
-    boxSizing: "border-box",
-    resize: "vertical",
-    fontFamily: "inherit",
-    lineHeight: "1.6"
-  }}
-/>
+
+value={updateText} onChange={(event) => setUpdateText(
+event.target.value ) } placeholder={uiText(“Contoh: Penjualan minggu ini
+turun, saya baru menaikkan harga, ada pesaing baru, atau saya menambah
+produk…”,“Example: Sales dropped this week, I just raised prices, there
+is a new competitor, or I added a product…”)} style={{ width: “100%”,
+minHeight: “110px”, padding: “14px”, border: “1px solid #CBD5E1”,
+borderRadius: “10px”, boxSizing: “border-box”, resize: “vertical”,
+fontFamily: “inherit”, lineHeight: “1.6” }} />
 
                   <div
                     style={{
@@ -5892,31 +5204,12 @@ The more complete your information, the more accurately ZENAI can understand you
                     }}
                   >
                     <button
-  onClick={addBusinessUpdate}
-  disabled={busy}
-  style={{
-    border: "none",
-    background:
-      busy
-        ? "#94A3B8"
-        : "#0F172A",
-    color: "#FFFFFF",
-    padding: "12px 18px",
-    borderRadius: "10px",
-    cursor:
-      busy
-        ? "not-allowed"
-        : "pointer",
-    fontWeight: "700"
-  }}
->
-  {busy
-    ? "Memperbarui..."
-    : uiText("Perbarui Analisis →","Refresh Analysis →")}
-</button>
-                  </div>
 
-
+onClick={addBusinessUpdate} disabled={busy} style={{ border: “none”,
+background: busy ? “#94A3B8” : “#0F172A”, color: “#FFFFFF”, padding:
+“12px 18px”, borderRadius: “10px”, cursor: busy ? “not-allowed” :
+“pointer”, fontWeight: “700” }} > {busy ? “Memperbarui…” :
+uiText(“Perbarui Analisis →”,“Refresh Analysis →”)}
                   {businessUpdates.length > 0 && (
                     <div
                       style={{
@@ -6514,24 +5807,12 @@ The more complete your information, the more accurately ZENAI can understand you
                     </div>
                   )}
 
-{/* LANGKAH BERIKUTNYA */}
-{diagnosis.nextStep && (
-  <div
-    style={{
-      background: darkMode ? "#172033" : "#EFF6FF",
-      border: `1px solid ${
-        darkMode ? "#60A5FA" : "#BFDBFE"
-      }`,
-      borderRadius: "16px",
-      padding: "20px",
-      marginBottom: "24px"
-    }}
-  >
-    <strong
-      style={{
-        color: darkMode ? "#F8FAFC" : "#0F172A"
-      }}
-    >{uiText('Langkah Berikutnya','Next Step')}</strong>
+{/* LANGKAH BERIKUTNYA */} {diagnosis.nextStep && ( <div style={{
+background: darkMode ? “#172033” : “#EFF6FF”, border:
+1px solid ${         darkMode ? "#60A5FA" : "#BFDBFE"       },
+borderRadius: “16px”, padding: “20px”, marginBottom: “24px” }} > <strong
+style={{ color: darkMode ? “#F8FAFC” : “#0F172A” }} >{uiText(‘Langkah
+Berikutnya’,‘Next Step’)}
 
     <p
       style={{
@@ -6542,7 +5823,7 @@ The more complete your information, the more accurately ZENAI can understand you
     >
       {diagnosis.nextStep}
     </p>
-  </div>
+
 )}
 
                 {/* ACTION */}
@@ -6606,16 +5887,19 @@ The more complete your information, the more accurately ZENAI can understand you
             )}
           </div>
         )}
-{/* =========================
-    PERSPEKTIF BISNIS
+
+{/* ========================= PERSPEKTIF BISNIS
 ========================= */}
 
-{tab === "market" && (
-  <div data-zenai-output data-zenai-output-key="marketData" style={{ maxWidth: "1000px", margin: "0 auto" }}>
-    {marketData && (
-      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "14px" }}>
-        <button type="button" className="no-print" onClick={exportMarketPdf} style={{ border: "1px solid #2563EB", background: darkMode ? "#172554" : "#EFF6FF", color: darkMode ? "#BFDBFE" : "#1D4ED8", padding: "10px 14px", borderRadius: "10px", cursor: "pointer", fontWeight: "700" }}>{uiText('Ekspor PDF','Export PDF')}</button>
-      </div>
+{tab === “market” && ( <div data-zenai-output
+data-zenai-output-key=“marketData” style={{ maxWidth: “1000px”, margin:
+“0 auto” }}> {marketData && ( <div style={{ display: “flex”,
+justifyContent: “flex-end”, marginBottom: “14px” }}> <button
+type=“button” className=“no-print” onClick={exportMarketPdf} style={{
+border: “1px solid #2563EB”, background: darkMode ? “#172554” :
+“#EFF6FF”, color: darkMode ? “#BFDBFE” : “#1D4ED8”, padding: “10px
+14px”, borderRadius: “10px”, cursor: “pointer”, fontWeight: “700”
+}}>{uiText(‘Ekspor PDF’,‘Export PDF’)}
     )}
     {!marketData && !marketLoading && !marketError && (
       <div
@@ -6729,36 +6013,16 @@ The more complete your information, the more accurately ZENAI can understand you
         </div>
 
         {marketData.analysis && (
-  <div
-    style={{
-      display: "grid",
-      gap: "14px",
-      marginBottom: "22px"
-    }}
-  >
-    {/* PERSPEKTIF UTAMA */}
-    <div
-      style={{
-        background: darkMode ? "#111827" : "#FFFFFF",
-        border: `1px solid ${darkMode ? "#334155" : "#E2E8F0"}`,
-        borderRadius: "18px",
-        padding: "22px",
-        boxShadow: darkMode
-          ? "0 8px 24px rgba(0, 0, 0, 0.20)"
-          : "0 8px 24px rgba(37, 99, 235, 0.06)"
-      }}
-    >
-      <div
-        style={{
-          fontSize: "12px",
-          fontWeight: "800",
-          color: darkMode ? "#93C5FD" : "#2563EB",
-          textTransform: "uppercase",
-          letterSpacing: "0.06em",
-          marginBottom: "8px"
-        }}
-      >{uiText('Perspektif Utama','Main Perspective')}</div>
 
+<div style={{ display: “grid”, gap: “14px”, marginBottom: “22px” }} >
+{/* PERSPEKTIF UTAMA */} <div style={{ background: darkMode ? “#111827”
+: “#FFFFFF”, border: 1px solid ${darkMode ? "#334155" : "#E2E8F0"},
+borderRadius: “18px”, padding: “22px”, boxShadow: darkMode ? “0 8px 24px
+rgba(0, 0, 0, 0.20)” : “0 8px 24px rgba(37, 99, 235, 0.06)” }} > <div
+style={{ fontSize: “12px”, fontWeight: “800”, color: darkMode ?
+“#93C5FD” : “#2563EB”, textTransform: “uppercase”, letterSpacing:
+“0.06em”, marginBottom: “8px” }} >{uiText(‘Perspektif Utama’,‘Main
+Perspective’)}
       <p
         style={{
           margin: 0,
@@ -6990,11 +6254,8 @@ The more complete your information, the more accurately ZENAI can understand you
           uiText("Belum tersedia.","Not available yet.")}
       </p>
     </div>
-  </div>
-)}
-      </>
-    )}
-        </div>
+
+)} </> )}
       )}
         {/* =========================
             LAPORAN KEUANGAN
@@ -8216,20 +7477,15 @@ The more complete your information, the more accurately ZENAI can understand you
                       uiText('ZENAI telah membuat strategi berdasarkan kondisi usaha Anda.','ZENAI has created a strategy based on your business condition.')}
                   </p>
                 </div>
+
 {/* bagian strategi/autopilot yang sudah ada */}
 
-<BusinessGrowthLoop
-  strategies={
-    Array.isArray(autopilotData?.plan7)
-      ? autopilotData.plan7
-      : []
-  }
-  actions={growthActions}
-  onActionsChange={(value) => { registerCanonicalAi("growthActions", value, locale); setGrowthActions(value); }}
-  evaluating={growthEvaluating}
-darkMode={darkMode}
-  onEvaluate={async (action) => {
-    setGrowthEvaluating(true);
+<BusinessGrowthLoop strategies={ Array.isArray(autopilotData?.plan7) ?
+autopilotData.plan7 : [] } actions={growthActions}
+onActionsChange={(value) => { registerCanonicalAi(“growthActions”,
+value, locale); setGrowthActions(value); }}
+evaluating={growthEvaluating} darkMode={darkMode} onEvaluate={async
+(action) => { setGrowthEvaluating(true);
 
     try {
       const evaluationText = [
@@ -8303,8 +7559,8 @@ darkMode={darkMode}
     } finally {
       setGrowthEvaluating(false);
     }
-  }}
-/>
+
+}} />
 
                 {/* RENCANA 7 HARI */}
                 {Array.isArray(
@@ -8688,19 +7944,12 @@ darkMode={darkMode}
 
 
                 {/* PERINGATAN */}
-{autopilotData.warning && (
-  <div
-    style={{
-      background: darkMode ? "#422006" : "#FFFBEB",
-      border: darkMode ? "1px solid #B45309" : "1px solid #FDE68A",
-      borderRadius: "16px",
-      padding: "20px",
-      marginBottom: "24px"
-    }}
-  >
-                    <strong style={{
-  color: darkMode ? "#FCD34D" : "#92400E"
-}}>{uiText('️ Hal yang Perlu Diwaspadai','️ Things to Watch')}</strong>
+
+{autopilotData.warning && ( <div style={{ background: darkMode ?
+“#422006” : “#FFFBEB”, border: darkMode ? “1px solid #B45309” : “1px
+solid #FDE68A”, borderRadius: “16px”, padding: “20px”, marginBottom:
+“24px” }} > <strong style={{ color: darkMode ? “#FCD34D” : “#92400E”
+}}>{uiText(‘️ Hal yang Perlu Diwaspadai’,‘️ Things to Watch’)}
 
                     <p
                       style={{
@@ -8716,23 +7965,13 @@ darkMode={darkMode}
 
 
                 {/* LANGKAH SELANJUTNYA */}
-{autopilotData.nextStep && (
-  <div
-    style={{
-      background: darkMode ? "#422006" : "#FFFBEB",
-      border: darkMode ? "1px solid #B45309" : "1px solid #FDE68A",
-      borderRadius: "16px",
-      padding: "20px",
-      marginBottom: "24px"
-    }}
-  >
-    <strong
-      style={{
-        color: darkMode ? "#FDE68A" : "#0F172A",
-        display: "block",
-        marginBottom: "8px"
-      }}
-    >{uiText('Langkah Berikutnya','Next Step')}</strong>
+
+{autopilotData.nextStep && ( <div style={{ background: darkMode ?
+“#422006” : “#FFFBEB”, border: darkMode ? “1px solid #B45309” : “1px
+solid #FDE68A”, borderRadius: “16px”, padding: “20px”, marginBottom:
+“24px” }} > <strong style={{ color: darkMode ? “#FDE68A” : “#0F172A”,
+display: “block”, marginBottom: “8px” }} >{uiText(‘Langkah
+Berikutnya’,‘Next Step’)}
 
     <p
       style={{
@@ -8743,39 +7982,14 @@ darkMode={darkMode}
     >
       {autopilotData.nextStep}
     </p>
-  </div>
-)}
-                {/* TOMBOL AKSI */}
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "12px",
-                    flexWrap: "wrap"
-                  }}
-                >
-                  <button
-                    onClick={() =>
-                      runAutopilot()
-                    }
-                    disabled={busy}
-                    style={{
-                      border:
-                        "1px solid #CBD5E1",
-                      background: darkMode ? "#111827" : "#FFFFFF",
-                      color:
-                        "#334155",
-                      padding:
-                        "12px 18px",
-                      borderRadius:
-                        "10px",
-                      cursor:
-                        busy
-                          ? "not-allowed"
-                          : "pointer",
-                      fontWeight:
-                        "600"
-                    }}
-                  >{uiText('Buat Ulang Strategi','Regenerate Strategy')}</button>
+
+)} {/* TOMBOL AKSI */} <div style={{ display: “flex”, gap: “12px”,
+flexWrap: “wrap” }} > <button onClick={() => runAutopilot() }
+disabled={busy} style={{ border: “1px solid #CBD5E1”, background:
+darkMode ? “#111827” : “#FFFFFF”, color: “#334155”, padding: “12px
+18px”, borderRadius: “10px”, cursor: busy ? “not-allowed” : “pointer”,
+fontWeight: “600” }} >{uiText(‘Buat Ulang Strategi’,‘Regenerate
+Strategy’)}
 
                   <button
                     onClick={() =>
@@ -8804,117 +8018,113 @@ darkMode={darkMode}
 
 
       <style>{`
-.zenai-dark { background:#101113 !important; color:#F2F2F0 !important; color-scheme:dark; }
-.zenai-dark .zenai-content { background:#101113 !important; color:#F2F2F0 !important; }
-.zenai-dark .zenai-sidebar { background:#151619 !important; border-color:#26272B !important; }
-.zenai-dark h1,.zenai-dark h2,.zenai-dark h3,.zenai-dark h4,.zenai-dark h5,.zenai-dark h6 { color:#F6F6F4 !important; letter-spacing:-0.02em !important; }
-.zenai-dark strong { color:#F6F6F4 !important; }
-.zenai-dark p,.zenai-dark span,.zenai-dark label { color:#A6ABB3 !important; }
-.zenai-dark input,.zenai-dark textarea,.zenai-dark select { background:#1A1B20 !important; color:#F2F2F0 !important; border-color:#2C2D33 !important; color-scheme:dark; }
-.zenai-dark input::placeholder,.zenai-dark textarea::placeholder { color:#7A7F88 !important; }
-.zenai-dark option { background:#1A1B20; color:#F2F2F0; }
 
-/* Neutral surfaces -> refined cards */
-.zenai-dark [style*="#FFFFFF"]:not(.zenai-sidebar) { background:#1A1B1F !important; color:#F2F2F0 !important; border-color:#27282D !important; }
-.zenai-dark [style*="#F8FAFC"] { background:#1E1F23 !important; }
-.zenai-dark [style*="#F1F5F9"] { background:#202127 !important; }
+.zenai-dark { background:#101113 !important; color:#F2F2F0 !important;
+color-scheme:dark; } .zenai-dark .zenai-content { background:#101113
+!important; color:#F2F2F0 !important; } .zenai-dark .zenai-sidebar {
+background:#151619 !important; border-color:#26272B !important; }
+.zenai-dark h1,.zenai-dark h2,.zenai-dark h3,.zenai-dark h4,.zenai-dark
+h5,.zenai-dark h6 { color:#F6F6F4 !important; letter-spacing:-0.02em
+!important; } .zenai-dark strong { color:#F6F6F4 !important; }
+.zenai-dark p,.zenai-dark span,.zenai-dark label { color:#A6ABB3
+!important; } .zenai-dark input,.zenai-dark textarea,.zenai-dark select
+{ background:#1A1B20 !important; color:#F2F2F0 !important;
+border-color:#2C2D33 !important; color-scheme:dark; } .zenai-dark
+input::placeholder,.zenai-dark textarea::placeholder { color:#7A7F88
+!important; } .zenai-dark option { background:#1A1B20; color:#F2F2F0; }
 
-/* Semantic surfaces: tinted, coherent, muted */
-.zenai-dark [style*="#EFF6FF"] { background:#1E1F2B !important; color:#D6DAFF !important; border-color:#2E2F40 !important; }
-.zenai-dark [style*="#EFF6FF"] p,.zenai-dark [style*="#EFF6FF"] span,.zenai-dark [style*="#EFF6FF"] label { color:#C2C7FF !important; }
-.zenai-dark [style*="#FFFFFF1f2"],.zenai-dark [style*="#FFFFFF1F2"] { background:#2A151B !important; color:#FFDADD !important; border-color:#43232B !important; }
-.zenai-dark [style*="#FFFFFF1f2"] p,.zenai-dark [style*="#FFFFFF1f2"] span,.zenai-dark [style*="#FFFFFF1f2"] label { color:#F2C2C8 !important; }
-.zenai-dark [style*="#FFFFFFbeb"],.zenai-dark [style*="#FFFFFFBEB"] { background:#2A2112 !important; color:#FBEECB !important; border-color:#45351A !important; }
-.zenai-dark [style*="#FFFFFFbeb"] p,.zenai-dark [style*="#FFFFFFbeb"] span,.zenai-dark [style*="#FFFFFFbeb"] label { color:#EBD9A6 !important; }
+/* Neutral surfaces -> refined cards */ .zenai-dark
+[style*=“#FFFFFF”]:not(.zenai-sidebar) { background:#1A1B1F !important;
+color:#F2F2F0 !important; border-color:#27282D !important; } .zenai-dark
+[style*=“#F8FAFC”] { background:#1E1F23 !important; } .zenai-dark
+[style*=“#F1F5F9”] { background:#202127 !important; }
 
-/* Other common semantic light surfaces */
-.zenai-dark [style*="#FFF1F2"] { background:#2A151B !important; color:#FFDADD !important; border-color:#43232B !important; }
-.zenai-dark [style*="#F0FDF4"],.zenai-dark [style*="#F0FDF4"] { background:#16241C !important; color:#CDEBD3 !important; border-color:#24402B !important; }
-.zenai-dark [style*="#FFFBEB"],.zenai-dark [style*="#FFFBEB"] { background:#2A2112 !important; color:#FBEECB !important; border-color:#45351A !important; }
+/* Semantic surfaces: tinted, coherent, muted */ .zenai-dark
+[style*=“#EFF6FF”] { background:#1E1F2B !important; color:#D6DAFF
+!important; border-color:#2E2F40 !important; } .zenai-dark
+[style*=“#EFF6FF”] p,.zenai-dark [style*=“#EFF6FF”] span,.zenai-dark
+[style*=“#EFF6FF”] label { color:#C2C7FF !important; } .zenai-dark
+[style*=“#FFFFFF1f2”],.zenai-dark [style*=“#FFFFFF1F2”] {
+background:#2A151B !important; color:#FFDADD !important;
+border-color:#43232B !important; } .zenai-dark [style*=“#FFFFFF1f2”]
+p,.zenai-dark [style*=“#FFFFFF1f2”] span,.zenai-dark
+[style*=“#FFFFFF1f2”] label { color:#F2C2C8 !important; } .zenai-dark
+[style*=“#FFFFFFbeb”],.zenai-dark [style*=“#FFFFFFBEB”] {
+background:#2A2112 !important; color:#FBEECB !important;
+border-color:#45351A !important; } .zenai-dark [style*=“#FFFFFFbeb”]
+p,.zenai-dark [style*=“#FFFFFFbeb”] span,.zenai-dark
+[style*=“#FFFFFFbeb”] label { color:#EBD9A6 !important; }
 
-/* Semantic text colors */
-.zenai-dark [style*="#2563EB"],.zenai-dark [style*="#1D4ED8"] { color:#8B8BF7 !important; }
-.zenai-dark [style*="#064e3b"] { color:#4ADE80 !important; }
-.zenai-dark [style*="#e11d48"],.zenai-dark [style*="#be123c"],.zenai-dark [style*="#9f1239"] { color:#FB7185 !important; }
-.zenai-dark [style*="#d97706"],.zenai-dark [style*="#b45309"],.zenai-dark [style*="#a16207"] { color:#FBBF24 !important; }
-.zenai-dark [style*="#0891B2"],.zenai-dark [style*="#0e7490"] { color:#22D3EE !important; }
+/* Other common semantic light surfaces */ .zenai-dark
+[style*=“#FFF1F2”] { background:#2A151B !important; color:#FFDADD
+!important; border-color:#43232B !important; } .zenai-dark
+[style*=“#F0FDF4”],.zenai-dark [style*=“#F0FDF4”] { background:#16241C
+!important; color:#CDEBD3 !important; border-color:#24402B !important; }
+.zenai-dark [style*=“#FFFBEB”],.zenai-dark [style*=“#FFFBEB”] {
+background:#2A2112 !important; color:#FBEECB !important;
+border-color:#45351A !important; }
 
-/* Accent: indigo primary actions */
-.zenai-dark [style*="background:#2563EB"] { background:#4F46E5 !important; border-color:#4F46E5 !important; }
+/* Semantic text colors */ .zenai-dark [style*=“#2563EB”],.zenai-dark
+[style*=“#1D4ED8”] { color:#8B8BF7 !important; } .zenai-dark
+[style*=“#064e3b”] { color:#4ADE80 !important; } .zenai-dark
+[style*=“#e11d48”],.zenai-dark [style*=“#be123c”],.zenai-dark
+[style*=“#9f1239”] { color:#FB7185 !important; } .zenai-dark
+[style*=“#d97706”],.zenai-dark [style*=“#b45309”],.zenai-dark
+[style*=“#a16207”] { color:#FBBF24 !important; } .zenai-dark
+[style*=“#0891B2”],.zenai-dark [style*=“#0e7490”] { color:#22D3EE
+!important; }
 
-/* Borders */
-.zenai-dark [style*="#E2E8F0"],.zenai-dark [style*="#e8edf3"],.zenai-dark [style*="#CBD5E1"] { border-color:#2C2D33 !important; }
+/* Accent: indigo primary actions */ .zenai-dark
+[style*=“background:#2563EB”] { background:#4F46E5 !important;
+border-color:#4F46E5 !important; }
 
-/* Buttons remain readable */
-.zenai-dark button { color:#E5E7EB; }
-.zenai-dark button[style*="#2563EB"],.zenai-dark button[style*="#2563EB"] { color:#FFFFFF !important; }
+/* Borders */ .zenai-dark [style*=“#E2E8F0”],.zenai-dark
+[style*=“#e8edf3”],.zenai-dark [style*=“#CBD5E1”] { border-color:#2C2D33
+!important; }
 
-/* Sidebar tidak memakai scroll; ukuran elemen mengikuti tinggi viewport. */
-.zenai-sidebar-nav { overflow-y:auto !important; overflow-x:hidden !important; flex:1 1 auto !important; min-height:0 !important; scrollbar-width:thin !important; -webkit-overflow-scrolling:touch !important; }
+/* Buttons remain readable */ .zenai-dark button { color:#E5E7EB; }
+.zenai-dark button[style*=“#2563EB”],.zenai-dark
+button[style*=“#2563EB”] { color:#FFFFFF !important; }
 
-@media (max-width: 768px) {
-  .zenai-app {
-    width: 100vw !important;
-    max-width: 100vw !important;
-    min-height: 100dvh !important;
-    overflow-x: hidden !important;
-  }
+/* Sidebar tidak memakai scroll; ukuran elemen mengikuti tinggi
+viewport. */ .zenai-sidebar-nav { overflow-y:auto !important;
+overflow-x:hidden !important; flex:1 1 auto !important; min-height:0
+!important; scrollbar-width:thin !important;
+-webkit-overflow-scrolling:touch !important; }
 
-  .zenai-sidebar {
-    width: min(82vw, 300px) !important;
-    min-width: min(82vw, 300px) !important;
-    height: 100dvh !important;
-    max-height: 100dvh !important;
-    padding: 10px 8px !important;
-    box-shadow: 12px 0 36px rgba(15, 23, 42, 0.18) !important;
-    transition: transform 0.2s ease !important;
-  }
+@media (max-width: 768px) { .zenai-app { width: 100vw !important;
+max-width: 100vw !important; min-height: 100dvh !important; overflow-x:
+hidden !important; }
 
-  .zenai-sidebar.closed {
-    transform: translateX(-105%) !important;
-  }
+.zenai-sidebar { width: min(82vw, 300px) !important; min-width:
+min(82vw, 300px) !important; height: 100dvh !important; max-height:
+100dvh !important; padding: 10px 8px !important; box-shadow: 12px 0 36px
+rgba(15, 23, 42, 0.18) !important; transition: transform 0.2s ease
+!important; }
 
-  .zenai-sidebar-nav {
-    min-height: 0 !important;
-    flex: 1 1 auto !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    -webkit-overflow-scrolling: touch !important;
-    overscroll-behavior: contain !important;
-    scrollbar-width: thin !important;
-  }
+.zenai-sidebar.closed { transform: translateX(-105%) !important; }
 
-  .zenai-content, .zenai-sidebar.open ~ .zenai-content {
-    min-width: 0 !important;
-    overflow-x: hidden !important;
-    overflow-y: visible !important;
-    margin-left: 0 !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-  }
-}
+.zenai-sidebar-nav { min-height: 0 !important; flex: 1 1 auto
+!important; overflow-y: auto !important; overflow-x: hidden !important;
+-webkit-overflow-scrolling: touch !important; overscroll-behavior:
+contain !important; scrollbar-width: thin !important; }
 
-/* Layar pendek: otomatis mengecilkan elemen atas agar menu bawah tetap muat. */
-@media (min-width: 769px) and (max-height: 720px) {
-  .zenai-sidebar {
-    padding-top: 10px !important;
-    padding-bottom: 10px !important;
-  }
+.zenai-content, .zenai-sidebar.open ~ .zenai-content { min-width: 0
+!important; overflow-x: hidden !important; overflow-y: visible
+!important; margin-left: 0 !important; width: 100% !important;
+box-sizing: border-box !important; } }
 
-  .zenai-sidebar-nav {
-    gap: 5px !important;
-  }
+/* Layar pendek: otomatis mengecilkan elemen atas agar menu bawah tetap
+muat. */ @media (min-width: 769px) and (max-height: 720px) {
+.zenai-sidebar { padding-top: 10px !important; padding-bottom: 10px
+!important; }
 
-  .zenai-sidebar-nav button {
-    min-height: 39px !important;
-    padding-top: 7px !important;
-    padding-bottom: 7px !important;
-  }
-}
-`}</style>
+.zenai-sidebar-nav { gap: 5px !important; }
 
+.zenai-sidebar-nav button { min-height: 39px !important; padding-top:
+7px !important; padding-bottom: 7px !important; } } `}
     </section>
 
     </main>
-  );
-}
+
+); }
