@@ -47,7 +47,7 @@ export async function GET(request) {
   if (process.env.GROQ_API_KEY) services.push(await timedCheck("Groq", () => checkModels("https://api.groq.com/openai/v1/models", { Authorization: `Bearer ${process.env.GROQ_API_KEY}` }, locale), locale));
   else pushNotConfigured("Groq");
 
-  if (process.env.OPENROUTER_API_KEY) services.push(await timedCheck("OpenRouter", () => checkModels("https://openrouter.ai/api/v1/models", { Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}` }, locale), locale));
+  if (process.env.ZENAI_OPENROUTER_FALLBACK_KEY) services.push(await timedCheck("OpenRouter", () => checkModels("https://openrouter.ai/api/v1/models", { Authorization: `Bearer ${process.env.ZENAI_OPENROUTER_FALLBACK_KEY}` }, locale), locale));
   else pushNotConfigured("OpenRouter");
 
   if (process.env.GEMINI_API_KEY) services.push(await timedCheck("Gemini", () => checkModels(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(process.env.GEMINI_API_KEY)}`, {}, locale), locale));
